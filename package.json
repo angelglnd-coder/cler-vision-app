@@ -1,0 +1,51 @@
+{
+  "name": "cler-vision-app5",
+  "version": "1.0.0",
+  "description": "An Electron application with Svelte",
+  "main": "./out/main/index.js",
+  "author": "example.com",
+  "homepage": "https://electron-vite.org",
+  "scripts": {
+    "format": "prettier --plugin prettier-plugin-svelte --write .",
+    "lint": "eslint --cache .",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "postinstall": "electron-builder install-app-deps",
+    "build:unpack": "npm run build && electron-builder --dir",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:linux": "npm run build && electron-builder --linux",
+    "prepare": "npm run smui-theme-light && npm run smui-theme-dark",
+    "smui-theme-light": "smui-theme compile build/smui.css -i src/theme",
+    "smui-theme-dark": "smui-theme compile build/smui-dark.css -i src/theme/dark"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "axios": "^1.12.2",
+    "electron-updater": "^6.3.9",
+    "svelte-material-ui": "^8.0.3",
+    "tabulator-tables": "^6.3.1"
+  },
+  "devDependencies": {
+    "@electron-toolkit/eslint-config": "^2.0.0",
+    "@electron-toolkit/eslint-config-prettier": "^3.0.0",
+    "@smui/tab": "^8.0.3",
+    "@smui/tab-bar": "^8.0.3",
+    "@sveltejs/vite-plugin-svelte": "^6.1.0",
+    "@tailwindcss/postcss": "^4.1.13",
+    "autoprefixer": "^10.4.21",
+    "electron": "^37.2.3",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^4.0.0",
+    "eslint": "^9.31.0",
+    "eslint-plugin-svelte": "^3.11.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^3.4.0",
+    "smui-theme": "^8.0.3",
+    "svelte": "^5.36.10",
+    "tailwindcss": "^4.1.13",
+    "vite": "^7.0.5"
+  }
+}
