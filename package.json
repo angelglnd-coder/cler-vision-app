@@ -26,7 +26,8 @@
     "axios": "^1.12.2",
     "electron-updater": "^6.3.9",
     "svelte-material-ui": "^8.0.3",
-    "tabulator-tables": "^6.3.1"
+    "tabulator-tables": "^6.3.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^2.0.0",
