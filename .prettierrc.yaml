@@ -1,10 +1,25 @@
-singleQuote: true
-semi: false
+# Prettier config for Svelte 5 + Tailwind
 printWidth: 100
-trailingComma: none
+tabWidth: 2
+useTabs: false
+semi: true
+singleQuote: true
+trailingComma: all
+bracketSpacing: true
+bracketSameLine: false
+arrowParens: always
+endOfLine: lf
+
+# Prettier 3 needs explicit plugins listed
 plugins:
   - prettier-plugin-svelte
+  # Tailwind plugin should be last so it can sort classes after other transforms
+  - prettier-plugin-tailwindcss
+
 overrides:
   - files: '*.svelte'
     options:
       parser: svelte
+      svelteSortOrder: scripts-options-styles-markup
+      svelteBracketNewLine: true
+      svelteIndentScriptAndStyle: true
