@@ -12,6 +12,7 @@ export const WO_COLUMNS = [
   'Reference_ID',
   'Eye',
   'Program_Code',
+  'cldfile',
   'Lens_Type_Laser',
   'Color',
   'Inspection_Note',
