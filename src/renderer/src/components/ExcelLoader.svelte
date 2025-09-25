@@ -1,29 +1,43 @@
 <script>
   import * as XLSX from "xlsx";
-//   import Tabulator from "tabulator-tables";
-  import { TabulatorFull as Tabulator } from 'tabulator-tables';
-  import 'tabulator-tables/dist/css/tabulator.min.css';
+  //   import Tabulator from "tabulator-tables";
+  import { TabulatorFull as Tabulator } from "tabulator-tables";
+  import "tabulator-tables/dist/css/tabulator.min.css";
   import { WO_COLUMNS, SHEET_NAME } from "../utils/woColumns";
-  
 
   let tableDiv, table;
   let errors = [];
   let rows = [];
 
   const NUMERIC_FIELDS = new Set([
-    "PW1_PW2","DIAM","OZ1_OZ2","SAG_HEIGHT","CT","CT_width",
-    "RC1_value","RC1_width","RC1_cyl",
-    "AC1_value","AC1_width","AC1_cyl",
-    "AC2_value","AC2_width","AC2_cyl",
-    "AC3_value","AC3_width","AC3_cyl",
-    "PC1_value","PC1_width",
-    "mtnum","ctnum"
+    "PW1_PW2",
+    "DIAM",
+    "OZ1_OZ2",
+    "SAG_HEIGHT",
+    "CT",
+    "CT_width",
+    "RC1_value",
+    "RC1_width",
+    "RC1_cyl",
+    "AC1_value",
+    "AC1_width",
+    "AC1_cyl",
+    "AC2_value",
+    "AC2_width",
+    "AC2_cyl",
+    "AC3_value",
+    "AC3_width",
+    "AC3_cyl",
+    "PC1_value",
+    "PC1_width",
+    "mtnum",
+    "ctnum",
   ]);
 
   function validateHeaders(row0) {
     const found = Object.keys(row0 ?? {});
-    const missing = WO_COLUMNS.filter(c => !found.includes(c));
-    const extra = found.filter(c => !WO_COLUMNS.includes(c));
+    const missing = WO_COLUMNS.filter((c) => !found.includes(c));
+    const extra = found.filter((c) => !WO_COLUMNS.includes(c));
     const msgs = [];
     if (missing.length) msgs.push(`Missing: ${missing.join(", ")}`);
     if (extra.length) msgs.push(`Unexpected: ${extra.join(", ")}`);
@@ -31,7 +45,7 @@
   }
 
   function normalizeRows(rows) {
-    return rows.map(r => {
+    return rows.map((r) => {
       const o = {};
       for (const col of WO_COLUMNS) {
         let v = r[col] ?? null;
@@ -46,13 +60,13 @@
   }
 
   function makeColumns() {
-    return WO_COLUMNS.map(col => ({
+    return WO_COLUMNS.map((col) => ({
       title: col,
       field: col,
       headerFilter: "input",
       headerSort: true,
       hozAlign: NUMERIC_FIELDS.has(col) ? "right" : "left",
-      frozen: ["WO_Number","Eye","Program_Code"].includes(col),
+      frozen: ["WO_Number", "Eye", "Program_Code"].includes(col),
     }));
   }
 
@@ -89,7 +103,8 @@
     const sheet = wb.Sheets[SHEET_NAME];
     if (!sheet) {
       errors = [`Sheet "${SHEET_NAME}" not found. Available: ${wb.SheetNames.join(", ")}`];
-      buildTable([]); return;
+      buildTable([]);
+      return;
     }
 
     const raw = XLSX.utils.sheet_to_json(sheet, { defval: null, raw: true });
@@ -110,30 +125,38 @@
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "workorders.json"; a.click();
+    a.href = url;
+    a.download = "workorders.json";
+    a.click();
     URL.revokeObjectURL(url);
   }
 </script>
 
-<div class="p-4 max-w-[95vw] mx-auto">
-  <h1 class="text-xl font-bold mb-3">WorkOrders (.xlsx → Tabulator)</h1>
+<style>
+  .max-w-\[95vw\] {
+    max-width: 95vw;
+  }
+</style>
 
-  <input type="file" accept=".xlsx" on:change={onPick} class="border rounded p-2 mb-3" />
+<div class="mx-auto max-w-[95vw] p-4">
+  <h1 class="mb-3 text-xl font-bold">WorkOrders (.xlsx → Tabulator)</h1>
+
+  <input type="file" accept=".xlsx" on:change={onPick} class="mb-3 rounded border p-2" />
 
   {#if errors.length}
-    <div class="bg-red-50 border border-red-200 text-red-800 p-3 rounded mb-3">
+    <div class="mb-3 rounded border border-red-200 bg-red-50 p-3 text-red-800">
       {#each errors as err}<div>• {err}</div>{/each}
     </div>
   {/if}
 
-  <div class="flex gap-2 mb-2">
-    <button class="px-3 py-1 border rounded" on:click={downloadCSV} disabled={!rows.length}>CSV</button>
-    <button class="px-3 py-1 border rounded" on:click={downloadJSON} disabled={!rows.length}>JSON</button>
+  <div class="mb-2 flex gap-2">
+    <button class="rounded border px-3 py-1" on:click={downloadCSV} disabled={!rows.length}
+      >CSV</button
+    >
+    <button class="rounded border px-3 py-1" on:click={downloadJSON} disabled={!rows.length}
+      >JSON</button
+    >
   </div>
 
   <div bind:this={tableDiv}></div>
 </div>
-
-<style>
-  .max-w-\[95vw\]{max-width:95vw}
-</style>

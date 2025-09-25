@@ -3,7 +3,7 @@ printWidth: 100
 tabWidth: 2
 useTabs: false
 semi: true
-singleQuote: true
+singleQuote: false # ← use double quotes in JS/TS/Svelte
 trailingComma: all
 bracketSpacing: true
 bracketSameLine: false
