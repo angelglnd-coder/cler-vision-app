@@ -1,12 +1,11 @@
 <script>
-  import { createActor } from "xstate";
-  import { woFileMachine } from "../machines/woFileMachine";
+  import { actor } from "../machines/woFileMachine";
   import { TabulatorFull as Tabulator } from "tabulator-tables";
   import "tabulator-tables/dist/css/tabulator.min.css";
   import { onDestroy, onMount } from "svelte";
 
   let tableDiv, table, state;
-  const actor = createActor(woFileMachine);
+  actor.start();
 
   function onPick(e) {
     const file = e.target.files?.[0];
@@ -17,6 +16,9 @@
   function reset() {
     actor.send({ type: "RESET" });
     table?.clearData?.();
+  }
+   function generate() {
+    actor.send({ type: "GENERATE.QUE_DIF" });
   }
 
   function render(ctx) {
@@ -40,22 +42,26 @@
   }
 
   onMount(() => {
-    actor.start();
+    state = actor.getSnapshot()
     const sub = actor.subscribe((s) => {
       state = s;
       if (s.matches("ready")) render(s.context);
       if (s.matches("error")) table?.clearData?.();
     });
-    return () => sub.unsubscribe?.();
+    return () => { sub.unsubscribe?.(); actor.stop(); };
   });
 </script>
 
-<style>
-  @import "tabulator-tables/dist/css/tabulator.min.css";
-</style>
+{#if state?.matches('idle')}
+  <input type="file" accept=".xlsx" on:change={onPick} />
+  <button on:click={reset}>Reset</button>
+{/if}
 
-<input type="file" accept=".xlsx" on:change={onPick} />
-<button on:click={reset}>Reset</button>
-{#if state?.matches("parsing") || state?.matches("building")}Parsing…{/if}
+
+<!-- {#if state?.matches("parsing") || state?.matches("building")}Parsing…{/if} -->
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}
 <div bind:this={tableDiv}></div>
+{#if state?.matches('ready')}ready
+
+ <button on:click={generate}>GENERATE QUE FILE</button>
+{/if}
