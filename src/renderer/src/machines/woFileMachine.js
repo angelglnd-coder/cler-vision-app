@@ -1,5 +1,6 @@
 import { assign, setup, fromPromise, createActor } from "xstate";
 import { WO_COLUMNS, SHEET_NAME } from "../utils/woColumns.js";
+import { formatDif } from "../utils/difSchema.js";
 import * as XLSX from "xlsx";
 import { notifyProgress } from "../utils/notify.js";
 
@@ -24,11 +25,11 @@ const NUMERIC_FIELDS = new Set([
   "AC3_cyl",
   "PC1_value",
   "PC1_width",
+  "Queue_Thickness",
   "mtnum",
   "ctnum",
 ]);
 // Optional progress helper (noop if you don't have one)
-
 
 function validateHeaders(row0) {
   const found = Object.keys(row0 ?? {});
@@ -61,13 +62,13 @@ function makeColumns() {
     headerFilter: "input",
     headerSort: true,
     hozAlign: NUMERIC_FIELDS.has(col) ? "right" : "left",
-    frozen: ["WO_Number", "Eye", "Program_Code"].includes(col),
+    frozen: ["WO_Number"].includes(col),
   }));
 }
 
 /* ======= NEW: helpers for QUE/DIF generation ======= */
-const LS19_CODES = new Set(["B18","C18","F12","F14","F18"]);
-const LS28_CODES = new Set(["PK29","PL27","PL29","PM27"]);
+const LS19_CODES = new Set(["B18", "C18", "F12", "F14", "F18"]);
+const LS28_CODES = new Set(["PK29", "PL27", "PL29", "PM27"]);
 
 function inferMaterialNumber(row) {
   // Prefer explicit mtnum if provided in Excel
@@ -115,9 +116,15 @@ function buildDIF(row, mtnum, ctnum) {
   kv("RC1_WIDTH", row.RC1_width);
   kv("RC1_CYL", row.RC1_cyl);
 
-  kv("AC1", row.AC1_value); kv("AC1_WIDTH", row.AC1_width); kv("AC1_CYL", row.AC1_cyl);
-  kv("AC2", row.AC2_value); kv("AC2_WIDTH", row.AC2_width); kv("AC2_CYL", row.AC2_cyl);
-  kv("AC3", row.AC3_value); kv("AC3_WIDTH", row.AC3_width); kv("AC3_CYL", row.AC3_cyl);
+  kv("AC1", row.AC1_value);
+  kv("AC1_WIDTH", row.AC1_width);
+  kv("AC1_CYL", row.AC1_cyl);
+  kv("AC2", row.AC2_value);
+  kv("AC2_WIDTH", row.AC2_width);
+  kv("AC2_CYL", row.AC2_cyl);
+  kv("AC3", row.AC3_value);
+  kv("AC3_WIDTH", row.AC3_width);
+  kv("AC3_CYL", row.AC3_cyl);
 
   kv("PC1", row.PC1_value);
   kv("PC1_WIDTH", row.PC1_width);
@@ -175,11 +182,9 @@ export const woFileMachine = setup({
       if (!file.name.toLowerCase().endsWith(".xlsx")) {
         throw new Error("Please choose an .xlsx file");
       }
-      const buf = await notifyProgress(file.arrayBuffer(),'reading file').catch(
-        (error) => {
-          console.log('error buffer =>', error);
-        }
-      );
+      const buf = await notifyProgress(file.arrayBuffer(), "reading file").catch((error) => {
+        console.log("error buffer =>", error);
+      });
       // const buf = await notifyProgress(file.arrayBuffer(), "reading file");
       return { buf, file };
     }),
@@ -190,11 +195,12 @@ export const woFileMachine = setup({
       //   Promise.resolve().then(() => XLSX.read(buf, { type: "array" })),
       //   "parsing workbook",
       // );
-      const wb = await notifyProgress(Promise.resolve().then(() => XLSX.read(buf, { type: "array" })),'parsing file').catch(
-        (error) => {
-          console.log('error buffer =>', error);
-        }
-      );
+      const wb = await notifyProgress(
+        Promise.resolve().then(() => XLSX.read(buf, { type: "array" })),
+        "parsing file",
+      ).catch((error) => {
+        console.log("error buffer =>", error);
+      });
 
       const sheetName = SHEET_NAME ?? wb.SheetNames[0];
       const ws = wb.Sheets[sheetName];
@@ -222,6 +228,7 @@ export const woFileMachine = setup({
     // 3) transform raw rows → normalized data + Tabulator columns
     buildGrid: fromPromise(async ({ input }) => {
       const { parseOutput } = input; // from parseWorkbook
+      console.log("parseOutput =>", parseOutput);
       const normalized = normalizeRows(parseOutput.raw);
       const errors = [];
       if (parseOutput.errors?.length) errors.push(parseOutput.errors.join(" | "));
@@ -233,36 +240,104 @@ export const woFileMachine = setup({
         columns: makeColumns(),
       };
     }),
+    // emitQueDif: fromPromise(async ({ input }) => {
+    //   const { rows } = input;
+    //   const errors = [];
+    //   const queLines = [];
+    //   const difFiles = [];
+
+    //   const safeName = (s) => String(s ?? "").replace(/[<>:"/\\|?*]/g, "_");
+    //   const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
+    //   const EOL = "\n"; // change to "\r\n" if your loader needs Windows line endings
+
+    //   rows.forEach((r, idx) => {
+    //     if (!r?.WO_Number) {
+    //       errors.push(`Row ${idx + 1}: missing WO_Number — skipped`);
+    //       return;
+    //     }
+
+    //     const woRaw = String(r.WO_Number); // keep spaces exactly as in Excel
+    //     const woSafe = safeName(woRaw); // for on-disk filenames only
+
+    //     // Write DIF/J0 to disk with safe names
+    //     const difDiskName = `${woSafe}.DIF`;
+    //     const jobDiskName = `${woSafe}.J0`;
+
+    //     const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
+    //     const ctnum = r.ctnum != null ? Number(r.ctnum) : idx + 1;
+    //     const difText = buildDIF(r, mtnum, ctnum);
+    //     difFiles.push({ name: difDiskName, text: difText });
+
+    //     // QUE tokens
+    //     const position = idx + 1; // strictly row order
+    //     const thickness =
+    //       (r.Queue_Thickness != null ? Number(r.Queue_Thickness) : undefined) ??
+    //       (r.CT_width != null ? Number(r.CT_width) : undefined) ??
+    //       (r.CT != null ? Number(r.CT) : undefined);
+
+    //     if (!Number.isFinite(thickness)) {
+    //       errors.push(
+    //         `Row ${idx + 1} (${woRaw}): missing thickness (Queue_Thickness / CT_width / CT)`,
+    //       );
+    //       return;
+    //     }
+
+    //     // 1) quoted label  2) unquoted filename (raw, with spaces)  3) position  4) thickness
+    //     const labelToken = quote(`${woRaw}.DIF`);
+    //     const fileToken = `${woRaw}.DIF`; // raw, unquoted, NOT sanitized
+
+    //     queLines.push(`${labelToken} ${fileToken} ${position} ${thickness}`);
+    //   });
+
+    //   const queText = ["queue file", ...queLines].join(EOL) + EOL;
+    //   console.log("QUE RESULTS =>", { queText, difFiles, errors });
+    //   return { queText, difFiles, errors };
+    // }),
     emitQueDif: fromPromise(async ({ input }) => {
-      const { rows } = input; // normalized rows from context.data
+      const { rows } = input; // normalized Excel rows
       const errors = [];
       const queLines = [];
       const difFiles = [];
 
-      // Iterate in order; you can sort rows here if needed.
+      const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
+      const EOL = "\r\n"; // change to "\n" if your loader prefers LF
+
       rows.forEach((r, idx) => {
         if (!r?.WO_Number) {
           errors.push(`Row ${idx + 1}: missing WO_Number — skipped`);
           return;
         }
-        const jobFileName = `${safeName(r.WO_Number)}.J0`;
-        const difFileName = `${safeName(r.WO_Number)}.DIF`;
 
-        const mtnum = inferMaterialNumber(r);
-        const ctnum = inferCutNumber(r, idx);
+        // Names/tokens come EXACTLY from Excel WO_Number
+        const wo = String(r.WO_Number); // e.g., "003-124719-01"
+        const difName = `${wo}.DIF`;
 
-        const difText = buildDIF(r, mtnum, ctnum);
-        difFiles.push({ name: difFileName, text: difText });
+        // Build DIF file text via schema (LS19/LS28 handled inside)
+        const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
+        const ctnum = r.ctnum != null ? Number(r.ctnum) : idx + 1;
+        const difText = formatDif(r, { mtnum, ctnum });
+        difFiles.push({ name: difName, text: difText });
 
-        queLines.push(queLine(r, mtnum, ctnum, jobFileName, difFileName));
+        // QUE tokens
+        const position = idx + 1; // strictly row order
+        const thickness =
+          (r.Queue_Thickness != null ? Number(r.Queue_Thickness) : undefined) ??
+          (r.CT_width != null ? Number(r.CT_width) : undefined) ??
+          (r.CT != null ? Number(r.CT) : undefined);
+
+        if (!Number.isFinite(thickness)) {
+          errors.push(
+            `Row ${idx + 1} (${wo}): missing thickness (Queue_Thickness / CT_width / CT)`,
+          );
+          return;
+        }
+
+        // "<WO.DIF>" WO.DIF position thickness
+        queLines.push(`${quote(difName)} ${difName} ${position} ${thickness}`);
       });
 
-      const queText = [
-        "# DAC Autoloader Queue",
-        `# COUNT=${queLines.length}`,
-        ...queLines
-      ].join("\n") + "\n";
-      console.log('RESULTS => ',{ queText, difFiles, errors })
+      const queText = ["queue file", ...queLines].join(EOL) + EOL;
+      console.log("QUE RESULTS =>", { queText, difFiles, errors });
       return { queText, difFiles, errors };
     }),
   },
