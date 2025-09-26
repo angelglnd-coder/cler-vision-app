@@ -17,7 +17,7 @@
     actor.send({ type: "RESET" });
     table?.clearData?.();
   }
-   function generate() {
+  function generate() {
     actor.send({ type: "GENERATE.QUE_DIF" });
   }
 
@@ -42,26 +42,37 @@
   }
 
   onMount(() => {
-    state = actor.getSnapshot()
+    state = actor.getSnapshot();
     const sub = actor.subscribe((s) => {
       state = s;
       if (s.matches("ready")) render(s.context);
       if (s.matches("error")) table?.clearData?.();
     });
-    return () => { sub.unsubscribe?.(); actor.stop(); };
+    return () => {
+      sub.unsubscribe?.();
+      actor.stop();
+    };
   });
 </script>
 
-{#if state?.matches('idle')}
+{#if state?.matches("idle")}
   <input type="file" accept=".xlsx" on:change={onPick} />
   <button on:click={reset}>Reset</button>
 {/if}
 
-
 <!-- {#if state?.matches("parsing") || state?.matches("building")}Parsing…{/if} -->
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}
 <div bind:this={tableDiv}></div>
-{#if state?.matches('ready')}ready
-
- <button on:click={generate}>GENERATE QUE FILE</button>
+{#if state?.matches("ready")}ready
+  <div class="row" style="display:flex; gap:.5rem; align-items:center;">
+    <label>Queue file name:</label>
+    <input
+      type="text"
+      bind:value={queName}
+      on:input={onNameChange}
+      placeholder="batch.QUE"
+      style="width: 240px"
+    />
+    <button on:click={generate}>Generate QUE + DIFs</button>
+  </div>
 {/if}
