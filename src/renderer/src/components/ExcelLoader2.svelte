@@ -3,8 +3,10 @@
   import { TabulatorFull as Tabulator } from "tabulator-tables";
   import "tabulator-tables/dist/css/tabulator.min.css";
   import { onDestroy, onMount } from "svelte";
+  import { downloadAsZip } from "../utils/downloadZip";
 
   let tableDiv, table, state;
+  let queName = "";
   actor.start();
 
   function onPick(e) {
@@ -18,7 +20,8 @@
     table?.clearData?.();
   }
   function generate() {
-    actor.send({ type: "GENERATE.QUE_DIF" });
+    // actor.send({ type: "GENERATE.QUE_DIF" });
+    actor.send({ type: "GENERATE.QUE_DIF", name: queName })
   }
 
   function render(ctx) {
@@ -39,6 +42,14 @@
     }
     table.setColumns(columns);
     table.setData(data);
+  }
+  async function downloadZip() {
+    const ctx = actor.getSnapshot().context;
+    if (!ctx.queFile && (!ctx.difFiles || ctx.difFiles.length === 0)) {
+      alert("No files to download yet. Generate QUE + DIF first.");
+      return;
+    }
+    await downloadAsZip(ctx.queFile, ctx.difFiles, "batch-job.zip");
   }
 
   onMount(() => {
@@ -63,16 +74,21 @@
 <!-- {#if state?.matches("parsing") || state?.matches("building")}Parsing…{/if} -->
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}
 <div bind:this={tableDiv}></div>
-{#if state?.matches("ready")}ready
+{#if state?.matches("ready")}
   <div class="row" style="display:flex; gap:.5rem; align-items:center;">
     <label>Queue file name:</label>
     <input
       type="text"
       bind:value={queName}
-      on:input={onNameChange}
-      placeholder="batch.QUE"
+      placeholder="QUE file name"
       style="width: 240px"
     />
-    <button on:click={generate}>Generate QUE + DIFs</button>
+    <button on:click={generate} disabled={!queName.trim()}>Generate QUE + DIFs</button>
   </div>
+{/if}
+{#if state?.matches("download")}
+<button on:click={downloadZip}>
+  Download ZIP (QUE + DIFs)
+</button>
+
 {/if}
