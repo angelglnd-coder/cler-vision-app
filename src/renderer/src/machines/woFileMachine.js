@@ -88,7 +88,7 @@ function safeName(s) {
 function queLine(row, mtnum, ctnum, jobFileName, difFileName) {
   const parts = [
     `JOB=${row.WO_Number}`,
-    `CLDFILE=${row.cldfile ?? (LS19_CODES.has(row.Program_Code)?.toString() ? "LS19" : LS28_CODES.has(row.Program_Code) ? "LS28" : "")}`,
+    `CLDFILE=${row.cldfile ?? (LS19_CODES.has(row.Type_Code)?.toString() ? "LS19" : LS28_CODES.has(row.Type_Code) ? "LS28" : "")}`,
     `J0=${jobFileName}`,
     `DIF=${difFileName}`,
     `MTNUM=${mtnum}`,
@@ -103,7 +103,7 @@ function buildDIF(row, mtnum, ctnum) {
   kv("WO_NUMBER", row.WO_Number);
   kv("CLDFILE", row.cldfile ?? "");
   kv("PATIENT", row.Patient_Name ?? "");
-  kv("PROGRAM_CODE", row.Program_Code ?? "");
+  kv("Type_Code", row.Type_Code ?? "");
   kv("COLOR", row.Color ?? "");
   kv("MTNUM", mtnum);
   kv("CTNUM", ctnum);
@@ -167,12 +167,22 @@ export const woFileMachine = setup({
       queText: () => "",
       difFiles: () => [],
       emitErrors: () => [],
+      queFileName: "",  
     }),
     setEmitResult: assign({
       queText: ({ event }) => event.output.queText,
       difFiles: ({ event }) => event.output.difFiles,
       emitErrors: ({ event }) => event.output.errors ?? [],
+      queFile: ({ event }) => event.output.queFile,
     }),
+    setQueueNameFromEvent: assign({
+    queFileName: ({ context, event }) => {
+      const raw = (event?.name ?? "").trim();
+      if (!raw) return context.queFileName ?? ""; // keep prior
+      const withExt = raw.toUpperCase().endsWith(".QUE") ? raw : `${raw}.QUE`;
+      return withExt;
+    },
+  }),
   },
   actors: {
     // 1) read file → ArrayBuffer (small, keeps concerns clean)
@@ -293,53 +303,42 @@ export const woFileMachine = setup({
     //   console.log("QUE RESULTS =>", { queText, difFiles, errors });
     //   return { queText, difFiles, errors };
     // }),
-    emitQueDif: fromPromise(async ({ input }) => {
-      const { rows } = input; // normalized Excel rows
-      const errors = [];
-      const queLines = [];
-      const difFiles = [];
+    // UPDATE: emitQueDif actor to use name from context and return queFile
+  emitQueDif: fromPromise(async ({ input }) => {
+    const { rows, queFileName } = input; // <— include in input
+    const errors = [];
+    const queLines = [];
+    const difFiles = [];
 
-      const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
-      const EOL = "\r\n"; // change to "\n" if your loader prefers LF
+    const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
+    const EOL = "\r\n";
 
-      rows.forEach((r, idx) => {
-        if (!r?.WO_Number) {
-          errors.push(`Row ${idx + 1}: missing WO_Number — skipped`);
-          return;
-        }
+    rows.forEach((r, idx) => {
+      if (!r?.WO_Number) { errors.push(`Row ${idx + 1}: missing WO_Number — skipped`); return; }
+      const wo = String(r.WO_Number);
+      const difName = `${wo}.DIF`;
 
-        // Names/tokens come EXACTLY from Excel WO_Number
-        const wo = String(r.WO_Number); // e.g., "003-124719-01"
-        const difName = `${wo}.DIF`;
+      const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
+      const ctnum = r.ctnum != null ? Number(r.ctnum) : (idx + 1);
+      const difText = formatDif(r, { mtnum, ctnum });
+      difFiles.push({ name: difName, text: difText });
 
-        // Build DIF file text via schema (LS19/LS28 handled inside)
-        const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
-        const ctnum = r.ctnum != null ? Number(r.ctnum) : idx + 1;
-        const difText = formatDif(r, { mtnum, ctnum });
-        difFiles.push({ name: difName, text: difText });
+      const position = idx + 1;
+      const thickness =
+        (r.Queue_Thickness != null ? Number(r.Queue_Thickness) : undefined) ??
+        (r.CT_width        != null ? Number(r.CT_width)        : undefined) ??
+        (r.CT              != null ? Number(r.CT)              : undefined);
+      if (!Number.isFinite(thickness)) { errors.push(`Row ${idx + 1} (${wo}): missing thickness`); return; }
 
-        // QUE tokens
-        const position = idx + 1; // strictly row order
-        const thickness =
-          (r.Queue_Thickness != null ? Number(r.Queue_Thickness) : undefined) ??
-          (r.CT_width != null ? Number(r.CT_width) : undefined) ??
-          (r.CT != null ? Number(r.CT) : undefined);
+      queLines.push(`${quote(difName)} ${difName} ${position} ${thickness}`);
+    });
 
-        if (!Number.isFinite(thickness)) {
-          errors.push(
-            `Row ${idx + 1} (${wo}): missing thickness (Queue_Thickness / CT_width / CT)`,
-          );
-          return;
-        }
+  const queText = ["queue file", ...queLines].join(EOL) + EOL;
+  console.log(' queFILE result =>', { name: queFileName , text: queText , difFiles, errors })
+  // Return named QUE file object
+  return { queFile: { name: queFileName || "batch.QUE", text: queText }, difFiles, errors };
+}),
 
-        // "<WO.DIF>" WO.DIF position thickness
-        queLines.push(`${quote(difName)} ${difName} ${position} ${thickness}`);
-      });
-
-      const queText = ["queue file", ...queLines].join(EOL) + EOL;
-      console.log("QUE RESULTS =>", { queText, difFiles, errors });
-      return { queText, difFiles, errors };
-    }),
   },
 }).createMachine({
   id: "woFile",
@@ -408,9 +407,9 @@ export const woFileMachine = setup({
     emitting: {
       invoke: {
         src: "emitQueDif",
-        input: ({ context }) => ({ rows: context.data }),
+        input: ({ context }) => ({ rows: context.data,queFileName: context.queFileName }),
         onDone: {
-          target: "ready",
+          target: "download",
           actions: "setEmitResult",
         },
         onError: { target: "error", actions: "setError" },
@@ -420,10 +419,17 @@ export const woFileMachine = setup({
       on: {
         "FILE.SELECT": "reading",
         RESET: { target: "idle", actions: "clearAll" },
-        "GENERATE.QUE_DIF": "emitting",
+        "GENERATE.QUE_DIF": {
+          target:"emitting",
+          actions: "setQueueNameFromEvent",
+        },
       },
     },
-
+    download:{
+      on:{
+        RESET: { target: "idle", actions: "clearAll" },
+      }
+    },
     error: {
       on: {
         "FILE.SELECT": "reading",
