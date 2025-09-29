@@ -20,6 +20,22 @@
     "smui-theme-light": "smui-theme compile build/smui.css -i src/theme",
     "smui-theme-dark": "smui-theme compile build/smui-dark.css -i src/theme/dark"
   },
+  "build": {
+    "appId": "com.clervision.app",
+    "productName": "clerVisionApp",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "signtoolOptions": {
+        "certificateFile": "private/clerVisionApp.pfx",
+        "publisherName": [
+          "clerVisionApp"
+        ],
+        "certificatePassword": ""
+      }
+    }
+  },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
