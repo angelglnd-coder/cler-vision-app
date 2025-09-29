@@ -1,5 +1,6 @@
 export const WO_COLUMNS = [
   "WO_Number",
+  "WO_Line",
   "Customer",
   "Account_ID",
   "Patient_Name",
@@ -10,6 +11,7 @@ export const WO_COLUMNS = [
   "ShipTo_Addr_BillTo",
   // "Order_ID",
   // "Reference_ID",
+  "Side",
   "Eye",
   "Type_Code",
   "cldfile",
