@@ -23,7 +23,11 @@
   "build": {
     "appId": "com.clervision.app",
     "productName": "clerVisionApp",
+    "directories": {
+      "buildResources": "build"
+    },
     "win": {
+      "icon": "build/icon.png",
       "target": [
         "nsis"
       ],
