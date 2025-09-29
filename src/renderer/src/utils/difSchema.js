@@ -26,10 +26,9 @@ function buildLS19(row, { mtnum, ctnum }) {
   data[19] = row.AC3_width ?? 0;
   data[23] = row.AC3_width ?? 0;
   data[47] = row.PC1_width ?? 0;
-  data[49] = row.CT_width ?? 0 ;
-  data[61] = row.CT_width ?? 0 ;
-  data[66] = row.PC1_width ?? 0 ;
-
+  data[49] = row.CT_width ?? 0;
+  data[61] = row.CT_width ?? 0;
+  data[66] = row.PC1_width ?? 0;
 
   // Widths at tail
   data[74] = row.RC1_width ?? 0.6;
@@ -39,6 +38,8 @@ function buildLS19(row, { mtnum, ctnum }) {
   data[78] = row.PC1_width ?? 0.2;
 
   // Constants seen in samples
+  data[6] = 7.2;
+  data[10] = 9.19999999999;
   data[14] = 10.2;
   data[18] = 10.8;
   data[20] = 12;
@@ -50,25 +51,26 @@ function buildLS19(row, { mtnum, ctnum }) {
   data[40] = 7.2;
   data[41] = 0.5;
   data[42] = 7.76623141893172;
-  data[44]= 11.2;
-  data[50]= 1.8;
-  data[52]=270;
-  data[53]=10;
-  data[54]=0.3;
-  data[55]=0.15;
-  data[56]=0.15;
-  data[59]=4.15;
-  data[60]=270;
-  data[64]=4.3;
-  data[65]=270;
-  data[67]=2;
-  data[68]=0.185;
-  data[69]=0.185;
+  data[44] = 11.2;
+  data[43] = 0.1;
+  data[50] = 1.8;
+  data[52] = 270;
+  data[53] = 10;
+  data[54] = 0.3;
+  data[55] = 0.15;
+  data[56] = 0.15;
+  data[59] = 4.15;
+  data[60] = 270;
+  data[62] = 2;
+  data[64] = 4.3;
+  data[65] = 270;
+  data[67] = 2;
+  data[68] = 0.185;
+  data[69] = 0.185;
   data[70] = 0.13;
   data[71] = 0.001;
   data[72] = 1;
   data[73] = 2;
-
 
   const L = [];
   L.push(`DIMC cldfile(9)`);
@@ -169,6 +171,8 @@ function buildLS28(row, { mtnum, ctnum }) {
   data[76] = 4.15;
   data[77] = 270;
   data[78] = 0.25;
+  data[79] = 2;
+  data[81] = 4.3;
   data[82] = 270;
   data[83] = 0.2;
   data[84] = 2;
@@ -177,8 +181,9 @@ function buildLS28(row, { mtnum, ctnum }) {
   data[87] = 0.2;
   data[88] = 0.2;
 
-
   // Widths at the tail
+  data[91] = 1.0;
+  data[92] = 1.0;
   data[94] = row.RC1_width ?? 0.6;
   data[95] = row.AC1_width ?? 1.0;
   data[96] = row.AC2_width ?? 0.5;
@@ -188,8 +193,6 @@ function buildLS28(row, { mtnum, ctnum }) {
   // Tail constants (as in your files)
   data[89] = 0.13;
   data[90] = 0.001;
-  data[91] = 1.0;
-  data[92] = 1.0;
   data[93] = 2.0;
 
   const L = [];
