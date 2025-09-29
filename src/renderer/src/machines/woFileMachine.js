@@ -1,5 +1,6 @@
 import { assign, setup, fromPromise, createActor } from "xstate";
 import { WO_COLUMNS, SHEET_NAME } from "../utils/woColumns.js";
+import { makeWOStem } from "../utils/names.js";
 import { formatDif } from "../utils/difSchema.js";
 import * as XLSX from "xlsx";
 import { notifyProgress } from "../utils/notify.js";
@@ -9,7 +10,6 @@ const NUMERIC_FIELDS = new Set([
   "DIAM",
   "OZ1_OZ2",
   "SAG_HEIGHT",
-  "CT",
   "CT_width",
   "RC1_value",
   "RC1_width",
@@ -250,59 +250,7 @@ export const woFileMachine = setup({
         columns: makeColumns(),
       };
     }),
-    // emitQueDif: fromPromise(async ({ input }) => {
-    //   const { rows } = input;
-    //   const errors = [];
-    //   const queLines = [];
-    //   const difFiles = [];
-
-    //   const safeName = (s) => String(s ?? "").replace(/[<>:"/\\|?*]/g, "_");
-    //   const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
-    //   const EOL = "\n"; // change to "\r\n" if your loader needs Windows line endings
-
-    //   rows.forEach((r, idx) => {
-    //     if (!r?.WO_Number) {
-    //       errors.push(`Row ${idx + 1}: missing WO_Number — skipped`);
-    //       return;
-    //     }
-
-    //     const woRaw = String(r.WO_Number); // keep spaces exactly as in Excel
-    //     const woSafe = safeName(woRaw); // for on-disk filenames only
-
-    //     // Write DIF/J0 to disk with safe names
-    //     const difDiskName = `${woSafe}.DIF`;
-    //     const jobDiskName = `${woSafe}.J0`;
-
-    //     const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
-    //     const ctnum = r.ctnum != null ? Number(r.ctnum) : idx + 1;
-    //     const difText = buildDIF(r, mtnum, ctnum);
-    //     difFiles.push({ name: difDiskName, text: difText });
-
-    //     // QUE tokens
-    //     const position = idx + 1; // strictly row order
-    //     const thickness =
-    //       (r.Queue_Thickness != null ? Number(r.Queue_Thickness) : undefined) ??
-    //       (r.CT_width != null ? Number(r.CT_width) : undefined) ??
-    //       (r.CT != null ? Number(r.CT) : undefined);
-
-    //     if (!Number.isFinite(thickness)) {
-    //       errors.push(
-    //         `Row ${idx + 1} (${woRaw}): missing thickness (Queue_Thickness / CT_width / CT)`,
-    //       );
-    //       return;
-    //     }
-
-    //     // 1) quoted label  2) unquoted filename (raw, with spaces)  3) position  4) thickness
-    //     const labelToken = quote(`${woRaw}.DIF`);
-    //     const fileToken = `${woRaw}.DIF`; // raw, unquoted, NOT sanitized
-
-    //     queLines.push(`${labelToken} ${fileToken} ${position} ${thickness}`);
-    //   });
-
-    //   const queText = ["queue file", ...queLines].join(EOL) + EOL;
-    //   console.log("QUE RESULTS =>", { queText, difFiles, errors });
-    //   return { queText, difFiles, errors };
-    // }),
+    
     // UPDATE: emitQueDif actor to use name from context and return queFile
   emitQueDif: fromPromise(async ({ input }) => {
     const { rows, queFileName } = input; // <— include in input
@@ -315,8 +263,9 @@ export const woFileMachine = setup({
 
     rows.forEach((r, idx) => {
       if (!r?.WO_Number) { errors.push(`Row ${idx + 1}: missing WO_Number — skipped`); return; }
+      const stem = makeWOStem(r.WO_Number, r.WO_Line);
       const wo = String(r.WO_Number);
-      const difName = `${wo}.DIF`;
+      const difName = `${stem}.DIF`;
 
       const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
       const ctnum = r.ctnum != null ? Number(r.ctnum) : (idx + 1);
@@ -330,7 +279,7 @@ export const woFileMachine = setup({
         (r.CT              != null ? Number(r.CT)              : undefined);
       if (!Number.isFinite(thickness)) { errors.push(`Row ${idx + 1} (${wo}): missing thickness`); return; }
 
-      queLines.push(`${quote(difName)} ${difName} ${position} ${thickness}`);
+      queLines.push(`"${difName}" ${difName} ${position} ${thickness}`);
     });
 
   const queText = ["queue file", ...queLines].join(EOL) + EOL;
