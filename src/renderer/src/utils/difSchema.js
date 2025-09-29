@@ -81,7 +81,7 @@ function buildLS19(row, { mtnum, ctnum }) {
   L.push(`tordat(1) = 0`);
   L.push(`tordat(2) = 0`);
   L.push(`tordat(3) = 0`);
-  L.push(`side = 0`);
+  L.push(`side = ${row.Side}`);
   L.push(`mtnum = ${sv(mtnum ?? 18)}`);
   L.push(`ctnum = ${sv(ctnum ?? 1)}`);
   L.push(`curtop = 0`);
@@ -203,7 +203,7 @@ function buildLS28(row, { mtnum, ctnum }) {
   L.push(`tordat(1) = 0`);
   L.push(`tordat(2) = 0`);
   L.push(`tordat(3) = 0`);
-  L.push(`side = 0`);
+  L.push(`side = ${row.Side}`);
   L.push(`mtnum = ${sv(mtnum ?? 18)}`);
   L.push(`ctnum = ${sv(ctnum ?? 1)}`);
   L.push(`curtop = 0`);
