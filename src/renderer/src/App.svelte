@@ -1,17 +1,29 @@
 <script>
-  import Header from './layout/Header.svelte';
-  import Footer from './layout/Footer.svelte';
-  import Body from './layout/Body.svelte';
-  import Container from './layout/Container.svelte';
-  // import 'tabulator-tables/dist/css/tabulator.min.css';
+  import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+  import AppSidebar from "../src/components/AppSidebar.svelte";
 </script>
 
-<main class="flex h-auto flex-col justify-between bg-gray-100 md:h-screen">
+<Sidebar.Provider>
+  <AppSidebar />
+  <main class="min-h-screen">
+    <div class="p-2">
+      <Sidebar.Trigger /> <!-- toggles the sidebar -->
+    </div>
+
+    <section class="p-4">
+      <h1 class="text-2xl font-semibold">Hello Sidebar</h1>
+      <p>Content goes here.</p>
+    </section>
+  </main>
+</Sidebar.Provider>
+
+
+<!-- <main class="flex h-auto flex-col justify-between bg-gray-100 md:h-screen">
   <Header />
   <Container>
-    <!-- <div class="flex flex-col justify-between gap-8 py-8 md:flex-row md:gap-0 md:py-0"> -->
+   
     <Body />
-    <!-- </div> -->
+   
   </Container>
   <Footer />
-</main>
+</main> -->
