@@ -4,6 +4,8 @@
   import "tabulator-tables/dist/css/tabulator.min.css";
   import { onDestroy, onMount } from "svelte";
   import { downloadAsZip } from "../utils/downloadZip";
+  import { Button } from "$lib/components/ui/button";
+
 
   let tableDiv, table, state;
   let queName = "";
@@ -103,6 +105,7 @@
 </style>
 
 {#if state?.matches("idle")}
+<Button class="m-4">Shadcn OK</Button>
   <!-- <input type="file" accept=".xlsx" on:change={onPick} />
   <button on:click={reset}>Reset</button> -->
   <!-- new -->
