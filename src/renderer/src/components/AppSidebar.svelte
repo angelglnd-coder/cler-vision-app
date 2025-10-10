@@ -1,7 +1,10 @@
 <script>
   // JS-friendly import. If you’re TS, you can use lang="ts".
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-  import { Home, Settings, ChevronDown,ListCheckIcon } from "@lucide/svelte";
+  import { Settings, ChevronDown,ListCheckIcon,PackagePlus,Combine} from "@lucide/svelte";
+  import { p } from '../router/router';
+  import { isActiveLink } from "sv-router";
+
 </script>
 
 <Sidebar.Root collapsible="icon" variant="sidebar" >
@@ -23,14 +26,20 @@
       <Sidebar.Menu>
         <Sidebar.MenuItem>
           <Sidebar.MenuButton>
-            <Home class="size-4" />
-            <span>Dashboard</span>
+            <a href={p('/')}
+               use:isActiveLink={{ className: "bg-accent text-accent-foreground" }}
+               class="flex items-center gap-2">
+              <PackagePlus class="size-4" />  <span>Work Orders</span>
+            </a>
           </Sidebar.MenuButton>
         </Sidebar.MenuItem>
         <Sidebar.MenuItem>
           <Sidebar.MenuButton>
-            <ListCheckIcon class="size-4" />
-            <span>Work Orders</span>
+            <a href={p('/queuefiles')}
+               use:isActiveLink={{ className: "bg-accent text-accent-foreground" }}
+               class="flex items-center gap-2">
+              <Combine class="size-4" /> <span>QUE Files</span>
+            </a>
           </Sidebar.MenuButton>
         </Sidebar.MenuItem>
       </Sidebar.Menu>
