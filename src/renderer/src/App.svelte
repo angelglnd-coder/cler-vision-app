@@ -1,6 +1,8 @@
 <script>
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import AppSidebar from "../src/components/AppSidebar.svelte";
+  import { Router } from 'sv-router';
+  import "../src/router/router"
 </script>
 
 <Sidebar.Provider>
@@ -11,8 +13,7 @@
     </div>
 
     <section class="p-4">
-      <h1 class="text-2xl font-semibold">Hello Sidebar</h1>
-      <p>Content goes here.</p>
+      <Router />
     </section>
   </main>
 </Sidebar.Provider>
