@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "cler-vision-app5": "file:../..",
-    "lucide-svelte": "^0.545.0"
-  }
-}
