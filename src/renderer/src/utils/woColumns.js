@@ -46,4 +46,27 @@ export const WO_COLUMNS = [
   "ctnum",
 ];
 
-export const SHEET_NAME = "WorkOrders"; // <— your single tab
+export const WO_COLUMNS_EXCEL = [
+  "Patient Name",	
+  "PO",	
+  "No.",	
+  "OD/OS",
+  "K-Code",
+  "P-Code",
+  "SPEC",
+  "Cyl",	"Diam",	"Color",	"Qty"	,"Laser",	"Design",	"Viet Label",	"Labeling",	"Ship Code",	"Previous S.O#",	"Note"
+]
+// 2) Expected columns (display names for messages)
+export const EXPECTED_REQUIRED = [
+  "Patient Name","PO","No.","OD/OS","K-Code","P-Code","SPEC",
+  "Cyl","Diam","Color","Qty","Laser","Design","Viet Label",
+  "Labeling","Ship Code","Previous S.O#"
+];
+
+export const EXPECTED_OPTIONAL = [
+  "Note" // new optional column
+];
+
+// export const SHEET_NAME = "WorkOrders"; // <— your single tab
+
+export const SHEET_NAME_TAB = "clo"; // <— your single tab
