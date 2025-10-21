@@ -1,1 +1,0 @@
-<h1 class="text-xl font-semibold p-4">Queue Files</h1>
