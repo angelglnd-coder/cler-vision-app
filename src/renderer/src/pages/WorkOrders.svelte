@@ -1,25 +1,24 @@
 <script>
+  import { actor } from "../machines/woExcelLoaderMachine";
+  import { TabulatorFull as Tabulator } from "tabulator-tables";
+  import "tabulator-tables/dist/css/tabulator.min.css";
+  import { onMount } from "svelte";
 
- import { actor } from "../machines/woExcelLoaderMachine";
- import { TabulatorFull as Tabulator } from "tabulator-tables";
- import "tabulator-tables/dist/css/tabulator.min.css";
- import {onMount} from "svelte";
+  let state, tableDiv, table;
+  actor.start();
 
- let state, tableDiv, table;
- actor.start();
-
-function onPick(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  console.log('onPick')
-  actor.send({ type: "FILE.SELECT", file });
-}
-function reset() {
-   actor.send({ type: "RESET" });
-//    table?.clearData?.();
-}
-// todo: move to a WorkOrdersTable component
-function render(ctx) {
+  function onPick(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    console.log("onPick");
+    actor.send({ type: "FILE.SELECT", file });
+  }
+  function reset() {
+    actor.send({ type: "RESET" });
+    //    table?.clearData?.();
+  }
+  // todo: move to a WorkOrdersTable component
+  function render(ctx) {
     const { data, columns } = ctx;
     if (!table) {
       table = new Tabulator(tableDiv, {
@@ -40,16 +39,13 @@ function render(ctx) {
     table.setData(data);
   }
 
-
-
-
-onMount(() => {
+  onMount(() => {
     state = actor.getSnapshot();
     const sub = actor.subscribe((s) => {
       state = s;
       if (s.matches("ready")) render(s.context);
       if (s.matches("error")) table?.clearData?.();
-      console.log('state mch =>', state)
+      console.log("state mch =>", state);
     });
     return () => {
       sub.unsubscribe?.();
@@ -57,6 +53,7 @@ onMount(() => {
     };
   });
 </script>
+
 <style>
   .pretty-btn {
     display: inline-flex;
@@ -94,15 +91,13 @@ onMount(() => {
 </style>
 
 {#if state?.matches("idle")}
-  
   <input id="file-input" type="file" accept=".xlsx" class="sr-only" on:change={onPick} />
   <label for="file-input" class="pretty-btn">Choose .xlsx</label>
-  
+
   <button class="pretty-btn" on:click={reset}>Reset</button>
 {/if}
 <div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div>
 {#if state?.matches("ready")}
-READY
-
+  READY
 {/if}
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}

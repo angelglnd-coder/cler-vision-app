@@ -1,5 +1,10 @@
 import { assign, setup, fromPromise, createActor } from "xstate";
-import { WO_COLUMNS_EXCEL, SHEET_NAME_TAB ,EXPECTED_OPTIONAL,EXPECTED_REQUIRED} from "../utils/woColumns.js";
+import {
+  WO_COLUMNS_EXCEL,
+  SHEET_NAME_TAB,
+  EXPECTED_OPTIONAL,
+  EXPECTED_REQUIRED,
+} from "../utils/woColumns.js";
 import { makeWOStem } from "../utils/names.js";
 import { formatDif } from "../utils/difSchema.js";
 import * as XLSX from "xlsx";
@@ -69,7 +74,7 @@ const CANON_OPTIONAL = EXPECTED_OPTIONAL.map((d) => norm(d));
 
 /** Canonicalize a normalized header via aliases */
 function canonical(n) {
-  return ALIASES.get(n) ?? n;
+  return n;
 }
 
 /** Pick the header row by scanning top N rows for best match */
@@ -114,7 +119,7 @@ function validateHeadersFlexible(foundRaw) {
   });
 
   if (missing.length) msgs.push(`Missing columns (${missing.length}): ${missing.join(", ")}`);
-  if (extra.length)   msgs.push(`Unexpected columns (${extra.length}): ${extra.join(", ")}`);
+  if (extra.length) msgs.push(`Unexpected columns (${extra.length}): ${extra.join(", ")}`);
 
   return { missing, extra, msgs, foundCanon };
 }
@@ -185,8 +190,6 @@ function makeColumns() {
 const LS19_CODES = new Set(["B18", "C18", "F12", "F14", "F18"]);
 const LS28_CODES = new Set(["PK29", "PL27", "PL29", "PM27"]);
 
-
-
 export const woExcelLoaderchine = setup({
   actions: {
     setFileMeta: assign({
@@ -212,7 +215,7 @@ export const woExcelLoaderchine = setup({
       queText: () => "",
       difFiles: () => [],
       emitErrors: () => [],
-      queFileName: "",  
+      queFileName: "",
     }),
     setEmitResult: assign({
       queText: ({ event }) => event.output.queText,
@@ -246,7 +249,7 @@ export const woExcelLoaderchine = setup({
     // 2) parse buffer → workbook + choose sheet
     parseWorkbook: fromPromise(async ({ input }) => {
       const { buf, file } = input;
-      
+
       const wb = await notifyProgress(
         Promise.resolve().then(() => XLSX.read(buf, { type: "array" })),
         "parsing file",
@@ -268,18 +271,20 @@ export const woExcelLoaderchine = setup({
       }
 
       // defval:null keeps columns aligned even when cells are empty
-    //   const raw = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
+      //   const raw = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
       const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
       // find the best header row among the first 5 rows
       const best = detectHeaderRow(aoa, 5);
 
       if (best.idx < 0 || best.score <= 0) {
         return {
-            fileName: file.name,
-            sheetName,
-            sheetNames: wb.SheetNames,
-            errors: [`Could not detect header row. First rows look like: ${JSON.stringify(aoa.slice(0, 3))}`],
-            raw: [],
+          fileName: file.name,
+          sheetName,
+          sheetNames: wb.SheetNames,
+          errors: [
+            `Could not detect header row. First rows look like: ${JSON.stringify(aoa.slice(0, 3))}`,
+          ],
+          raw: [],
         };
       }
       // build rows from that header row
@@ -292,16 +297,16 @@ export const woExcelLoaderchine = setup({
         sheetName,
         sheetNames: wb.SheetNames,
         errors: msgs, // e.g., ["Missing: …", "Unexpected: …"] or []
-        raw: rows,    // objects whose keys are EXACTLY the visible headers in Excel
+        raw: rows, // objects whose keys are EXACTLY the visible headers in Excel
       };
 
-    //   return {
-    //     fileName: file.name,
-    //     sheetName,
-    //     sheetNames: wb.SheetNames,
-    //     errors: validateHeaders(raw[0]),
-    //     raw,
-    //   };
+      //   return {
+      //     fileName: file.name,
+      //     sheetName,
+      //     sheetNames: wb.SheetNames,
+      //     errors: validateHeaders(raw[0]),
+      //     raw,
+      //   };
     }),
     // 3) transform raw rows → normalized data + Tabulator columns
     buildGrid: fromPromise(async ({ input }) => {
@@ -424,7 +429,7 @@ export const woExcelLoaderchine = setup({
     emitting: {
       invoke: {
         src: "emitQueDif",
-        input: ({ context }) => ({ rows: context.data,queFileName: context.queFileName }),
+        input: ({ context }) => ({ rows: context.data, queFileName: context.queFileName }),
         onDone: {
           target: "download",
           actions: "setEmitResult",
@@ -437,15 +442,15 @@ export const woExcelLoaderchine = setup({
         "FILE.SELECT": "reading",
         RESET: { target: "idle", actions: "clearAll" },
         "GENERATE.QUE_DIF": {
-          target:"emitting",
+          target: "emitting",
           actions: "setQueueNameFromEvent",
         },
       },
     },
-    download:{
-      on:{
+    download: {
+      on: {
         RESET: { target: "idle", actions: "clearAll" },
-      }
+      },
     },
     error: {
       on: {
@@ -456,4 +461,4 @@ export const woExcelLoaderchine = setup({
   },
 });
 
-export const actor= createActor(woExcelLoaderchine);
+export const actor = createActor(woExcelLoaderchine);
