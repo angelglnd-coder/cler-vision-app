@@ -1,55 +1,60 @@
 <script>
+  import { actor } from "../machines/woExcelLoaderMachine";
+  import { onMount } from "svelte";
 
- import { actor } from "../machines/woExcelLoaderMachine";
- import { TabulatorFull as Tabulator } from "tabulator-tables";
- import "tabulator-tables/dist/css/tabulator.min.css";
- import {onMount} from "svelte";
+  import { Grid, Willow } from "@svar-ui/svelte-grid";
+  // REQUIRED: grid + theme styles
+  // import "@svar-ui/svelte-grid/styles.css";
+  // import "@svar-ui/svelte-grid/themes/willow.css";
 
- let state, tableDiv, table;
- actor.start();
+  let state;
+  let rows = [];
+  let columns = [];
+  const PIN_LEFT = new Set(["WO_Number", "WO_Line", "Type_Code"]);
 
-function onPick(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  console.log('onPick')
-  actor.send({ type: "FILE.SELECT", file });
-}
-function reset() {
-   actor.send({ type: "RESET" });
-//    table?.clearData?.();
-}
-// todo: move to a WorkOrdersTable component
-function render(ctx) {
-    const { data, columns } = ctx;
-    if (!table) {
-      table = new Tabulator(tableDiv, {
-        data,
-        columns,
-        // layout: "fitDataStretch",
-        layout: "fitData",
-        height: "80vh",
-        pagination: true,
-        // paginationSize: 25,
-        movableColumns: true,
-        clipboard: true,
-        placeholder: "Choose a .xlsx to load WorkOrders",
-      });
-      return;
-    }
-    table.setColumns(columns);
-    table.setData(data);
+  actor.start();
+
+  function onPick(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    actor.send({ type: "FILE.SELECT", file });
+  }
+  function reset() {
+    actor.send({ type: "RESET" });
+    rows = [];
+    //    table?.clearData?.();
+  }
+  // Convert Tabulator-style columns to SVAR format
+  function toSvarColumns(tabCols = []) {
+    return tabCols.map((c) => {
+      const id = c.field || c.title || Math.random().toString(36).slice(2);
+      return {
+        id,
+        header: c.title || c.field || id,
+        width: 150,
+        sortable: true,
+        filter: true,
+        align: c.hozAlign === "right" ? "right" : "left",
+        pinned: PIN_LEFT.has(id) ? "left" : undefined,
+      };
+    });
   }
 
+  function render(ctx) {
+    // console.log("ctx =>", ctx);
+    rows = ctx.data || [];
+    columns = toSvarColumns(ctx.columns || []);
+  }
 
-
-
-onMount(() => {
+  onMount(() => {
     state = actor.getSnapshot();
     const sub = actor.subscribe((s) => {
       state = s;
       if (s.matches("ready")) render(s.context);
-      if (s.matches("error")) table?.clearData?.();
-      console.log('state mch =>', state)
+      if (s.matches("error")) {
+        rows = [];
+      }
+      console.log("state mch =>", state);
     });
     return () => {
       sub.unsubscribe?.();
@@ -57,6 +62,7 @@ onMount(() => {
     };
   });
 </script>
+
 <style>
   .pretty-btn {
     display: inline-flex;
@@ -91,18 +97,27 @@ onMount(() => {
     white-space: nowrap;
     border: 0;
   }
+  .grid-wrap {
+    height: 80vh;
+    /* width: 100%; */
+    min-width: 640px;
+  }
 </style>
 
 {#if state?.matches("idle")}
-  
   <input id="file-input" type="file" accept=".xlsx" class="sr-only" on:change={onPick} />
   <label for="file-input" class="pretty-btn">Choose .xlsx</label>
-  
+
   <button class="pretty-btn" on:click={reset}>Reset</button>
 {/if}
-<div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div>
-{#if state?.matches("ready")}
-READY
+<!-- <div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div> -->
 
+{#if state?.matches("ready")}
+  <Willow>
+    <div class="grid-wrap">
+      <Grid data={rows} {columns} />
+    </div>
+  </Willow>
+  READY
 {/if}
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}
