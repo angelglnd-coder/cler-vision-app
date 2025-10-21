@@ -44,29 +44,7 @@ const norm = (s) =>
 
 // 3) Aliases (all normalized) → canonical normalized header
 // left side are possible normalized variants; right side is canonical normalized
-const ALIASES = new Map([
-  // Previous S.O#
-  ["previousso", "previousso"],          // "Previous SO" (no dot/hash)
-  ["previousso#", "previousso"],         // "Previous SO#"
-  ["previouss.o#", "previousso"],        // "Previous S.O#"
-  ["previouss.o", "previousso"],
-
-  // OD/OS
-  ["od/os", "od/os".replace(/[.\s_/#]+/g, "")], // becomes "odos"
-  ["od os", "odos"],
-
-  // No.
-  ["no", "no"], ["no.", "no"],
-
-  // Viet Label (tolerate hyphen/space)
-  ["vietlabel", "vietlabel"],
-
-  // Ship Code (spaces)
-  ["shipcode", "shipcode"],
-
-  // Patient Name
-  ["patientname", "patientname"],
-]);
+// Aliases (all normalized) → canonical normalized header
 
 // Map display → canonical normalized
 const CANON_REQUIRED = EXPECTED_REQUIRED.map((d) => norm(d));
