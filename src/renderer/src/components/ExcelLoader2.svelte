@@ -105,7 +105,6 @@
 </style>
 
 {#if state?.matches("idle")}
-<Button class="m-4">Shadcn OK</Button>
   <!-- <input type="file" accept=".xlsx" on:change={onPick} />
   <button on:click={reset}>Reset</button> -->
   <!-- new -->
