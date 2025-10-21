@@ -224,13 +224,13 @@ export const woExcelLoaderchine = setup({
       queFile: ({ event }) => event.output.queFile,
     }),
     setQueueNameFromEvent: assign({
-    queFileName: ({ context, event }) => {
-      const raw = (event?.name ?? "").trim();
-      if (!raw) return context.queFileName ?? ""; // keep prior
-      const withExt = raw.toUpperCase().endsWith(".QUE") ? raw : `${raw}.QUE`;
-      return withExt;
-    },
-  }),
+      queFileName: ({ context, event }) => {
+        const raw = (event?.name ?? "").trim();
+        if (!raw) return context.queFileName ?? ""; // keep prior
+        const withExt = raw.toUpperCase().endsWith(".QUE") ? raw : `${raw}.QUE`;
+        return withExt;
+      },
+    }),
   },
   actors: {
     // 1) read file → ArrayBuffer (small, keeps concerns clean)
@@ -323,44 +323,49 @@ export const woExcelLoaderchine = setup({
         columns: makeColumns(),
       };
     }),
-    
+
     // UPDATE: emitQueDif actor to use name from context and return queFile
     emitQueDif: fromPromise(async ({ input }) => {
-    const { rows, queFileName } = input; // <— include in input
-    const errors = [];
-    const queLines = [];
-    const difFiles = [];
+      const { rows, queFileName } = input; // <— include in input
+      const errors = [];
+      const queLines = [];
+      const difFiles = [];
 
-    const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
-    const EOL = "\r\n";
+      const quote = (s) => `"${String(s).replace(/"/g, '""')}"`;
+      const EOL = "\r\n";
 
-    rows.forEach((r, idx) => {
-      if (!r?.WO_Number) { errors.push(`Row ${idx + 1}: missing WO_Number — skipped`); return; }
-      const stem = makeWOStem(r.WO_Number, r.WO_Line);
-      const wo = String(r.WO_Number);
-      const difName = `${stem}.DIF`;
+      rows.forEach((r, idx) => {
+        if (!r?.WO_Number) {
+          errors.push(`Row ${idx + 1}: missing WO_Number — skipped`);
+          return;
+        }
+        const stem = makeWOStem(r.WO_Number, r.WO_Line);
+        const wo = String(r.WO_Number);
+        const difName = `${stem}.DIF`;
 
-      const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
-      const ctnum = r.ctnum != null ? Number(r.ctnum) : (idx + 1);
-      const difText = formatDif(r, { mtnum, ctnum });
-      difFiles.push({ name: difName, text: difText });
+        const mtnum = r.mtnum != null ? Number(r.mtnum) : undefined;
+        const ctnum = r.ctnum != null ? Number(r.ctnum) : idx + 1;
+        const difText = formatDif(r, { mtnum, ctnum });
+        difFiles.push({ name: difName, text: difText });
 
-      const position = idx + 1;
-      const thickness =
-        (r.Queue_Thickness != null ? Number(r.Queue_Thickness) : undefined) ??
-        (r.CT_width        != null ? Number(r.CT_width)        : undefined) ??
-        (r.CT              != null ? Number(r.CT)              : undefined);
-      if (!Number.isFinite(thickness)) { errors.push(`Row ${idx + 1} (${wo}): missing thickness`); return; }
+        const position = idx + 1;
+        const thickness =
+          (r.Queue_Thickness != null ? Number(r.Queue_Thickness) : undefined) ??
+          (r.CT_width != null ? Number(r.CT_width) : undefined) ??
+          (r.CT != null ? Number(r.CT) : undefined);
+        if (!Number.isFinite(thickness)) {
+          errors.push(`Row ${idx + 1} (${wo}): missing thickness`);
+          return;
+        }
 
-      queLines.push(`"${difName}" ${difName} ${position} ${thickness}`);
-    });
+        queLines.push(`"${difName}" ${difName} ${position} ${thickness}`);
+      });
 
-  const queText = ["queue file", ...queLines].join(EOL) + EOL;
-  console.log(' queFILE result =>', { name: queFileName , text: queText , difFiles, errors })
-  // Return named QUE file object
-  return { queFile: { name: queFileName || "batch.QUE", text: queText }, difFiles, errors };
-}),
-
+      const queText = ["queue file", ...queLines].join(EOL) + EOL;
+      console.log(" queFILE result =>", { name: queFileName, text: queText, difFiles, errors });
+      // Return named QUE file object
+      return { queFile: { name: queFileName || "batch.QUE", text: queText }, difFiles, errors };
+    }),
   },
 }).createMachine({
   id: "woFile",

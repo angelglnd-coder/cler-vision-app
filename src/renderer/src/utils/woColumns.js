@@ -47,24 +47,75 @@ export const WO_COLUMNS = [
 ];
 
 export const WO_COLUMNS_EXCEL = [
-  "Patient Name",	
-  "PO",	
-  "No.",	
+  "Patient Name",
+  "PO",
+  "No.",
   "OD/OS",
   "K-Code",
   "P-Code",
   "SPEC",
-  "Cyl",	"Diam",	"Color",	"Qty"	,"Laser",	"Design",	"Viet Label",	"Labeling",	"Ship Code",	"Previous S.O#",	"Note"
-]
+  "Cyl",
+  "Diam",
+  "Color",
+  "Qty",
+  "Laser",
+  "Design",
+  "Viet Label",
+  "Labeling",
+  "Ship Code",
+  "Previous S.O#",
+  "Note",
+  "Device",
+  "Mfg",
+  "Mat_Code",
+  "Mat_Lot",
+  "GTIN",
+  "Bill_To",
+  "Ship_To",
+  "Type",
+  "Cyl_p",
+  "PC1_Radius",
+  "PC2_Radius",
+  "Edge_Thick",
+  "Center_Thick",
+];
 // 2) Expected columns (display names for messages)
 export const EXPECTED_REQUIRED = [
-  "Patient Name","PO","No.","OD/OS","K-Code","P-Code","SPEC",
-  "Cyl","Diam","Color","Qty","Laser","Design","Viet Label",
-  "Labeling","Ship Code","Previous S.O#"
+  "Patient Name",
+  "PO",
+  "No.",
+  "OD/OS",
+  "K-Code",
+  "P-Code",
+  "SPEC",
+  "Cyl",
+  "Diam",
+  "Color",
+  "Qty",
+  "Laser",
+  "Design",
+  "Viet Label",
+  "Labeling",
+  "Ship Code",
+  "Previous S.O#",
+  // previously added required
+  "Mat_Lot",
+  "Bill_To",
+  "Ship_To",
+  "Device",
+  "Mfg",
+  "Mat_Code",
+  "GTIN",
+  "Type",
+  "Cyl_p",
+  "PC1_Radius",
+  "PC2_Radius",
+  "Edge_Thick",
+  "Center_Thick",
 ];
 
 export const EXPECTED_OPTIONAL = [
-  "Note" // new optional column
+  "Note", // new optional column
 ];
 
 // export const SHEET_NAME = "WorkOrders"; // <— your single tab
