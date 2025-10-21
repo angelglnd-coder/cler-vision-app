@@ -70,77 +70,77 @@ function makeColumns() {
 const LS19_CODES = new Set(["B18", "C18", "F12", "F14", "F18"]);
 const LS28_CODES = new Set(["PK29", "PL27", "PL29", "PM27"]);
 
-function inferMaterialNumber(row) {
-  // Prefer explicit mtnum if provided in Excel
-  if (row.mtnum != null) return Number(row.mtnum);
-  const color = String(row.Color || "").toLowerCase();
-  if (color.includes("red")) return 1;
-  if (color.includes("gray") || color.includes("grey")) return 2;
-  return 1; // default
-}
-function inferCutNumber(row, idx) {
-  if (row.ctnum != null) return Number(row.ctnum);
-  return idx + 1; // simple sequence
-}
-function safeName(s) {
-  return String(s ?? "").replace(/[<>:"/\\|?*]/g, "_");
-}
-function queLine(row, mtnum, ctnum, jobFileName, difFileName) {
-  const parts = [
-    `JOB=${row.WO_Number}`,
-    `CLDFILE=${row.cldfile ?? (LS19_CODES.has(row.Type_Code)?.toString() ? "LS19" : LS28_CODES.has(row.Type_Code) ? "LS28" : "")}`,
-    `J0=${jobFileName}`,
-    `DIF=${difFileName}`,
-    `MTNUM=${mtnum}`,
-    `CTNUM=${ctnum}`,
-  ];
-  return parts.join("|");
-}
-function buildDIF(row, mtnum, ctnum) {
-  const L = [];
-  const kv = (k, v) => L.push(`${k}=${v ?? ""}`);
+// function inferMaterialNumber(row) {
+//   // Prefer explicit mtnum if provided in Excel
+//   if (row.mtnum != null) return Number(row.mtnum);
+//   const color = String(row.Color || "").toLowerCase();
+//   if (color.includes("red")) return 1;
+//   if (color.includes("gray") || color.includes("grey")) return 2;
+//   return 1; // default
+// }
+// function inferCutNumber(row, idx) {
+//   if (row.ctnum != null) return Number(row.ctnum);
+//   return idx + 1; // simple sequence
+// }
+// function safeName(s) {
+//   return String(s ?? "").replace(/[<>:"/\\|?*]/g, "_");
+// }
+// function queLine(row, mtnum, ctnum, jobFileName, difFileName) {
+//   const parts = [
+//     `JOB=${row.WO_Number}`,
+//     `CLDFILE=${row.cldfile ?? (LS19_CODES.has(row.Type_Code)?.toString() ? "LS19" : LS28_CODES.has(row.Type_Code) ? "LS28" : "")}`,
+//     `J0=${jobFileName}`,
+//     `DIF=${difFileName}`,
+//     `MTNUM=${mtnum}`,
+//     `CTNUM=${ctnum}`,
+//   ];
+//   return parts.join("|");
+// }
+// function buildDIF(row, mtnum, ctnum) {
+//   const L = [];
+//   const kv = (k, v) => L.push(`${k}=${v ?? ""}`);
 
-  kv("WO_NUMBER", row.WO_Number);
-  kv("CLDFILE", row.cldfile ?? "");
-  kv("PATIENT", row.Patient_Name ?? "");
-  kv("Type_Code", row.Type_Code ?? "");
-  kv("COLOR", row.Color ?? "");
-  kv("MTNUM", mtnum);
-  kv("CTNUM", ctnum);
+//   kv("WO_NUMBER", row.WO_Number);
+//   kv("CLDFILE", row.cldfile ?? "");
+//   kv("PATIENT", row.Patient_Name ?? "");
+//   kv("Type_Code", row.Type_Code ?? "");
+//   kv("COLOR", row.Color ?? "");
+//   kv("MTNUM", mtnum);
+//   kv("CTNUM", ctnum);
 
-  // Common optics
-  kv("DIAM", row.DIAM);
-  kv("PW1", row.PW1_PW2);
+//   // Common optics
+//   kv("DIAM", row.DIAM);
+//   kv("PW1", row.PW1_PW2);
 
-  kv("RC1", row.RC1_value);
-  kv("RC1_WIDTH", row.RC1_width);
-  kv("RC1_CYL", row.RC1_cyl);
+//   kv("RC1", row.RC1_value);
+//   kv("RC1_WIDTH", row.RC1_width);
+//   kv("RC1_CYL", row.RC1_cyl);
 
-  kv("AC1", row.AC1_value);
-  kv("AC1_WIDTH", row.AC1_width);
-  kv("AC1_CYL", row.AC1_cyl);
-  kv("AC2", row.AC2_value);
-  kv("AC2_WIDTH", row.AC2_width);
-  kv("AC2_CYL", row.AC2_cyl);
-  kv("AC3", row.AC3_value);
-  kv("AC3_WIDTH", row.AC3_width);
-  kv("AC3_CYL", row.AC3_cyl);
+//   kv("AC1", row.AC1_value);
+//   kv("AC1_WIDTH", row.AC1_width);
+//   kv("AC1_CYL", row.AC1_cyl);
+//   kv("AC2", row.AC2_value);
+//   kv("AC2_WIDTH", row.AC2_width);
+//   kv("AC2_CYL", row.AC2_cyl);
+//   kv("AC3", row.AC3_value);
+//   kv("AC3_WIDTH", row.AC3_width);
+//   kv("AC3_CYL", row.AC3_cyl);
 
-  kv("PC1", row.PC1_value);
-  kv("PC1_WIDTH", row.PC1_width);
+//   kv("PC1", row.PC1_value);
+//   kv("PC1_WIDTH", row.PC1_width);
 
-  kv("CT", row.CT);
-  kv("CT_WIDTH", row.CT_width);
+//   kv("CT", row.CT);
+//   kv("CT_WIDTH", row.CT_width);
 
-  // Optional extras
-  kv("OZ1", row.OZ1_OZ2);
-  kv("AXIS", row.AXIS);
-  kv("ADD", row.ADD);
-  kv("CYLINDER_NOTE", row.Cylinder_Note);
-  kv("INSPECTION_NOTE", row.Inspection_Note);
+//   // Optional extras
+//   kv("OZ1", row.OZ1_OZ2);
+//   kv("AXIS", row.AXIS);
+//   kv("ADD", row.ADD);
+//   kv("CYLINDER_NOTE", row.Cylinder_Note);
+//   kv("INSPECTION_NOTE", row.Inspection_Note);
 
-  return L.join("\n") + "\n";
-}
+//   return L.join("\n") + "\n";
+// }
 
 export const woFileMachine = setup({
   actions: {
