@@ -22,7 +22,9 @@
   function reset() {
     actor.send({ type: "RESET" });
     rows = [];
-    //    table?.clearData?.();
+  }
+  function calculate() {
+    actor.send({ type: "APPLY.FORMULAS" });
   }
   // Convert Tabulator-style columns to SVAR format
   function toSvarColumns(tabCols = []) {
@@ -113,11 +115,11 @@
 <!-- <div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div> -->
 
 {#if state?.matches("ready")}
+  <button class="pretty-btn" on:click={calculate}>CALCULATE</button>
   <Willow>
     <div class="grid-wrap">
       <Grid data={rows} {columns} />
     </div>
   </Willow>
-  READY
 {/if}
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}

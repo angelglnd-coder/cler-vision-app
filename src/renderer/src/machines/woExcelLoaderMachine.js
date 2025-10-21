@@ -328,6 +328,10 @@ export const woExcelLoaderchine = setup({
       // Return named QUE file object
       return { queFile: { name: queFileName || "batch.QUE", text: queText }, difFiles, errors };
     }),
+    calculate: fromPromise(async ({ input }) => {
+      console.log("calculate : INPUT =>", input);
+      return true;
+    }),
   },
 }).createMachine({
   id: "woFile",
@@ -404,13 +408,23 @@ export const woExcelLoaderchine = setup({
         onError: { target: "error", actions: "setError" },
       },
     },
+    applyingFormulas: {
+      invoke: {
+        src: "calculate",
+        input: ({ context }) => ({ rows: context.data }),
+        onDone: {
+          target: "readyCalculations",
+        },
+        onError: { target: "error", actions: "setError" },
+      },
+    },
     ready: {
       on: {
         "FILE.SELECT": "reading",
         RESET: { target: "idle", actions: "clearAll" },
-        "GENERATE.QUE_DIF": {
-          target: "emitting",
-          actions: "setQueueNameFromEvent",
+        "APPLY.FORMULAS": {
+          target: "applyingFormulas",
+          // actions: "setQueueNameFromEvent",
         },
       },
     },
@@ -419,6 +433,7 @@ export const woExcelLoaderchine = setup({
         RESET: { target: "idle", actions: "clearAll" },
       },
     },
+    readyCalculations: {},
     error: {
       on: {
         "FILE.SELECT": "reading",
