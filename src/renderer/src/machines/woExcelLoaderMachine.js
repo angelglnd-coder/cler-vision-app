@@ -120,15 +120,7 @@ function buildRowsFromAoA(aoa, headerRowIdx) {
   }
   return { headers, rows };
 }
-function validateHeaders(row0) {
-  const found = Object.keys(row0 ?? {});
-  const missing = WO_COLUMNS_EXCEL.filter((c) => !found.includes(c));
-  const extra = found.filter((c) => !WO_COLUMNS_EXCEL.includes(c));
-  const msgs = [];
-  if (missing.length) msgs.push(`Missing: ${missing.join(", ")}`);
-  if (extra.length) msgs.push(`Unexpected: ${extra.join(", ")}`);
-  return msgs;
-}
+
 function normalizeRows(rows) {
   return rows.map((r) => {
     const o = {};
@@ -277,14 +269,6 @@ export const woExcelLoaderchine = setup({
         errors: msgs, // e.g., ["Missing: …", "Unexpected: …"] or []
         raw: rows, // objects whose keys are EXACTLY the visible headers in Excel
       };
-
-      //   return {
-      //     fileName: file.name,
-      //     sheetName,
-      //     sheetNames: wb.SheetNames,
-      //     errors: validateHeaders(raw[0]),
-      //     raw,
-      //   };
     }),
     // 3) transform raw rows → normalized data + Tabulator columns
     buildGrid: fromPromise(async ({ input }) => {
