@@ -114,7 +114,7 @@
 {/if}
 <!-- <div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div> -->
 
-{#if state?.matches("ready")}
+{#if state?.matches("ready") || state?.matches("applyingFormulas") || state?.matches("readyCalculations")}
   <button class="pretty-btn" on:click={calculate}>CALCULATE</button>
   <Willow>
     <div class="grid-wrap">

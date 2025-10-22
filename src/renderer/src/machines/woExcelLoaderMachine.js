@@ -343,7 +343,7 @@ export const woExcelLoaderchine = setup({
     }),
     calculate: fromPromise(async ({ input }) => {
       const { rows } = input;
-      const one = lensCalc.computeFirst(rows, { eValue: 0.55 });
+      const one = lensCalc.computeFirst(rows);
       console.log("calculate : lensCalc =>", one);
       return true;
     }),
