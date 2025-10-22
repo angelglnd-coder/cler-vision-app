@@ -202,6 +202,18 @@ export const woExcelLoaderchine = setup({
         return withExt;
       },
     }),
+    setCalculated: assign({
+    data: ({ event }) => event.output.rows,          // flattened rows
+    columns: ({ context, event }) => {
+      const base = context.columns ?? [];
+      const extra = makeCalcColumns();
+      // Avoid duplicating if user hits CALCULATE again
+      const have = new Set(base.map(c => c.field));
+      const merged = [...base];
+      for (const col of extra) if (!have.has(col.field)) merged.push(col);
+      return merged;
+    },
+
   },
   actors: {
     // 1) read file → ArrayBuffer (small, keeps concerns clean)
