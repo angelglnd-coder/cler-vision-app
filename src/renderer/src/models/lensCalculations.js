@@ -3,7 +3,7 @@
 
 /* --------- static JSON imports (Vite/SvelteKit OK) --------- */
 import typeLookup from "./lookups/typeChart.lookup.json";
-import refLookup  from "./lookups/ref1.lookup.json";
+import refLookup from "./lookups/ref1.lookup.json";
 import ref2Lookup from "./lookups/ref2.lookup.json";
 
 /* ----------------- helpers ----------------- */
@@ -21,20 +21,31 @@ export const toNum = (v) => {
 
 /* --------------- toricity map --------------- */
 const TORICITY_CODE = {
-  pj:{value:0.75,offset:0.0},  tor:{value:1.25,offset:0.0},
-  x:{value:1.75,offset:0.5},   s:{value:0.00,offset:0.0},
-  p:{value:1.00,offset:0.0},   t:{value:1.50,offset:0.0},
-  ti:{value:1.75,offset:0.0},  to:{value:2.00,offset:0.0},
-  ty:{value:2.25,offset:0.0},  sx:{value:2.50,offset:0.0},
-  xs:{value:2.75,offset:0.0},  xx:{value:3.00,offset:0.0},
-  x1:{value:3.25,offset:0.0},  x2:{value:3.50,offset:0.0},
-  x3:{value:3.75,offset:0.0},  x4:{value:4.00,offset:0.0}
+  pj: { value: 0.75, offset: 0.0 },
+  tor: { value: 1.25, offset: 0.0 },
+  x: { value: 1.75, offset: 0.5 },
+  s: { value: 0.0, offset: 0.0 },
+  p: { value: 1.0, offset: 0.0 },
+  t: { value: 1.5, offset: 0.0 },
+  ti: { value: 1.75, offset: 0.0 },
+  to: { value: 2.0, offset: 0.0 },
+  ty: { value: 2.25, offset: 0.0 },
+  sx: { value: 2.5, offset: 0.0 },
+  xs: { value: 2.75, offset: 0.0 },
+  xx: { value: 3.0, offset: 0.0 },
+  x1: { value: 3.25, offset: 0.0 },
+  x2: { value: 3.5, offset: 0.0 },
+  x3: { value: 3.75, offset: 0.0 },
+  x4: { value: 4.0, offset: 0.0 },
 };
 
 /* -------- pickers / lookups (REF1/REF2) -------- */
 function pickFields(ref1Rec) {
   if (!ref1Rec) return { JESSEN: null, OZ: null, FX: null };
-  const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const norm = (s) =>
+    String(s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
   const want = { JESSEN: ["jessen"], OZ: ["oz", "o.z"], FX: ["fx"] };
   const index = {};
   Object.keys(ref1Rec).forEach((k) => (index[norm(k)] = k));
@@ -43,7 +54,10 @@ function pickFields(ref1Rec) {
     let v = null;
     for (const alias of want[lbl]) {
       const actual = index[norm(alias)];
-      if (actual && actual in ref1Rec) { v = ref1Rec[actual]; break; }
+      if (actual && actual in ref1Rec) {
+        v = ref1Rec[actual];
+        break;
+      }
     }
     if (v == null) {
       const actual = index[norm(lbl)];
@@ -54,11 +68,13 @@ function pickFields(ref1Rec) {
   return out;
 }
 const getRef2ByDiamOz = (ref2, diam, oz) =>
-  ref2 ? ref2?.[toKey(diam)]?.[toKey(oz)] ?? null : null;
+  ref2 ? (ref2?.[toKey(diam)]?.[toKey(oz)] ?? null) : null;
 
 /* ---------------- formulas ---------------- */
 function computeBC1BC2(K, P, JESSEN) {
-  const k = toNum(K), p = toNum(P), j = toNum(JESSEN);
+  const k = toNum(K),
+    p = toNum(P),
+    j = toNum(JESSEN);
   if (k == null || p == null || j == null) return null;
   const denom = k - j + p;
   return Math.abs(denom) < 1e-12 ? null : 337.5 / denom;
@@ -68,10 +84,16 @@ const computeOZ1OZ2 = (OZ) => toNum(OZ);
 
 // RC1_radius = 337.5 / ( K - P*FX + JESSEN - TORICITY_offset )
 function computeRC1Radius(K, P, FX, JESSEN, TORICITY_offset = 0) {
-  const k = toNum(K), p = toNum(P), fx = toNum(FX), j = toNum(JESSEN), t = toNum(TORICITY_offset) ?? 0;
-  if (k == null || p == null || fx == null || j == null) return { value: null, _why: "missing input" };
+  const k = toNum(K),
+    p = toNum(P),
+    fx = toNum(FX),
+    j = toNum(JESSEN),
+    t = toNum(TORICITY_offset) ?? 0;
+  if (k == null || p == null || fx == null || j == null)
+    return { value: null, _why: "missing input" };
   const denom = k - p * fx + j - t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return { value: null, _why: "division by zero" };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
+    return { value: null, _why: "division by zero" };
   return { value: 337.5 / denom };
 }
 
@@ -81,7 +103,8 @@ function computeRC1Tor(RC1_radius, TORICITY_value) {
   const t = toNum(TORICITY_value);
   if (r == null || t == null) return { value: null, _why: "missing RC1_radius or TORICITY_value" };
   const denom = 337.5 / r + t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return { value: null, _why: "division by zero" };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
+    return { value: null, _why: "division by zero" };
   return { value: 337.5 / denom };
 }
 
@@ -91,7 +114,8 @@ function computeAC1Radius(K, TORICITY_offset = 0) {
   const t = toNum(TORICITY_offset) ?? 0;
   if (k == null) return { value: null, _why: "missing K" };
   const denom = k + 0.12 + t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return { value: null, _why: "division by zero" };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
+    return { value: null, _why: "division by zero" };
   return { value: 337.5 / denom };
 }
 
@@ -102,42 +126,44 @@ function computeAC1Tor(K, TORICITY_value, TORICITY_offset = 0) {
   const t = toNum(TORICITY_offset) ?? 0;
   if (k == null || v == null) return { value: null, _why: "missing K or TORICITY_value" };
   const denom = k + 0.12 + v + t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return { value: null, _why: "division by zero" };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
+    return { value: null, _why: "division by zero" };
   return { value: 337.5 / denom };
 }
 
 // AC2 offsets added on top of AC1
 function computeAC2RadiusTor(AC1_radius, eValue) {
-  const r1 = toNum(AC1_radius), e = toNum(eValue);
+  const r1 = toNum(AC1_radius),
+    e = toNum(eValue);
   if (r1 == null || e == null) return { radius: null, _why: "missing AC1_radius or eValue" };
 
   let add = null;
-  if (e <= 0.30) add = 0.12;
+  if (e <= 0.3) add = 0.12;
   else if (e <= 0.35) add = 0.13;
-  else if (e <= 0.40) add = 0.16;
+  else if (e <= 0.4) add = 0.16;
   else if (e <= 0.425) add = 0.17;
   else if (e <= 0.45) add = 0.18;
-  else if (e <= 0.50) add = 0.22;
+  else if (e <= 0.5) add = 0.22;
   else if (e <= 0.55) add = 0.23;
-  else if (e <= 0.60) add = 0.29;
-  else if (e <= 0.65) add = 0.30;
-  else if (e <= 0.70) add = 0.36;
+  else if (e <= 0.6) add = 0.29;
+  else if (e <= 0.65) add = 0.3;
+  else if (e <= 0.7) add = 0.36;
   else if (e <= 0.75) add = 0.38;
-  else if (e <= 0.80) add = 0.46;
+  else if (e <= 0.8) add = 0.46;
   else if (e <= 0.85) add = 0.48;
-  else if (e <= 0.90) add = 0.50;
+  else if (e <= 0.9) add = 0.5;
   else if (e <= 0.95) add = 0.52;
-  else if (e <= 1.00) add = 0.54;
+  else if (e <= 1.0) add = 0.54;
   else if (e <= 1.05) add = 0.56;
-  else if (e <= 1.10) add = 0.58;
-  else if (e <= 1.15) add = 0.60;
-  else if (e <= 1.20) add = 0.62;
+  else if (e <= 1.1) add = 0.58;
+  else if (e <= 1.15) add = 0.6;
+  else if (e <= 1.2) add = 0.62;
   else if (e <= 1.25) add = 0.64;
-  else if (e <= 1.30) add = 0.66;
+  else if (e <= 1.3) add = 0.66;
   else if (e <= 1.35) add = 0.68;
-  else if (e <= 1.40) add = 0.70;
+  else if (e <= 1.4) add = 0.7;
   else if (e <= 1.45) add = 0.72;
-  else if (e <= 1.50) add = 0.74;
+  else if (e <= 1.5) add = 0.74;
   else if (e <= 1.55) add = 0.76;
   else return { radius: null, _why: "eValue out of range (0.30–1.55)" };
 
@@ -145,23 +171,25 @@ function computeAC2RadiusTor(AC1_radius, eValue) {
 }
 
 function computeAC3RadiusTor(AC1_radius, eValue) {
-  const r1 = toNum(AC1_radius), e = toNum(eValue);
-  if (r1 == null || e == null) return { radius: null, tor: null, _why: "missing AC1_radius or eValue" };
+  const r1 = toNum(AC1_radius),
+    e = toNum(eValue);
+  if (r1 == null || e == null)
+    return { radius: null, tor: null, _why: "missing AC1_radius or eValue" };
 
   let add = null;
-  if (e <= 0.30) add = 1.59;
+  if (e <= 0.3) add = 1.59;
   else if (e <= 0.35) add = 1.64;
-  else if (e <= 0.40) add = 1.66;
+  else if (e <= 0.4) add = 1.66;
   else if (e <= 0.425) add = 1.67;
   else if (e <= 0.45) add = 1.68;
-  else if (e <= 0.50) add = 1.69;
+  else if (e <= 0.5) add = 1.69;
   else if (e <= 0.55) add = 1.72;
-  else if (e <= 0.60) add = 1.75;
+  else if (e <= 0.6) add = 1.75;
   else if (e <= 0.65) add = 1.75;
-  else if (e <= 0.70) add = 1.79;
-  else if (e <= 0.75) add = 1.80;
-  else if (e <= 0.80) add = 1.85;
-  else if (e <= 0.85) add = 1.90;
+  else if (e <= 0.7) add = 1.79;
+  else if (e <= 0.75) add = 1.8;
+  else if (e <= 0.8) add = 1.85;
+  else if (e <= 0.85) add = 1.9;
   else return { radius: null, tor: null, _why: "eValue out of range (0.30–0.85)" };
 
   return { radius: r1 + add, tor: r1 + add };
@@ -174,7 +202,13 @@ function computeWidths(ref2Values) {
   const ac1_width = ref2Values?.["AC1 W"] ?? null;
   const ac2_width = ref2Values?.["AC2 W"] ?? null;
   const ac3_width = ref2Values?.["AC3 W"] ?? null;
-  return { RC1_width: rc1_width, AC1_width: ac1_width, AC2_width: ac2_width, AC3_width: ac3_width, PC_width: pc_width };
+  return {
+    RC1_width: rc1_width,
+    AC1_width: ac1_width,
+    AC2_width: ac2_width,
+    AC3_width: ac3_width,
+    PC_width: pc_width,
+  };
 }
 
 /* ---------------- factory ---------------- */
@@ -245,7 +279,7 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
     const toricity = resolveToricity({ toricity_code, toricity_value, toricity_offset });
 
     const e = toNum(eValue);
-    if (e == null || e < 0.30 || e > 1.55) {
+    if (e == null || e < 0.3 || e > 1.55) {
       return { _error: `Invalid eValue=${eValue}. Expected 0.30–1.55.` };
     }
 
@@ -255,10 +289,10 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
     const OZ1_OZ2 = computeOZ1OZ2(flds.OZ);
 
     const rc1Radius = computeRC1Radius(kEff, pEff, flds.FX, flds.JESSEN, toricity.offset);
-    const rc1Tor    = computeRC1Tor(rc1Radius.value, toricity.value);
+    const rc1Tor = computeRC1Tor(rc1Radius.value, toricity.value);
 
     const ac1Radius = computeAC1Radius(kEff, toricity.offset);
-    const ac1Tor    = computeAC1Tor(kEff, toricity.value, toricity.offset);
+    const ac1Tor = computeAC1Tor(kEff, toricity.value, toricity.offset);
 
     const AC2 = computeAC2RadiusTor(ac1Radius.value, e);
     const AC3 = computeAC3RadiusTor(ac1Radius.value, e);
@@ -272,11 +306,17 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
       _ref1: { JESSEN: flds.JESSEN, OZ: flds.OZ, FX: flds.FX },
       _ref2: ref2Vals,
 
-      BC1_BC2, PW1_PW2, OZ1_OZ2,
-      RC1_radius: rc1Radius, RC1_tor: rc1Tor,
-      AC1_radius: ac1Radius, AC1_tor: ac1Tor,
-      AC2_radius: AC2.radius, AC2_tor: AC2.tor,
-      AC3_radius: AC3.radius, AC3_tor: AC3.tor,
+      BC1_BC2,
+      PW1_PW2,
+      OZ1_OZ2,
+      RC1_radius: rc1Radius,
+      RC1_tor: rc1Tor,
+      AC1_radius: ac1Radius,
+      AC1_tor: ac1Tor,
+      AC2_radius: AC2.radius,
+      AC2_tor: AC2.tor,
+      AC3_radius: AC3.radius,
+      AC3_tor: AC3.tor,
 
       ...widths,
       PC_radius,
@@ -301,6 +341,6 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
 export const lensCalc = createLensCalculator({
   typeLookup,
   refLookup,
-  ref2Lookup,              // keep or set to null if you don’t use REF2
+  ref2Lookup, // keep or set to null if you don’t use REF2
   defaults: { PC_radius: 12, LensPower: 1 },
 });
