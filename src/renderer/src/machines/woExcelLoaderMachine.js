@@ -9,6 +9,7 @@ import { makeWOStem } from "../utils/names.js";
 import { formatDif } from "../utils/difSchema.js";
 import * as XLSX from "xlsx";
 import { notifyProgress } from "../utils/notify.js";
+import { lensCalc } from "../models/lensCalculations.js";
 
 const NUMERIC_FIELDS = new Set([
   "PW1_PW2",
@@ -329,7 +330,9 @@ export const woExcelLoaderchine = setup({
       return { queFile: { name: queFileName || "batch.QUE", text: queText }, difFiles, errors };
     }),
     calculate: fromPromise(async ({ input }) => {
-      console.log("calculate : INPUT =>", input);
+      const {rows} = input;
+      const one = lensCalc.computeFirst(rows, { eValue: 0.55 });
+      console.log("calculate : lensCalc =>", one);
       return true;
     }),
   },
