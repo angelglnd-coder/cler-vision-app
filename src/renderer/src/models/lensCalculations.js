@@ -18,6 +18,9 @@ export const toNum = (v) => {
   const n = Number(String(v).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 };
+// unified output helper
+const ok = (value) => ({ value });
+const err = (_error) => ({ value: null, _error });
 
 /* --------------- toricity map --------------- */
 const TORICITY_CODE = {
@@ -75,12 +78,19 @@ function computeBC1BC2(K, P, JESSEN) {
   const k = toNum(K),
     p = toNum(P),
     j = toNum(JESSEN);
-  if (k == null || p == null || j == null) return null;
+  if (k == null || p == null || j == null) return err("missing input");
   const denom = k - j + p;
-  return Math.abs(denom) < 1e-12 ? null : 337.5 / denom;
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
+  return ok(337.5 / denom);
 }
-const computePW1PW2 = (J) => toNum(J);
-const computeOZ1OZ2 = (OZ) => toNum(OZ);
+const computePW1PW2 = (J) => {
+  const n = toNum(J);
+  return n == null ? err("missing JESSEN") : ok(n);
+};
+const computeOZ1OZ2 = (OZ) => {
+  const n = toNum(OZ);
+  return n == null ? err("missing O.Z.") : ok(n);
+};
 
 // RC1_radius = 337.5 / ( K - P*FX + JESSEN - TORICITY_offset )
 function computeRC1Radius(K, P, FX, JESSEN, TORICITY_offset = 0) {
@@ -89,53 +99,52 @@ function computeRC1Radius(K, P, FX, JESSEN, TORICITY_offset = 0) {
     fx = toNum(FX),
     j = toNum(JESSEN),
     t = toNum(TORICITY_offset) ?? 0;
-  if (k == null || p == null || fx == null || j == null)
-    return { value: null, _why: "missing input" };
+  if (k == null || p == null || fx == null || j == null) return err("missing input");
   const denom = k - p * fx + j - t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
-    return { value: null, _why: "division by zero" };
-  return { value: 337.5 / denom };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
+  return ok(337.5 / denom);
 }
 
 // RC1_tor = 337.5 / ( 337.5 / RC1_radius + TORICITY_value )
 function computeRC1Tor(RC1_radius, TORICITY_value) {
-  const r = toNum(RC1_radius);
-  const t = toNum(TORICITY_value);
-  if (r == null || t == null) return { value: null, _why: "missing RC1_radius or TORICITY_value" };
+  const r = toNum(RC1_radius),
+    t = toNum(TORICITY_value);
+  if (r == null || t == null) return err("missing RC1_radius or TORICITY_value");
   const denom = 337.5 / r + t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
-    return { value: null, _why: "division by zero" };
-  return { value: 337.5 / denom };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
+  return ok(337.5 / denom);
 }
 
 // AC1_radius = 337.5 / ( K + 0.12 + TORICITY_offset )
 function computeAC1Radius(K, TORICITY_offset = 0) {
-  const k = toNum(K);
-  const t = toNum(TORICITY_offset) ?? 0;
-  if (k == null) return { value: null, _why: "missing K" };
+  const k = toNum(K),
+    t = toNum(TORICITY_offset) ?? 0;
+  if (k == null) return err("missing K");
   const denom = k + 0.12 + t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
-    return { value: null, _why: "division by zero" };
-  return { value: 337.5 / denom };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
+  return ok(337.5 / denom);
 }
 
 // AC1_tor = 337.5 / ( K + 0.12 + TORICITY_value + TORICITY_offset )
 function computeAC1Tor(K, TORICITY_value, TORICITY_offset = 0) {
-  const k = toNum(K);
-  const v = toNum(TORICITY_value);
-  const t = toNum(TORICITY_offset) ?? 0;
-  if (k == null || v == null) return { value: null, _why: "missing K or TORICITY_value" };
+  const k = toNum(K),
+    v = toNum(TORICITY_value),
+    t = toNum(TORICITY_offset) ?? 0;
+  if (k == null || v == null) return err("missing K or TORICITY_value");
   const denom = k + 0.12 + v + t;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12)
-    return { value: null, _why: "division by zero" };
-  return { value: 337.5 / denom };
+  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
+  return ok(337.5 / denom);
 }
 
-// AC2 offsets added on top of AC1
+// AC2 offsets added on top of AC1 → return { radius:{value,_error}, tor:{value,_error} }
 function computeAC2RadiusTor(AC1_radius, eValue) {
   const r1 = toNum(AC1_radius),
     e = toNum(eValue);
-  if (r1 == null || e == null) return { radius: null, _why: "missing AC1_radius or eValue" };
+  if (r1 == null || e == null)
+    return {
+      radius: err("missing AC1_radius or eValue"),
+      tor: err("missing AC1_radius or eValue"),
+    };
 
   let add = null;
   if (e <= 0.3) add = 0.12;
@@ -165,16 +174,23 @@ function computeAC2RadiusTor(AC1_radius, eValue) {
   else if (e <= 1.45) add = 0.72;
   else if (e <= 1.5) add = 0.74;
   else if (e <= 1.55) add = 0.76;
-  else return { radius: null, _why: "eValue out of range (0.30–1.55)" };
+  else
+    return {
+      radius: err("eValue out of range (0.30–1.55)"),
+      tor: err("eValue out of range (0.30–1.55)"),
+    };
 
-  return { radius: r1 + add, tor: r1 + add };
+  const v = r1 + add;
+  return { radius: ok(v), tor: ok(v) };
 }
-
 function computeAC3RadiusTor(AC1_radius, eValue) {
   const r1 = toNum(AC1_radius),
     e = toNum(eValue);
   if (r1 == null || e == null)
-    return { radius: null, tor: null, _why: "missing AC1_radius or eValue" };
+    return {
+      radius: err("missing AC1_radius or eValue"),
+      tor: err("missing AC1_radius or eValue"),
+    };
 
   let add = null;
   if (e <= 0.3) add = 1.59;
@@ -190,27 +206,35 @@ function computeAC3RadiusTor(AC1_radius, eValue) {
   else if (e <= 0.75) add = 1.8;
   else if (e <= 0.8) add = 1.85;
   else if (e <= 0.85) add = 1.9;
-  else return { radius: null, tor: null, _why: "eValue out of range (0.30–0.85)" };
+  else
+    return {
+      radius: err("eValue out of range (0.30–0.85)"),
+      tor: err("eValue out of range (0.30–0.85)"),
+    };
 
-  return { radius: r1 + add, tor: r1 + add };
+  const v = r1 + add;
+  return { radius: ok(v), tor: ok(v) };
 }
 
-// widths
+// widths (also normalized to {value,_error})
 function computeWidths(ref2Values) {
-  const rc1_width = 0.6;
-  const pc_width = 0.2;
-  const ac1_width = ref2Values?.["AC1 W"] ?? null;
-  const ac2_width = ref2Values?.["AC2 W"] ?? null;
-  const ac3_width = ref2Values?.["AC3 W"] ?? null;
+  const rc1 = ok(0.6);
+  const pc = ok(0.2);
+  const ac1 =
+    ref2Values?.["AC1 W"] != null ? ok(ref2Values["AC1 W"]) : err("AC1 W not found in REF2");
+  const ac2 =
+    ref2Values?.["AC2 W"] != null ? ok(ref2Values["AC2 W"]) : err("AC2 W not found in REF2");
+  const ac3 =
+    ref2Values?.["AC3 W"] != null ? ok(ref2Values["AC3 W"]) : err("AC3 W not found in REF2");
+
   return {
-    RC1_width: rc1_width,
-    AC1_width: ac1_width,
-    AC2_width: ac2_width,
-    AC3_width: ac3_width,
-    PC_width: pc_width,
+    RC1_width: rc1,
+    AC1_width: ac1,
+    AC2_width: ac2,
+    AC3_width: ac3,
+    PC_width: pc,
   };
 }
-
 /* ---------------- factory ---------------- */
 export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null, defaults = {} }) {
   const PC_radius = defaults.PC_radius ?? 12;
@@ -277,11 +301,6 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
       else if (typeof cylRaw === "string") toricity_code = cylRaw.trim();
     }
     const toricity = resolveToricity({ toricity_code, toricity_value, toricity_offset });
-
-    const e = toNum(eValue);
-    if (e == null || e < 0.3 || e > 1.55) {
-      return { _error: `Invalid eValue=${eValue}. Expected 0.30–1.55.` };
-    }
 
     // compute
     const BC1_BC2 = computeBC1BC2(kEff, pEff, flds.JESSEN);
