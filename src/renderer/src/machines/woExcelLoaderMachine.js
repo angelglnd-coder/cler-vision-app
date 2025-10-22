@@ -330,7 +330,7 @@ export const woExcelLoaderchine = setup({
       return { queFile: { name: queFileName || "batch.QUE", text: queText }, difFiles, errors };
     }),
     calculate: fromPromise(async ({ input }) => {
-      const {rows} = input;
+      const { rows } = input;
       const one = lensCalc.computeFirst(rows, { eValue: 0.55 });
       console.log("calculate : lensCalc =>", one);
       return true;

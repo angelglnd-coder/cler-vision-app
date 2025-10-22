@@ -78,6 +78,7 @@ export const WO_COLUMNS_EXCEL = [
   "PC2_Radius",
   "Edge_Thick",
   "Center_Thick",
+  "eValue",
 ];
 // 2) Expected columns (display names for messages)
 export const EXPECTED_REQUIRED = [
@@ -112,6 +113,7 @@ export const EXPECTED_REQUIRED = [
   "PC2_Radius",
   "Edge_Thick",
   "Center_Thick",
+  "eValue",
 ];
 
 export const EXPECTED_OPTIONAL = [

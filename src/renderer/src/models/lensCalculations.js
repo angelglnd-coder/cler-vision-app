@@ -210,14 +210,17 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
     return { source: "none", code: null, value: null, offset: 0.0 };
   }
 
-  function computeRow(row, { eValue }) {
+  function computeRow(row) {
     // Inputs
     const K = row["K-Code"] ?? row.K_Code ?? row.k_code ?? null;
     const P = row["P-Code"] ?? row.P_Code ?? row.p_code ?? null;
     const DIAM = row.Diam ?? row.DIAM ?? row.diam ?? null;
     const CODE_IN = row.CODE ?? row.Type ?? row["Design "] ?? null;
+    const eValue = row.eValue ?? row.EValue ?? row["eValue"] ?? null;
 
-    let code = CODE_IN ?? null, kEff = K, pEff = P;
+    let code = CODE_IN ?? null,
+      kEff = K,
+      pEff = P;
     if (!code) {
       if (kEff != null && pEff != null) code = getCodeByKP(kEff, pEff);
     } else if (kEff == null || pEff == null) {
@@ -281,14 +284,14 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
     };
   }
 
-  function computeAll(rows = [], { eValue }) {
-    return rows.map((r) => ({ ...r, ...computeRow(r, { eValue }) }));
+  function computeAll(rows = []) {
+    return rows.map((r) => ({ ...r, ...computeRow(r) }));
   }
 
-  function computeFirst(rows = [], { eValue }) {
+  function computeFirst(rows = []) {
     const first = Array.isArray(rows) && rows.length ? rows[0] : null;
     if (!first) return null;
-    return { ...first, ...computeRow(first, { eValue }) };
+    return { ...first, ...computeRow(first) };
   }
 
   return { computeRow, computeAll, computeFirst };
