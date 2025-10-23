@@ -111,6 +111,17 @@
     height: 80vh;
     /* width: 100%; */
     min-width: 640px;
+    overflow-x: auto; /* 👈 horizontal scrolling enabled */
+  }
+  /* We need :global so Svelte doesn’t scope it away */
+  :global(.hover-highlight:hover) {
+    background-color: rgba(180, 220, 255, 0.4) !important; /* soft blue highlight */
+    transition: background-color 0.15s ease;
+  }
+
+  /* Optional: make it look crisp with pointer cursor */
+  :global(.hover-highlight) {
+    cursor: pointer;
   }
 </style>
 
@@ -125,9 +136,9 @@
 {#if state?.matches("ready") || state?.matches("applyingFormulas") || state?.matches("readyCalculations")}
   <button class="pretty-btn" on:click={calculate}>CALCULATE</button>
   <Willow>
-    <div class="grid-wrap">
-      <Grid data={rows} {columns} />
-    </div>
+    <!-- <div class="grid-wrap"> -->
+    <Grid data={rows} {columns} rowStyle={() => "hover-highlight"} />
+    <!-- </div> -->
   </Willow>
 {/if}
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}
