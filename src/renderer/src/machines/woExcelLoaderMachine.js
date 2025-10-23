@@ -254,16 +254,38 @@ export const woExcelLoaderchine = setup({
       },
     }),
     setCalculated: assign({
-    data: ({ event }) => event.output.rows,          // flattened rows
+    data: ({ event }) => event.output.rows, // flattened rows from calculate
+
     columns: ({ context, event }) => {
-      const base = context.columns ?? [];
-      const extra = makeCalcColumns();
-      // Avoid duplicating if user hits CALCULATE again
-      const have = new Set(base.map(c => c.field));
-      const merged = [...base];
-      for (const col of extra) if (!have.has(col.field)) merged.push(col);
-      return merged;
+      const base = (context.columns ?? []).filter(Boolean);
+
+      // Determine which *_err columns are actually needed
+      const neededErr = new Set();
+      for (const r of event.output.rows ?? []) {
+        for (const k of Object.keys(r)) {
+          if (k.endsWith("_err") && r[k]) neededErr.add(k);
+        }
+      }
+
+      // Build calc columns, but include only needed *_err columns
+      const calcAll = makeCalcColumns(); // returns value + *_err columns
+      const extra = calcAll.filter(col => {
+        const f = col.field;
+        return !f.endsWith("_err") || neededErr.has(f);
+      });
+
+      // Avoid duplicates if user recalculates
+      const seen = new Set(base.map(c => c.field));
+      for (const col of extra) {
+        if (!seen.has(col.field)) {
+          base.push(col);
+          seen.add(col.field);
+        }
+      }
+
+      return base;
     },
+})
 
   },
   actors: {
@@ -491,6 +513,7 @@ export const woExcelLoaderchine = setup({
         input: ({ context }) => ({ rows: context.data }),
         onDone: {
           target: "readyCalculations",
+          actions:"setCalculated"
         },
         onError: { target: "error", actions: "setError" },
       },
