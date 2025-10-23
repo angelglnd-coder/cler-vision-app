@@ -36,6 +36,57 @@ const NUMERIC_FIELDS = new Set([
   "ctnum",
 ]);
 
+// core calc fields whose values we want to display
+const CALC_FIELDS = [
+  "BC1_BC2","PW1_PW2","OZ1_OZ2",
+  "RC1_radius","RC1_tor",
+  "AC1_radius","AC1_tor",
+  "AC2_radius","AC2_tor",
+  "AC3_radius","AC3_tor",
+  "RC1_width","AC1_width","AC2_width","AC3_width","PC_width",
+  "PC_radius","LensPower",
+];
+
+// pull numeric value from number or {value,_error|_why}
+function getVal(v) {
+  if (v && typeof v === "object" && "value" in v) return v.value;
+  return typeof v === "number" ? v : v ?? null;
+}
+// pull error text from {value,_error} or {value,_why}
+function getErr(v) {
+  if (v && typeof v === "object") return v._error ?? v._why ?? null;
+  return null;
+}
+
+function flattenCalcRow(r) {
+  const out = { ...r };
+  for (const k of CALC_FIELDS) {
+    out[k] = getVal(r[k]);
+    const err = getErr(r[k]);
+    if (err) out[`${k}_err`] = err;
+  }
+  return out;
+}
+// build value columns (right aligned) + error columns (narrow)
+// build value columns (right aligned) + error columns (narrow)
+function makeCalcColumns() {
+  const valueCols = CALC_FIELDS.map((col) => ({
+    title: col,
+    field: col,
+    headerFilter: "input",
+    headerSort: true,
+    hozAlign: "right",
+  }));
+  const errCols = CALC_FIELDS.map((col) => ({
+    title: `${col}_err`,
+    field: `${col}_err`,
+    headerFilter: "input",
+    headerSort: false,
+    hozAlign: "left",
+    width: 220, // tweak as you like
+  }));
+  return [...valueCols, ...errCols];
+}
 // 1) Normalize header text
 const norm = (s) =>
   String(s ?? "")
