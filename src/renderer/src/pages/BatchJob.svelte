@@ -56,6 +56,7 @@
       if (s.matches("error")) {
         rows = [];
       }
+      if (s.matches("readyCalculations")) render(s.context);
       console.log("state mch =>", state);
     });
     return () => {
