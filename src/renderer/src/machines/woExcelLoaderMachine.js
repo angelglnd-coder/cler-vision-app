@@ -38,19 +38,30 @@ const NUMERIC_FIELDS = new Set([
 
 // core calc fields whose values we want to display
 const CALC_FIELDS = [
-  "BC1_BC2","PW1_PW2","OZ1_OZ2",
-  "RC1_radius","RC1_tor",
-  "AC1_radius","AC1_tor",
-  "AC2_radius","AC2_tor",
-  "AC3_radius","AC3_tor",
-  "RC1_width","AC1_width","AC2_width","AC3_width","PC_width",
-  "PC_radius","LensPower",
+  "BC1_BC2",
+  "PW1_PW2",
+  "OZ1_OZ2",
+  "RC1_radius",
+  "RC1_tor",
+  "AC1_radius",
+  "AC1_tor",
+  "AC2_radius",
+  "AC2_tor",
+  "AC3_radius",
+  "AC3_tor",
+  "RC1_width",
+  "AC1_width",
+  "AC2_width",
+  "AC3_width",
+  "PC_width",
+  "PC_radius",
+  "LensPower",
 ];
 
 // pull numeric value from number or {value,_error|_why}
 function getVal(v) {
   if (v && typeof v === "object" && "value" in v) return v.value;
-  return typeof v === "number" ? v : v ?? null;
+  return typeof v === "number" ? v : (v ?? null);
 }
 // pull error text from {value,_error} or {value,_why}
 function getErr(v) {
@@ -254,39 +265,38 @@ export const woExcelLoaderchine = setup({
       },
     }),
     setCalculated: assign({
-    data: ({ event }) => event.output.rows, // flattened rows from calculate
+      data: ({ event }) => event.output.rows, // flattened rows from calculate
 
-    columns: ({ context, event }) => {
-      const base = (context.columns ?? []).filter(Boolean);
+      columns: ({ context, event }) => {
+        const base = (context.columns ?? []).filter(Boolean);
 
-      // Determine which *_err columns are actually needed
-      const neededErr = new Set();
-      for (const r of event.output.rows ?? []) {
-        for (const k of Object.keys(r)) {
-          if (k.endsWith("_err") && r[k]) neededErr.add(k);
+        // Determine which *_err columns are actually needed
+        const neededErr = new Set();
+        for (const r of event.output.rows ?? []) {
+          for (const k of Object.keys(r)) {
+            if (k.endsWith("_err") && r[k]) neededErr.add(k);
+          }
         }
-      }
 
-      // Build calc columns, but include only needed *_err columns
-      const calcAll = makeCalcColumns(); // returns value + *_err columns
-      const extra = calcAll.filter(col => {
-        const f = col.field;
-        return !f.endsWith("_err") || neededErr.has(f);
-      });
+        // Build calc columns, but include only needed *_err columns
+        const calcAll = makeCalcColumns(); // returns value + *_err columns
+        const extra = calcAll.filter((col) => {
+          const f = col.field;
+          return !f.endsWith("_err") || neededErr.has(f);
+        });
 
-      // Avoid duplicates if user recalculates
-      const seen = new Set(base.map(c => c.field));
-      for (const col of extra) {
-        if (!seen.has(col.field)) {
-          base.push(col);
-          seen.add(col.field);
+        // Avoid duplicates if user recalculates
+        const seen = new Set(base.map((c) => c.field));
+        for (const col of extra) {
+          if (!seen.has(col.field)) {
+            base.push(col);
+            seen.add(col.field);
+          }
         }
-      }
 
-      return base;
-    },
-})
-
+        return base;
+      },
+    }),
   },
   actors: {
     // 1) read file → ArrayBuffer (small, keeps concerns clean)
@@ -513,7 +523,7 @@ export const woExcelLoaderchine = setup({
         input: ({ context }) => ({ rows: context.data }),
         onDone: {
           target: "readyCalculations",
-          actions:"setCalculated"
+          actions: "setCalculated",
         },
         onError: { target: "error", actions: "setError" },
       },

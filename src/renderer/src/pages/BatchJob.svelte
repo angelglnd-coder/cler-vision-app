@@ -46,6 +46,7 @@
     // console.log("ctx =>", ctx);
     rows = ctx.data || [];
     columns = toSvarColumns(ctx.columns || []);
+    console.log("columns => ", columns);
   }
 
   onMount(() => {
