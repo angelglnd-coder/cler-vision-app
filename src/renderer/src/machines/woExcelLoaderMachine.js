@@ -394,9 +394,20 @@ export const woExcelLoaderchine = setup({
     }),
     calculate: fromPromise(async ({ input }) => {
       const { rows } = input;
-      const one = lensCalc.computeFirst(rows);
-      console.log("calculate : lensCalc =>", one);
-      return true;
+      // const one = lensCalc.computeFirst(rows);
+      const computed = lensCalc.computeAll(rows);     // adds computed fields (value/_error or value/_why)
+      const flattened = computed.map(flattenCalcRow); // create <field> and <field>_err
+      
+      // (optional) collect which error columns actually have messages
+      const neededErr = new Set();
+      for (const r of flattened) {
+        for (const k of Object.keys(r)) {
+          if (k.endsWith("_err") && r[k]) neededErr.add(k);
+        }
+      }
+
+      console.log("calculate: flattened =>", flattened);
+      return { rows: flattened, neededErr: Array.from(neededErr) };
     }),
   },
 }).createMachine({
