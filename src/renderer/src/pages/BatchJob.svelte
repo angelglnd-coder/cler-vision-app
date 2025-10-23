@@ -10,8 +10,15 @@
   let state;
   let rows = [];
   let columns = [];
-  const PIN_LEFT = new Set(["WO_Number", "WO_Line", "Type_Code"]);
+  // same safeKey you already use elsewhere
+  const safeKey = (col) => col.replace(/[^\w$]/g, "_");
 
+  // define desired sticky headers in human form…
+  const PIN_LEFT_RAW = ["Patient Name", "PO", "SPEC"];
+
+  // …then normalize to the actual column ids
+  const PIN_LEFT = new Set(PIN_LEFT_RAW.map(safeKey));
+  console.log("Pinned fields:", [...PIN_LEFT]);
   actor.start();
 
   function onPick(e) {
@@ -26,18 +33,17 @@
   function calculate() {
     actor.send({ type: "APPLY.FORMULAS" });
   }
-  // Convert Tabulator-style columns to SVAR format
   function toSvarColumns(tabCols = []) {
     return tabCols.map((c) => {
       const id = c.field || c.title || Math.random().toString(36).slice(2);
       return {
-        id,
-        header: c.title || c.field || id,
+        id, // Grid uses this as the field key
+        header: c.title || id, // what you see in the header
         width: 150,
         sortable: true,
         filter: true,
         align: c.hozAlign === "right" ? "right" : "left",
-        pinned: PIN_LEFT.has(id) ? "left" : undefined,
+        pinned: PIN_LEFT.has(id) ? "left" : undefined, // 👈 now matches
       };
     });
   }
