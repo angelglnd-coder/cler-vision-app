@@ -71,7 +71,7 @@ export const WO_COLUMNS_EXCEL = [
   "Mat_Lot",
   "GTIN",
   "Bill_To",
-  "Ship_To",
+  "cldfile",
   "Type",
   "Cyl_p",
   "PC1_Radius",
@@ -102,7 +102,7 @@ export const EXPECTED_REQUIRED = [
   // previously added required
   "Mat_Lot",
   "Bill_To",
-  "Ship_To",
+  "cldfile",
   "Device",
   "Mfg",
   "Mat_Code",
