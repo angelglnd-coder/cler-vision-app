@@ -10,6 +10,8 @@
   let state;
   let rows = [];
   let columns = [];
+  // let api;
+  // let api = $state();
   // same safeKey you already use elsewhere
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
 
@@ -54,7 +56,21 @@
     columns = toSvarColumns(ctx.columns || []);
     console.log("columns => ", columns);
   }
+  function onRowClick(event) {
+    
+    console.log("clicked row:", event.id);
+    const currentContext = actor.getSnapshot().context.data;
+    // const row = currentContext.find(r => r.id === event.id)
 
+    const index = currentContext.findIndex(r => r.id === event.id );
+  const row = index >= 0 ? rows[index] : null;
+
+  const result = { index, row };
+
+    console.log('current context =>', result)
+
+    // console.log('data from table api =>', api.getState().selectedRows)
+  }
   onMount(() => {
     state = actor.getSnapshot();
     const sub = actor.subscribe((s) => {
@@ -137,7 +153,7 @@
   <button class="pretty-btn" on:click={calculate}>CALCULATE</button>
   <Willow>
     <!-- <div class="grid-wrap"> -->
-    <Grid data={rows} {columns} rowStyle={() => "hover-highlight"} />
+    <Grid data={rows} {columns} rowStyle={() => "hover-highlight"} onselectrow={onRowClick} />
     <!-- </div> -->
   </Willow>
 {/if}
