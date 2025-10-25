@@ -5,6 +5,7 @@ import QueueFiles from "../pages/QueueFiles.svelte";
 
 export const { p, navigate, isActive, route } = createRouter({
   "/": BatchJob,
+  "/workorders": WorkOrders,
   "/queuefiles": QueueFiles,
   "*": () => console.log("PAGE NOT FOUND IT"),
 });
