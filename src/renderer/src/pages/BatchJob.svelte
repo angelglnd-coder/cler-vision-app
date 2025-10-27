@@ -1,8 +1,11 @@
 <script>
   import { actor } from "../machines/woExcelLoaderMachine";
   import { onMount } from "svelte";
+  import WorkOrderView from "../components/WorkOrderView.svelte";
+  import WorkOrderViewTemp from "../components/WorkOrderViewTemp.svelte";
 
   import { Grid, Willow } from "@svar-ui/svelte-grid";
+  import { Splitpanes, Pane } from 'svelte-splitpanes';
   // REQUIRED: grid + theme styles
   // import "@svar-ui/svelte-grid/styles.css";
   // import "@svar-ui/svelte-grid/themes/willow.css";
@@ -10,8 +13,10 @@
   let state;
   let rows = [];
   let columns = [];
-  // let api;
-  // let api = $state();
+  let visiblePane = false;
+  let selected = null;    
+  let woRef;
+  
   // same safeKey you already use elsewhere
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
 
@@ -60,17 +65,24 @@
     
     console.log("clicked row:", event.id);
     const currentContext = actor.getSnapshot().context.data;
-    // const row = currentContext.find(r => r.id === event.id)
-
     const index = currentContext.findIndex(r => r.id === event.id );
-  const row = index >= 0 ? rows[index] : null;
+    const row = index >= 0 ? rows[index] : null;
 
-  const result = { index, row };
-
-    console.log('current context =>', result)
+    if (row){
+      selected = { index, row };
+      console.log("updated selection ",selected)
+      visiblePane= true;
+    }
 
     // console.log('data from table api =>', api.getState().selectedRows)
   }
+   function onClick() {
+    visiblePane = !visiblePane;
+  }
+  function printWO(){
+    window.print();
+  }
+  
   onMount(() => {
     state = actor.getSnapshot();
     const sub = actor.subscribe((s) => {
@@ -150,11 +162,42 @@
 <!-- <div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div> -->
 
 {#if state?.matches("ready") || state?.matches("applyingFormulas") || state?.matches("readyCalculations")}
-  <button class="pretty-btn" on:click={calculate}>CALCULATE</button>
+<Splitpanes style="height: 100%">
+  <Pane>
+    <button class="pretty-btn" on:click={calculate}>CALCULATE</button>
+    <button class="pretty-btn" on:click={onClick}>toggle</button>
+
+
   <Willow>
     <!-- <div class="grid-wrap"> -->
     <Grid data={rows} {columns} rowStyle={() => "hover-highlight"} onselectrow={onRowClick} />
     <!-- </div> -->
   </Willow>
+  </Pane>
+  {#if visiblePane}
+    <Pane maxSize={35}>
+      {#if selected}
+            <div style="display:flex; justify-content: space-between; align-items:center; padding:.5rem 1rem; border-bottom:1px solid #eee;">
+              <strong>WO Preview</strong>
+              <div style="display:flex; gap:.5rem;">
+               <button class="pretty-btn" on:click={printWO}>Print</button>
+        </div>
+              <!-- <button class="pretty-btn" on:click={closeSidebar}>Close</button> -->
+            </div>
+            {#key selected?.row?.id ?? selected?.index}
+            <div bind:this={woRef}>
+              <WorkOrderView row={selected.row}></WorkOrderView>
+            </div>
+            {/key}
+            <!-- <WorkOrderPrint row={selected.row} onClose={closeSidebar} /> -->
+      {:else}
+            <div style="padding:1rem; color:#6b7280;">Select a row to preview the Work Order.</div>
+      {/if}
+    </Pane>
+  {/if}
+  
+</Splitpanes>  
+
+   
 {/if}
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}
