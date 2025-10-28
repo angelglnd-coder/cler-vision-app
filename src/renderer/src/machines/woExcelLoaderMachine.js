@@ -184,14 +184,45 @@ function buildRowsFromAoA(aoa, headerRowIdx) {
   return { headers, rows };
 }
 
+function excelDateToJSDate(serial) {
+  // Excel stores dates as days since 1900-01-01 (with leap year bug)
+  const utc_days = Math.floor(serial - 25569);
+  const utc_value = utc_days * 86400;
+  const date_info = new Date(utc_value * 1000);
+  return date_info;
+}
+
+function formatDate(date) {
+  if (!date) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function normalizeRows(rows) {
   return rows.map((r) => {
     const o = {};
     for (const col of WO_COLUMNS_EXCEL) {
       const key = safeKey(col);
       let v = r[col] ?? null;
-      // your numeric coercion here if needed…
-      o[key] = typeof v === "string" ? v.trim() : v;
+
+      // Handle date columns
+      if (col === "PO date" && v !== null) {
+        if (typeof v === "number") {
+          // Excel serial date number
+          v = formatDate(excelDateToJSDate(v));
+        } else if (v instanceof Date) {
+          v = formatDate(v);
+        } else if (typeof v === "string") {
+          v = v.trim();
+        }
+      } else {
+        // your numeric coercion here if needed…
+        v = typeof v === "string" ? v.trim() : v;
+      }
+
+      o[key] = v;
     }
     return o;
   });

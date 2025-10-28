@@ -49,6 +49,7 @@ export const WO_COLUMNS = [
 export const WO_COLUMNS_EXCEL = [
   "Patient Name",
   "PO",
+  "PO date",
   "No.",
   "OD/OS",
   "K-Code",
@@ -84,6 +85,7 @@ export const WO_COLUMNS_EXCEL = [
 export const EXPECTED_REQUIRED = [
   "Patient Name",
   "PO",
+  "PO date",
   "No.",
   "OD/OS",
   "K-Code",
