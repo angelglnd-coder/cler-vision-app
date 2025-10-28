@@ -132,6 +132,21 @@
     font-weight: 600;
     font-size: .92rem;
   }
+  .input-field {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: .92rem;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 2px rgba(14,165,233,.1);
+  }
   .link {
     color: var(--brand);
     text-decoration: underline;
@@ -234,6 +249,11 @@
     <div class="label">Bill To:</div>          <div class="value">{data.billTo || "—"}</div>
     <div class="label">Doctor's Name</div>     <div class="value">{data.doctor || "—"}</div>
     <div class="label">Device Type:</div>      <div class="value">{data.deviceType || "—"}</div>
+
+    <!-- Row 5 -->
+    <div class="label"></div>                  <div class="value"></div>
+    <div class="label"></div>                  <div class="value"></div>
+    <div class="label">Blank THKN:</div>       <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
   </div>
 
   <div class="rule"></div>
