@@ -19,7 +19,8 @@ export const toNum = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 // unified output helper
-const ok = (value) => ({ value });
+const cap2 = (v) => (v != null && Number.isFinite(v) ? Math.floor(v * 100) / 100 : v);
+const ok = (value) => ({ value: cap2(value) });
 const err = (_error) => ({ value: null, _error });
 
 /* --------------- toricity map --------------- */
