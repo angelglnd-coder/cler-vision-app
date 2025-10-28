@@ -7,7 +7,7 @@
 
   // header data
   const data = {
-    poDate:     g("PO_Date"),
+    poDate:     g("PO_date"),
     customerPO: g("PO"),
     woNumber:   g("WO_Number", g("WO")),
 
