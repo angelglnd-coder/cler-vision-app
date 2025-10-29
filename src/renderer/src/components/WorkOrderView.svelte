@@ -74,14 +74,14 @@
 
 <style>
   :root {
-    --ink:#111827;          /* text */
-    --muted:#6b7280;        /* gray-500 */
-    --light:#f3f4f6;        /* gray-100 */
-    --line:#e5e7eb;         /* gray-200 */
-    --brand:#0ea5e9;        /* sky-500 */
-    --accent:#16a34a;       /* green-600 */
-    --label:#475569;        /* slate-600 */
-    --paper:#ffffff;
+    --ink: #111827; /* text */
+    --muted: #6b7280; /* gray-500 */
+    --light: #f3f4f6; /* gray-100 */
+    --line: #e5e7eb; /* gray-200 */
+    --brand: #0ea5e9; /* sky-500 */
+    --accent: #16a34a; /* green-600 */
+    --label: #475569; /* slate-600 */
+    --paper: #ffffff;
   }
 
   .sheet {
@@ -89,35 +89,41 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 18px 18px 16px;
-    box-shadow: 0 1px 0 rgba(0,0,0,.02), 0 8px 24px rgba(0,0,0,.04);
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.02),
+      0 8px 24px rgba(0, 0, 0, 0.04);
   }
 
   .titlebar {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 12px;
   }
   .titlebar h2 {
-    margin:0;
+    margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
-    letter-spacing:.2px;
+    letter-spacing: 0.2px;
     color: var(--ink);
   }
   .badge {
-    font: 600 .75rem/1 system-ui, sans-serif;
-    padding: .25rem .5rem;
+    font:
+      600 0.75rem/1 system-ui,
+      sans-serif;
+    padding: 0.25rem 0.5rem;
     border-radius: 999px;
-    background: rgba(14,165,233,.12);
+    background: rgba(14, 165, 233, 0.12);
     color: var(--brand);
-    border: 1px solid rgba(14,165,233,.3);
+    border: 1px solid rgba(14, 165, 233, 0.3);
   }
 
   /* header grid (3 columns of key/value) */
   .kv {
-    display:grid;
-    grid-template-columns: 140px 1fr 140px 1fr 140px 1fr;
+    display: grid;
+    grid-template-columns:
+      minmax(100px, 140px) minmax(100px, 1fr) minmax(100px, 140px) minmax(100px, 1fr)
+      minmax(100px, 140px) minmax(100px, 1fr);
     column-gap: 14px;
     row-gap: 8px;
     align-items: center;
@@ -125,21 +131,23 @@
   .kv .label {
     color: var(--label);
     font-weight: 600;
-    font-size: .82rem;
+    font-size: 0.82rem;
     justify-self: end;
-    letter-spacing:.2px;
+    letter-spacing: 0.2px;
   }
   .kv .value {
     color: var(--ink);
     font-weight: 600;
-    font-size: .92rem;
+    font-size: 0.92rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
   .input-field {
     width: 100%;
     padding: 4px 8px;
     border: 1px solid var(--line);
     border-radius: 4px;
-    font-size: .92rem;
+    font-size: 0.92rem;
     font-weight: 600;
     color: var(--ink);
     background: var(--paper);
@@ -147,7 +155,7 @@
   .input-field:focus {
     outline: none;
     border-color: var(--brand);
-    box-shadow: 0 0 0 2px rgba(14,165,233,.1);
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
   }
   .link {
     color: var(--brand);
@@ -163,7 +171,7 @@
 
   /* content strip for CONT / Color / Brand aligned with PRGM */
   .grid-3 {
-    display:grid;
+    display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 14px;
   }
@@ -174,51 +182,85 @@
     padding: 10px 12px;
   }
   .card .head {
-    display:flex; align-items:center; justify-content:space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 6px;
   }
   .card .head .h {
-    font-weight: 700; font-size: .85rem; color: var(--label);
-    letter-spacing:.25px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--label);
+    letter-spacing: 0.25px;
   }
   .code {
-    font: 600 .9rem/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    letter-spacing:.2px;
-    word-break: break-all;
+    font:
+      600 0.9rem/1.2 ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      "Liberation Mono",
+      "Courier New",
+      monospace;
+    letter-spacing: 0.2px;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
-  .muted { color: var(--muted); }
+  .muted {
+    color: var(--muted);
+  }
 
   /* calc table (flex rows) */
   .flex-table {
-    display:flex; flex-direction:column;
-    border:1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
     border-radius: 10px;
     overflow: hidden;
     margin-top: 10px;
   }
-  .t-head, .t-row {
-    display:grid;
-    grid-template-columns: 260px 250px 1fr;
-    align-items:center;
+  .t-head,
+  .t-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 2fr) minmax(120px, 1.5fr) minmax(120px, 2fr);
+    align-items: center;
   }
   .t-head {
     background: var(--light);
-    border-bottom:1px solid var(--line);
-    font-weight:700;
+    border-bottom: 1px solid var(--line);
+    font-weight: 700;
   }
   .cell {
-    padding: 5px 72px;
-    border-bottom:1px solid var(--line);
-    font-size: .92rem;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
-  .cell.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .t-row:last-child .cell { border-bottom:none; }
+  .cell.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .t-row:last-child .cell {
+    border-bottom: none;
+  }
 
   /* print tweaks */
   @media print {
-    .sheet { box-shadow: none; border-color:#000; }
-    .rule { background:#000; }
-    .flex-table, .t-head, .t-row, .cell { border-color:#000; }
+    .sheet {
+      box-shadow: none;
+      border-color: #000;
+    }
+    .rule {
+      background: #000;
+    }
+    .flex-table,
+    .t-head,
+    .t-row,
+    .cell {
+      border-color: #000;
+    }
   }
 </style>
 
@@ -231,38 +273,54 @@
 
   <!-- Barcode Section -->
   {#if data.woNumber}
-  <div style="display: flex; justify-content: center; margin: 12px 0 10px 0;">
-    <Barcode value={data.woNumber} height={50} width={2} fontSize={12} margin={15} />
-  </div>
+    <div style="display: flex; justify-content: center; margin: 12px 0 10px 0;">
+      <Barcode value={data.woNumber} height={50} width={2} fontSize={12} margin={15} />
+    </div>
   {/if}
 
   <!-- 3× key/value header grid -->
   <div class="kv">
     <!-- Row 1 -->
-    <div class="label">PO Date:</div>         <div class="value">{data.poDate || "—"}</div>
-    <div class="label">Customer PO#:</div>     <div class="value">{data.customerPO || "—"}</div>
-    <div class="label">WO #</div>              <div class="value">{data.woNumber || "—"}</div>
+    <div class="label">PO Date:</div>
+    <div class="value">{data.poDate || "—"}</div>
+    <div class="label">Customer PO#:</div>
+    <div class="value">{data.customerPO || "—"}</div>
+    <div class="label">WO #</div>
+    <div class="value">{data.woNumber || "—"}</div>
 
     <!-- Row 2 -->
-    <div class="label">Sold To:</div>          <div class="value">{data.soldTo || "—"}</div>
-    <div class="label">Shopping Cart#</div>    <div class="value">{data.cart || "—"}</div>
+    <div class="label">Sold To:</div>
+    <div class="value">{data.soldTo || "—"}</div>
+    <div class="label">Shopping Cart#</div>
+    <div class="value">{data.cart || "—"}</div>
     <div class="label">Device:</div>
-    <div class="value"><span class="link" on:click={openDeviceLink}>{data.deviceText || "—"}</span></div>
+    <div class="value">
+      <span class="link" on:click={openDeviceLink}>{data.deviceText || "—"}</span>
+    </div>
 
     <!-- Row 3 -->
-    <div class="label">Ship To:</div>          <div class="value">{data.shipTo || "—"}</div>
-    <div class="label">Patient Name</div>      <div class="value">{data.patient || "—"}</div>
-    <div class="label">Laser Mark:</div>       <div class="value code">{data.laserMark || "—"}</div>
+    <div class="label">Ship To:</div>
+    <div class="value">{data.shipTo || "—"}</div>
+    <div class="label">Patient Name</div>
+    <div class="value">{data.patient || "—"}</div>
+    <div class="label">Laser Mark:</div>
+    <div class="value code">{data.laserMark || "—"}</div>
 
     <!-- Row 4 -->
-    <div class="label">Bill To:</div>          <div class="value">{data.billTo || "—"}</div>
-    <div class="label">Doctor's Name</div>     <div class="value">{data.doctor || "—"}</div>
-    <div class="label">Device Type:</div>      <div class="value">{data.deviceType || "—"}</div>
+    <div class="label">Bill To:</div>
+    <div class="value">{data.billTo || "—"}</div>
+    <div class="label">Doctor's Name</div>
+    <div class="value">{data.doctor || "—"}</div>
+    <div class="label">Device Type:</div>
+    <div class="value">{data.deviceType || "—"}</div>
 
     <!-- Row 5 -->
-    <div class="label"></div>                  <div class="value"></div>
-    <div class="label"></div>                  <div class="value"></div>
-    <div class="label">Blank THKN:</div>       <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
+    <div class="label"></div>
+    <div class="value"></div>
+    <div class="label"></div>
+    <div class="value"></div>
+    <div class="label">Blank THKN:</div>
+    <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
   </div>
 
   <div class="rule"></div>
