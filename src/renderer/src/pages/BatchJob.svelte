@@ -40,6 +40,9 @@
   function calculate() {
     actor.send({ type: "APPLY.FORMULAS" });
   }
+  function generateWorkOrders() {
+    actor.send({ type: "GENERATE.WO" });
+  }
   function toSvarColumns(tabCols = []) {
     return tabCols.map((c) => {
       const id = c.field || c.title || Math.random().toString(36).slice(2);
@@ -92,6 +95,10 @@
         rows = [];
       }
       if (s.matches("readyCalculations")) render(s.context);
+      if (s.matches("generatingWorkOrders")) {
+        // Keep current display while generating
+        console.log("Generating work orders...");
+      }
       console.log("state mch =>", state);
     });
     return () => {
@@ -123,6 +130,15 @@
   }
   .pretty-btn:active {
     transform: scale(0.99);
+  }
+  .pretty-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f3f4f6;
+  }
+  .pretty-btn:disabled:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
   }
   .sr-only {
     position: absolute;
@@ -161,11 +177,49 @@
 {/if}
 <!-- <div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div> -->
 
-{#if state?.matches("ready") || state?.matches("applyingFormulas") || state?.matches("readyCalculations")}
+{#if state?.matches("ready") || state?.matches("applyingFormulas") || state?.matches("readyCalculations") || state?.matches("generatingWorkOrders")}
 <Splitpanes style="height: 100%">
   <Pane>
-    <button class="pretty-btn" on:click={calculate}>CALCULATE</button>
-    <button class="pretty-btn" on:click={onClick}>toggle</button>
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;">
+      <button
+        class="pretty-btn"
+        on:click={generateWorkOrders}
+        disabled={state?.matches("generatingWorkOrders") || state?.matches("applyingFormulas")}
+      >
+        📝 Generate WO Numbers
+      </button>
+      <button
+        class="pretty-btn"
+        on:click={calculate}
+        disabled={state?.matches("generatingWorkOrders") || state?.matches("applyingFormulas")}
+      >
+        🧮 Calculate
+      </button>
+      <button class="pretty-btn" on:click={onClick}>
+        {visiblePane ? '◀ Hide' : '▶ Show'} Preview
+      </button>
+
+      {#if state?.matches("generatingWorkOrders")}
+        <span style="color: #3b82f6; font-size: 0.875rem;">
+          ⏳ Generating work orders...
+        </span>
+      {/if}
+      {#if state?.matches("applyingFormulas")}
+        <span style="color: #3b82f6; font-size: 0.875rem;">
+          ⏳ Calculating...
+        </span>
+      {/if}
+      {#if state.context?.woGenerationErrors?.length > 0}
+        <span style="color: #ef4444; font-size: 0.875rem;">
+          ⚠️ {state.context.woGenerationErrors.length} WO generation warning(s)
+        </span>
+      {/if}
+      {#if state.context?.sequenceCounters && Object.keys(state.context.sequenceCounters).length > 0}
+        <span style="color: #10b981; font-size: 0.875rem;">
+          ✓ WO Numbers generated
+        </span>
+      {/if}
+    </div>
 
 
   <Willow>

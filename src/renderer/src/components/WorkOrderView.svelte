@@ -1,5 +1,7 @@
 <!-- WorkOrderViewHeader.svelte -->
 <script>
+  import Barcode from './Barcode.svelte';
+
   export let row = {};
 
   // safe getters
@@ -226,6 +228,13 @@
     <h2>.</h2>
     <div class="badge">PRGM: {data.prgm || "—"}</div>
   </div>
+
+  <!-- Barcode Section -->
+  {#if data.woNumber}
+  <div style="display: flex; justify-content: center; margin: 12px 0 10px 0;">
+    <Barcode value={data.woNumber} height={50} width={2} fontSize={12} margin={15} />
+  </div>
+  {/if}
 
   <!-- 3× key/value header grid -->
   <div class="kv">

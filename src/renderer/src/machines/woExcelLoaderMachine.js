@@ -10,6 +10,7 @@ import { formatDif } from "../utils/difSchema.js";
 import * as XLSX from "xlsx";
 import { notifyProgress } from "../utils/notify.js";
 import { lensCalc } from "../models/lensCalculations.js";
+import * as WO from "../models/workOrderNumber.js";
 
 const NUMERIC_FIELDS = new Set([
   "PW1_PW2",
@@ -328,6 +329,40 @@ export const woExcelLoaderchine = setup({
         return base;
       },
     }),
+    setGeneratedWorkOrders: assign({
+      data: ({ event }) => event.output.rows,
+      sequenceCounters: ({ event }) => event.output.sequenceCounters,
+      woGenerationErrors: ({ event }) => event.output.errors ?? [],
+      columns: ({ context }) => {
+        const base = (context.columns ?? []).filter(Boolean);
+        const seen = new Set(base.map((c) => c.field));
+
+        // Add WO_Number and Account_ID columns if not present
+        const woColumns = [
+          {
+            title: "WO_Number",
+            field: "WO_Number",
+            headerFilter: "input",
+            headerSort: true,
+            hozAlign: "left",
+            frozen: true,
+            width: 150,
+          },
+        ];
+
+        // Add new columns if not already present
+        const newCols = [];
+        for (const col of woColumns) {
+          if (!seen.has(col.field)) {
+            newCols.push(col);
+            seen.add(col.field);
+          }
+        }
+
+        // Insert WO columns at the beginning
+        return [...newCols, ...base];
+      },
+    }),
   },
   actors: {
     // 1) read file → ArrayBuffer (small, keeps concerns clean)
@@ -480,6 +515,71 @@ export const woExcelLoaderchine = setup({
       console.log("calculate: flattened =>", flattened);
       return { rows: flattened, neededErr: Array.from(neededErr) };
     }),
+    generateWorkOrders: fromPromise(async ({ input }) => {
+      const { rows, soldToField = "Ship_Code", startingSequence = 1 } = input;
+
+      if (!rows || rows.length === 0) {
+        throw new Error("No rows to generate work orders for");
+      }
+
+      // Group rows by SOLD_TO account and track sequences
+      const sequenceCounters = {};
+      const errors = [];
+
+      const updatedRows = await notifyProgress(
+        Promise.resolve().then(() => {
+          return rows.map((row, idx) => {
+            try {
+              // Get SOLD_TO from the specified field (Ship Code is primary)
+              let soldTo = row.Sold_To;
+
+              console.log('ship TO',row.Ship_Code)
+              if (!soldTo) {
+                errors.push(`Row ${idx + 1}: Missing SOLD_TO (${soldToField}) - skipped`);
+                return { ...row, WO_Number: null };
+              }
+
+              // Convert to 3-digit format (pad or truncate)
+              soldTo = String(soldTo).replace(/[^\d]/g, "").slice(0, 3).padStart(3, "0");
+
+              // Initialize sequence counter for this SOLD_TO if not exists
+              if (!(soldTo in sequenceCounters)) {
+                sequenceCounters[soldTo] = startingSequence;
+              }
+
+              // Generate work order number
+              const sequence = sequenceCounters[soldTo];
+              const woNumber = WO.generateNewWorkOrder(soldTo, sequence);
+
+              // Increment sequence for next row with same SOLD_TO
+              sequenceCounters[soldTo] = sequence + 1;
+
+              return {
+                ...row,
+                WO_Number: woNumber,
+                Account_ID: soldTo,
+                print_count: 0,
+              };
+            } catch (error) {
+              errors.push(`Row ${idx + 1}: ${error.message}`);
+              return { ...row, WO_Number: null };
+            }
+          });
+        }),
+        "generating work orders"
+      ).catch((error) => {
+        console.log("error generating work orders =>", error);
+        throw error;
+      });
+
+      console.log("Generated work orders:", {
+        total: updatedRows.length,
+        sequences: sequenceCounters,
+        errors
+      });
+
+      return { rows: updatedRows, sequenceCounters, errors };
+    }),
   },
 }).createMachine({
   id: "woFile",
@@ -491,6 +591,8 @@ export const woExcelLoaderchine = setup({
     errors: [],
     data: [],
     columns: [],
+    sequenceCounters: {},
+    woGenerationErrors: [],
   },
   states: {
     idle: {
@@ -567,6 +669,21 @@ export const woExcelLoaderchine = setup({
         onError: { target: "error", actions: "setError" },
       },
     },
+    generatingWorkOrders: {
+      invoke: {
+        src: "generateWorkOrders",
+        input: ({ context, event }) => ({
+          rows: context.data,
+          soldToField: event.soldToField || "Ship_Code",
+          startingSequence: event.startingSequence || 1,
+        }),
+        onDone: {
+          target: "ready",
+          actions: "setGeneratedWorkOrders",
+        },
+        onError: { target: "error", actions: "setError" },
+      },
+    },
     ready: {
       on: {
         "FILE.SELECT": "reading",
@@ -575,6 +692,9 @@ export const woExcelLoaderchine = setup({
           target: "applyingFormulas",
           // actions: "setQueueNameFromEvent",
         },
+        "GENERATE.WO": {
+          target: "generatingWorkOrders",
+        },
       },
     },
     download: {
@@ -582,7 +702,15 @@ export const woExcelLoaderchine = setup({
         RESET: { target: "idle", actions: "clearAll" },
       },
     },
-    readyCalculations: {},
+    readyCalculations: {
+      on: {
+        "FILE.SELECT": "reading",
+        RESET: { target: "idle", actions: "clearAll" },
+        "GENERATE.WO": {
+          target: "generatingWorkOrders",
+        },
+      },
+    },
     error: {
       on: {
         "FILE.SELECT": "reading",

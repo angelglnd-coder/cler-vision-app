@@ -71,6 +71,7 @@ export const WO_COLUMNS_EXCEL = [
   "Mat_Code",
   "Mat_Lot",
   "GTIN",
+  "Sold_To",
   "Bill_To",
   "cldfile",
   "Type",
@@ -103,6 +104,7 @@ export const EXPECTED_REQUIRED = [
   "Previous S.O#",
   // previously added required
   "Mat_Lot",
+  "Sold_To",
   "Bill_To",
   "cldfile",
   "Device",

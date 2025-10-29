@@ -49,6 +49,7 @@
     "axios": "^1.12.2",
     "electron-updater": "^6.3.9",
     "file-saver": "^2.0.5",
+    "jsbarcode": "^3.12.1",
     "jszip": "^3.10.1",
     "sv-router": "^0.10.1",
     "svelte-material-ui": "^8.0.3",
