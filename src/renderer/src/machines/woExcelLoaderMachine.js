@@ -566,7 +566,7 @@ export const woExcelLoaderchine = setup({
             }
           });
         }),
-        "generating work orders"
+        "generating work orders",
       ).catch((error) => {
         console.log("error generating work orders =>", error);
         throw error;
@@ -575,7 +575,7 @@ export const woExcelLoaderchine = setup({
       console.log("Generated work orders:", {
         total: updatedRows.length,
         sequences: sequenceCounters,
-        errors
+        errors,
       });
 
       return { rows: updatedRows, sequenceCounters, errors };

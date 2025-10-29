@@ -9,33 +9,33 @@
 
   // header data
   const data = {
-    poDate:     g("PO_date"),
+    poDate: g("PO_date"),
     customerPO: g("PO"),
-    woNumber:   g("WO_Number", g("WO")),
+    woNumber: g("WO_Number", g("WO")),
 
-    soldTo:     g("Sold_To", g("Account_ID", g("Bill_To"))),
-    cart:       g("Shopping_Cart"),
+    soldTo: g("Sold_To", g("Account_ID", g("Bill_To"))),
+    cart: g("Shopping_Cart"),
     deviceText: g("Device", "OrthoK"),
 
-    shipTo:     g("Ship_Code"),
-    patient:    g("Patient_Name"),
-    laserMark:  g("Laser"),
+    shipTo: g("Ship_Code"),
+    patient: g("Patient_Name"),
+    laserMark: g("Laser"),
 
-    billTo:     g("Bill_To"),
-    doctor:     g("Doctor_Name"),
+    billTo: g("Bill_To"),
+    doctor: g("Doctor_Name"),
     deviceType: g("Device_Type", g("Type")),
 
-    prgm:       g("cldfile"),
+    prgm: g("cldfile"),
 
-    cont1:      g("Mat_Code"),
-    cont2:      g("Mat_Lot"),
-    cont3:      g("GTIN"),
-    color:      g("Color"),
-    brand:      g("Brand", g("Labeling")),
+    cont1: g("Mat_Code"),
+    cont2: g("Mat_Lot"),
+    cont3: g("GTIN"),
+    color: g("Color"),
+    brand: g("Brand", g("Labeling")),
   };
 
   // computed helpers
-  const pick = (v) => (v && typeof v === "object" ? v.value ?? null : v);
+  const pick = (v) => (v && typeof v === "object" ? (v.value ?? null) : v);
   const fmt = (v, digits = 2) => {
     const n = Number(v);
     return Number.isFinite(n) ? n.toFixed(digits) : (v ?? "") || "";
