@@ -1,6 +1,6 @@
 <!-- WorkOrderViewHeader.svelte -->
 <script>
-  import Barcode from './Barcode.svelte';
+  import Barcode from "./Barcode.svelte";
 
   export let row = {};
 

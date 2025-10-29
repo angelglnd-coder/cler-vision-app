@@ -196,8 +196,8 @@ function excelDateToJSDate(serial) {
 function formatDate(date) {
   if (!date) return null;
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -533,7 +533,7 @@ export const woExcelLoaderchine = setup({
               // Get SOLD_TO from the specified field (Ship Code is primary)
               let soldTo = row.Sold_To;
 
-              console.log('ship TO',row.Ship_Code)
+              console.log("ship TO", row.Ship_Code);
               if (!soldTo) {
                 errors.push(`Row ${idx + 1}: Missing SOLD_TO (${soldToField}) - skipped`);
                 return { ...row, WO_Number: null };
