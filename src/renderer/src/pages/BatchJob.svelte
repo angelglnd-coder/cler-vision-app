@@ -2,7 +2,6 @@
   import { actor } from "../machines/woExcelLoaderMachine";
   import { onMount } from "svelte";
   import WorkOrderView from "../components/WorkOrderView.svelte";
-  import WorkOrderViewTemp from "../components/WorkOrderViewTemp.svelte";
 
   import { Grid, Willow } from "@svar-ui/svelte-grid";
   import { Splitpanes, Pane } from 'svelte-splitpanes';
