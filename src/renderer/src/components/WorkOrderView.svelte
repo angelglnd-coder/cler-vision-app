@@ -264,9 +264,12 @@
     .sheet {
       box-shadow: none;
       border-color: #000;
+      padding: 12px;
+      page-break-inside: avoid;
     }
     .rule {
       background: #000;
+      margin: 8px 0;
     }
     .flex-table,
     .t-head,
@@ -274,20 +277,35 @@
     .cell {
       border-color: #000;
     }
+    .cell {
+      padding: 6px 8px;
+      min-height: 32px;
+      font-size: 0.85rem;
+    }
+    .kv {
+      row-gap: 4px;
+      font-size: 0.88rem;
+    }
+    .grid-3 {
+      gap: 8px;
+    }
+    .card {
+      padding: 6px 8px;
+    }
   }
 </style>
 
 <div class="sheet">
   <!-- Top title -->
   <div class="titlebar">
-    <h2>.</h2>
+    
     <div class="badge">PRGM: {data.prgm || "—"}</div>
   </div>
 
   <!-- Barcode Section -->
   {#if data.woNumber}
-    <div style="display: flex; justify-content: center; margin: 12px 0 10px 0;">
-      <Barcode value={data.woNumber} height={50} width={2} fontSize={12} margin={15} />
+    <div style="display: flex; justify-content: center; margin: -17px 0 10px 0;">
+      <Barcode value={data.woNumber} height={40} width={2} fontSize={12} margin={10} />
     </div>
   {/if}
 

@@ -166,6 +166,39 @@
   :global(.hover-highlight) {
     cursor: pointer;
   }
+
+  /* Print styles - hide everything except WorkOrderView */
+  @media print {
+    @page {
+      size: auto;
+      margin: 10mm;
+    }
+    :global(*) {
+      visibility: hidden;
+    }
+    :global(.print-area),
+    :global(.print-area *) {
+      visibility: visible;
+    }
+    :global(.print-area) {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+      page-break-before: avoid;
+    }
+    /* Hide splitpanes and other UI elements */
+    :global(.splitpanes__splitter) {
+      display: none !important;
+    }
+    /* Ensure WorkOrderView sheet fits on one page */
+    :global(.sheet) {
+      page-break-inside: avoid;
+      box-shadow: none !important;
+    }
+  }
 </style>
 
 {#if state?.matches("idle")}
@@ -238,7 +271,7 @@
               <!-- <button class="pretty-btn" on:click={closeSidebar}>Close</button> -->
             </div>
             {#key selected?.row?.id ?? selected?.index}
-            <div bind:this={woRef}>
+            <div bind:this={woRef} class="print-area">
               <WorkOrderView row={selected.row}></WorkOrderView>
             </div>
             {/key}
