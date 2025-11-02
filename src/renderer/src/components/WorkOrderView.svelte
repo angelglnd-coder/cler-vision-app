@@ -44,10 +44,11 @@
   // calc rows
   const specRows = [
     { desc: "BC1", param: pick(row.BC1_BC2) },
-    { desc: "BC1", param: pick(row.BC1_BC2) },
+    { desc: "BC2", param: pick(row.BC1_BC2) },
     { desc: "PW1", param: pick(row.PW1_PW2) },
     { desc: "PW2", param: pick(row.PW1_PW2) },
-    { desc: "OZ1_OZ2", param: pick(row.OZ1_OZ2) },
+    { desc: "OZ1", param: pick(row.OZ1_OZ2) },
+    { desc: "OZ2", param: pick(row.OZ1_OZ2) },
     { desc: "RC 1 Radius", param: pick(row.RC1_radius) },
     { desc: "RC 1 Tor", param: pick(row.RC1_tor) },
     { desc: "AC 1 Radius", param: pick(row.AC1_radius) },
