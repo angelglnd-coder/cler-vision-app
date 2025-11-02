@@ -219,28 +219,40 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     overflow: hidden;
-    margin-top: 10px;
-  }
-  .t-head,
-  .t-row {
-    display: grid;
-    grid-template-columns: minmax(180px, 2fr) minmax(120px, 1.5fr) minmax(120px, 2fr);
-    align-items: center;
+    margin-top: 20px;
   }
   .t-head {
+    display: grid;
+    grid-template-columns: minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(240px, 2.4fr);
+    align-items: center;
     background: var(--light);
     border-bottom: 1px solid var(--line);
     font-weight: 700;
   }
+  .t-row {
+    display: grid;
+    grid-template-columns: minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(120px, 1.2fr) minmax(120px, 1.2fr);
+    align-items: stretch;
+  }
   .cell {
-    padding: 8px 12px;
+    padding: 12px;
+    border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     font-size: 0.92rem;
     overflow-wrap: break-word;
     word-break: break-word;
+    min-height: 44px;
   }
-  .cell.num {
-    text-align: right;
+  .t-row .cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .cell:last-child {
+    border-right: none;
+  }
+  .t-row .cell.num {
+    justify-content: center;
     font-variant-numeric: tabular-nums;
   }
   .t-row:last-child .cell {
@@ -359,13 +371,18 @@
     <div class="t-head">
       <div class="cell">Desc.</div>
       <div class="cell">Param.</div>
-      <div class="cell">QC</div>
+      <div class="cell">Desc.</div>
+      <div class="cell">Param.</div>
+      <div class="cell" style="justify-content: center; text-align:center;">QC</div>
     </div>
 
-    {#each specRows as r}
+    {#each Array(Math.ceil(specRows.length / 2)) as _, i}
       <div class="t-row">
-        <div class="cell">{r.desc}</div>
-        <div class="cell num">{fmt(r.param)}</div>
+        <div class="cell">{specRows[i * 2]?.desc || ""}</div>
+        <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
+        <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
+        <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
+        <div class="cell"></div>
         <div class="cell"></div>
       </div>
     {/each}
