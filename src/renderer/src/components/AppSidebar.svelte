@@ -24,7 +24,7 @@
     <Sidebar.Group>
       <Sidebar.GroupLabel>General</Sidebar.GroupLabel>
       <Sidebar.Menu>
-        <Sidebar.MenuItem>
+        <!-- <Sidebar.MenuItem>
           <Sidebar.MenuButton>
             <a href={p('/')}
                use:isActiveLink={{ className: "bg-accent text-accent-foreground" }}
@@ -32,13 +32,13 @@
               <PackagePlus class="size-4" />  <span>Batch Orders</span>
             </a>
           </Sidebar.MenuButton>
-        </Sidebar.MenuItem>
+        </Sidebar.MenuItem> -->
         <Sidebar.MenuItem>
           <Sidebar.MenuButton>
             <a href={p('/workorders')}
                use:isActiveLink={{ className: "bg-accent text-accent-foreground" }}
                class="flex items-center gap-2">
-              <Combine class="size-4" /> <span>Work Orders</span>
+              <PackagePlus class="size-4" />  <span>Work Orders</span>
             </a>
           </Sidebar.MenuButton>
         </Sidebar.MenuItem>
