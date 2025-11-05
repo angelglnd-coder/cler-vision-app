@@ -116,10 +116,6 @@ export const woMachine = setup({
       columns: () => [],
       total: 0,
       error: null,
-      filters: null,
-    }),
-    setFilters: assign({
-      filters: ({ event }) => event.filters ?? null,
     }),
   },
   actors: {
@@ -186,7 +182,6 @@ export const woMachine = setup({
     columns: [],
     total: 0,
     error: null,
-    filters: null,
   },
   states: {
     idle: {
@@ -195,41 +190,16 @@ export const woMachine = setup({
           target: "loading",
           actions: "clearError",
         },
-        LOAD_ONE: {
-          target: "loadingOne",
-          actions: "clearError",
-        },
-        LOAD_FILTERED: {
-          target: "loading",
-          actions: ["setFilters", "clearError"],
-        },
       },
     },
 
-    // Loading all work orders or filtered work orders
+    // Loading all work orders
     loading: {
       invoke: {
-        src: ({ context }) => context.filters ? "fetchWorkOrdersFiltered" : "fetchWorkOrders",
-        input: ({ context }) => ({ filters: context.filters }),
+        src: "fetchWorkOrders",
         onDone: {
           target: "ready",
           actions: "setWorkOrders",
-        },
-        onError: {
-          target: "error",
-          actions: "setError",
-        },
-      },
-    },
-
-    // Loading a single work order
-    loadingOne: {
-      invoke: {
-        src: "fetchWorkOrderById",
-        input: ({ event }) => ({ id: event.id }),
-        onDone: {
-          target: "ready",
-          actions: "setSingleWorkOrder",
         },
         onError: {
           target: "error",
@@ -245,14 +215,6 @@ export const woMachine = setup({
           target: "loading",
           actions: "clearError",
         },
-        LOAD_ONE: {
-          target: "loadingOne",
-          actions: "clearError",
-        },
-        LOAD_FILTERED: {
-          target: "loading",
-          actions: ["setFilters", "clearError"],
-        },
         REFRESH: {
           target: "refreshing",
           actions: "clearError",
@@ -267,8 +229,7 @@ export const woMachine = setup({
     // Refreshing current data
     refreshing: {
       invoke: {
-        src: ({ context }) => context.filters ? "fetchWorkOrdersFiltered" : "fetchWorkOrders",
-        input: ({ context }) => ({ filters: context.filters }),
+        src: "fetchWorkOrders",
         onDone: {
           target: "ready",
           actions: "setWorkOrders",
@@ -289,10 +250,6 @@ export const woMachine = setup({
         },
         LOAD: {
           target: "loading",
-          actions: "clearError",
-        },
-        LOAD_ONE: {
-          target: "loadingOne",
           actions: "clearError",
         },
         RESET: {
