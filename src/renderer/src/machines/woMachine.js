@@ -25,28 +25,33 @@ import { WO_COLUMNS } from "../utils/woColumns.js";
 
 // Define numeric fields for proper alignment in UI
 const NUMERIC_FIELDS = new Set([
-  "PW1_PW2",
-  "DIAM",
-  "OZ1_OZ2",
-  "SAG_HEIGHT",
-  "CT_width",
-  "RC1_value",
-  "RC1_width",
-  "RC1_cyl",
-  "AC1_value",
-  "AC1_width",
-  "AC1_cyl",
-  "AC2_value",
-  "AC2_width",
-  "AC2_cyl",
-  "AC3_value",
-  "AC3_width",
-  "AC3_cyl",
-  "PC1_value",
-  "PC1_width",
-  "Queue_Thickness",
-  "mtnum",
-  "ctnum",
+  "cyl",
+  "diam",
+  "cylP",
+  "edgeThick",
+  "centerThick",
+  "eValue",
+  "bc1",
+  "bc2",
+  "pw1",
+  "pw2",
+  "oz1",
+  "oz2",
+  "rc1Radius",
+  "ac1Radius",
+  "ac2Radius",
+  "ac3Radius",
+  "rc1Tor",
+  "ac1Tor",
+  "ac2Tor",
+  "ac3Tor",
+  "rc1Width",
+  "ac1Width",
+  "ac2Width",
+  "ac3Width",
+  "pc1Radius",
+  "pc2Radius",
+  "pcwidth",
 ]);
 
 /**
@@ -60,7 +65,7 @@ function makeColumns() {
     headerFilter: "input",
     headerSort: true,
     hozAlign: NUMERIC_FIELDS.has(col) ? "right" : "left",
-    frozen: ["WO_Number"].includes(col),
+    frozen: ["woNumber"].includes(col),
   }));
 }
 
@@ -122,7 +127,8 @@ export const woMachine = setup({
     fetchWorkOrders: fromPromise(async () => {
       try {
         const response = await getWorkOrders();
-        const data = normalizeWorkOrders(response.data);
+        console.log("API response =>", response);
+        const data = normalizeWorkOrders(response.data.data);
         return {
           data,
           columns: makeColumns(),
@@ -157,7 +163,7 @@ export const woMachine = setup({
       try {
         const { filters } = input;
         const response = await getWorkOrdersFiltered(filters);
-        const data = normalizeWorkOrders(response.data);
+        const data = normalizeWorkOrders(response.data.data);
         return {
           data,
           columns: makeColumns(),
