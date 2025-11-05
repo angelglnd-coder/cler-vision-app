@@ -2,6 +2,7 @@
   import { actor } from "../machines/woMachine.js";
   import { onMount } from "svelte";
   import WorkOrderView from "../components/WorkOrderView.svelte";
+  import { ChevronRight,PackagePlus } from "@lucide/svelte";
 
   import { Grid, Willow } from "@svar-ui/svelte-grid";
   import { Splitpanes, Pane } from "svelte-splitpanes";
@@ -79,9 +80,12 @@
     window.print();
   }
 
-  function createWorkOrder() {
-    console.log("Create new work order");
-    // TODO: Implement create work order functionality
+  function onPick(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    console.log("Selected file:", file.name);
+    // TODO: Process the Excel file to create work orders
+    // You can send this to your state machine or process it directly
   }
 
   onMount(() => {
@@ -108,6 +112,46 @@
 </script>
 
 <style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  .breadcrumb {
+    padding: 1rem 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .breadcrumb-item li {
+    display: flex;
+    align-items: center;
+  }
+  .breadcrumb-link {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .breadcrumb-link:hover {
+    color: #3b82f6;
+  }
+  .breadcrumb-current {
+    color: #111827;
+    font-weight: 500;
+  }
   .pretty-btn {
     display: inline-flex;
     align-items: center;
@@ -196,12 +240,20 @@
 {#if state?.matches("ready")}
   <Splitpanes style="height: 100%">
     <Pane>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <ol class="breadcrumb-item">
+          <li>
+            <PackagePlus class="size-4" />
+            <span class="breadcrumb-current">Work Orders</span></li>
+        </ol>
+      </nav>
+
+      <input id="file-input" type="file" accept=".xlsx" class="sr-only" on:change={onPick} />
+
       <div
         style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;"
       >
-        <button class="pretty-btn" on:click={createWorkOrder}> ➕ Create </button>
-        <button class="pretty-btn" on:click={refresh}> 🔄 Refresh </button>
-        <button class="pretty-btn" on:click={reset}> ↩️ Reset </button>
+        <label for="file-input" class="pretty-btn">➕ Create</label>
         <button class="pretty-btn" on:click={onClick}>
           {visiblePane ? "◀ Hide" : "▶ Show"} Preview
         </button>
