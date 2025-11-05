@@ -29,10 +29,6 @@
     actor.send({ type: "LOAD" });
   }
 
-  function refresh() {
-    actor.send({ type: "REFRESH" });
-  }
-
   function reset() {
     actor.send({ type: "RESET" });
     rows = [];
@@ -100,6 +96,10 @@
       }
       console.log("state mch =>", state);
     });
+
+    // Automatically load work orders on mount
+    loadWorkOrders();
+
     return () => {
       sub.unsubscribe?.();
       actor.stop();
@@ -184,13 +184,6 @@
   }
 </style>
 
-{#if state?.matches("idle")}
-  <div style="padding: 2rem;">
-    <h1 style="margin-bottom: 1rem;">Work Orders from Database</h1>
-    <button class="pretty-btn" on:click={loadWorkOrders}>📋 Load Work Orders</button>
-    <p style="margin-top: 1rem; color: #6b7280;">Click to load work orders from the database</p>
-  </div>
-{/if}
 
 {#if state?.matches("loading") || state?.matches("refreshing")}
   <div style="padding: 2rem;">
