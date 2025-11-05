@@ -137,41 +137,6 @@ export const woMachine = setup({
         );
       }
     }),
-
-    // Fetch a single work order by ID
-    fetchWorkOrderById: fromPromise(async ({ input }) => {
-      try {
-        const { id } = input;
-        if (!id) throw new Error("Work order ID is required");
-
-        const response = await getWorkOrderById(id);
-        return response.data;
-      } catch (error) {
-        console.error(`Error fetching work order ${input.id}:`, error);
-        throw new Error(
-          error.response?.data?.message || error.message || "Failed to fetch work order",
-        );
-      }
-    }),
-
-    // Fetch filtered work orders
-    fetchWorkOrdersFiltered: fromPromise(async ({ input }) => {
-      try {
-        const { filters } = input;
-        const response = await getWorkOrdersFiltered(filters);
-        const data = normalizeWorkOrders(response.data.data);
-        return {
-          data,
-          columns: makeColumns(),
-          total: data.length,
-        };
-      } catch (error) {
-        console.error("Error fetching filtered work orders:", error);
-        throw new Error(
-          error.response?.data?.message || error.message || "Failed to fetch filtered work orders",
-        );
-      }
-    }),
   },
 }).createMachine({
   id: "workOrder",
