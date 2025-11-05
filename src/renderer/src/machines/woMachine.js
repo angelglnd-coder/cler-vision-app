@@ -130,7 +130,9 @@ export const woMachine = setup({
         };
       } catch (error) {
         console.error("Error fetching work orders:", error);
-        throw new Error(error.response?.data?.message || error.message || "Failed to fetch work orders");
+        throw new Error(
+          error.response?.data?.message || error.message || "Failed to fetch work orders",
+        );
       }
     }),
 
@@ -144,7 +146,9 @@ export const woMachine = setup({
         return response.data;
       } catch (error) {
         console.error(`Error fetching work order ${input.id}:`, error);
-        throw new Error(error.response?.data?.message || error.message || "Failed to fetch work order");
+        throw new Error(
+          error.response?.data?.message || error.message || "Failed to fetch work order",
+        );
       }
     }),
 
@@ -161,7 +165,9 @@ export const woMachine = setup({
         };
       } catch (error) {
         console.error("Error fetching filtered work orders:", error);
-        throw new Error(error.response?.data?.message || error.message || "Failed to fetch filtered work orders");
+        throw new Error(
+          error.response?.data?.message || error.message || "Failed to fetch filtered work orders",
+        );
       }
     }),
   },

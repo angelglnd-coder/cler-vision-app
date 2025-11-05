@@ -223,7 +223,9 @@
   }
   .t-head {
     display: grid;
-    grid-template-columns: minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(240px, 2.4fr);
+    grid-template-columns:
+      minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr)
+      minmax(240px, 2.4fr);
     align-items: center;
     background: var(--light);
     border-bottom: 1px solid var(--line);
@@ -231,7 +233,9 @@
   }
   .t-row {
     display: grid;
-    grid-template-columns: minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(120px, 1.2fr) minmax(120px, 1.2fr);
+    grid-template-columns:
+      minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr)
+      minmax(120px, 1.2fr) minmax(120px, 1.2fr);
     align-items: stretch;
   }
   .cell {
@@ -298,7 +302,6 @@
 <div class="sheet">
   <!-- Top title -->
   <div class="titlebar">
-    
     <div class="badge">PRGM: {data.prgm || "—"}</div>
   </div>
 
