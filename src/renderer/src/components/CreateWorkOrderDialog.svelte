@@ -1,26 +1,43 @@
 <script>
   import * as Dialog from "$lib/components/ui/dialog";
   import { Button } from "$lib/components/ui/button";
-  import { actor } from "../machines/woExcelLoaderMachine.js";
+  import { createWoExcelLoaderActor } from "../machines/woExcelLoaderMachine.js";
   import { onMount } from "svelte";
   import { createWorkOrder } from "../api/workOrderApi.js";
+  import { Grid, Willow } from "@svar-ui/svelte-grid";
 
   let { open = $bindable(false), onSuccess = () => {} } = $props();
 
-  // State
-  let state = actor.getSnapshot();
-  let columns = [];
-  let rows = [];
-  let errors = [];
-  let fileName = "";
-  let isSubmitting = false;
-  let submitError = null;
-  let submitSuccess = false;
+  // Create a new actor instance for this component
+  const actorExcel = createWoExcelLoaderActor();
 
-  actor.start();
+  // State - using $state() for proper reactivity in Svelte 5
+  let state = $state(actorExcel.getSnapshot());
+  let columns = $state([]);
+  let rows = $state([]);
+  let errors = $state([]);
+  let fileName = $state("");
+  let isSubmitting = $state(false);
+  let submitError = $state(null);
+  let submitSuccess = $state(false);
+
+  // Transform columns to SVAR Grid format
+  function toSvarColumns(tabCols = []) {
+    return tabCols.map((c) => {
+      const id = c.field || c.title || Math.random().toString(36).slice(2);
+      return {
+        id, // Grid uses this as the field key
+        header: c.title || id, // what you see in the header
+        width: 150,
+        sortable: true,
+        filter: true,
+        align: c.hozAlign === "right" ? "right" : "left",
+      };
+    });
+  }
 
   function updateFromContext(ctx) {
-    columns = ctx.columns || [];
+    columns = toSvarColumns(ctx.columns || []);
     rows = ctx.data || [];
     errors = ctx.errors || [];
     fileName = ctx.fileName || "";
@@ -31,20 +48,20 @@
     if (!file) return;
 
     console.log("1) Selected file:", file.name);
-    actor.send({ type: "FILE.SELECT", file });
+    actorExcel.send({ type: "FILE.SELECT", file });
     submitError = null;
     submitSuccess = false;
   }
 
   function handleCancel() {
-    actor.send({ type: "RESET" });
+    actorExcel.send({ type: "RESET" });
     open = false;
     submitError = null;
     submitSuccess = false;
   }
 
   function handleGenerateWorkOrders() {
-    actor.send({ type: "GENERATE.WO" });
+    actorExcel.send({ type: "GENERATE.WO" });
   }
 
   async function handleSubmit() {
@@ -65,7 +82,7 @@
 
       // Close dialog after brief delay to show success
       setTimeout(() => {
-        actor.send({ type: "RESET" });
+        actorExcel.send({ type: "RESET" });
         open = false;
         isSubmitting = false;
       }, 1000);
@@ -76,32 +93,21 @@
     }
   }
 
-  // Safe key for column field access
-  function getSafeValue(row, field) {
-    return row?.[field] ?? "";
-  }
-
   onMount(() => {
-    console.log("onMOUNT: createWorkORDER Dialog", state);
-    const sub = actor.subscribe((s) => {
+    // Start the actor when component mounts
+    actorExcel.start();
+    console.log("onMOUNT: createWorkORDER Dialog", actorExcel.getSnapshot());
+
+    const sub = actorExcel.subscribe((s) => {
       state = s;
-      // if (s.matches("ready")) {
-      //   updateFromContext(s.context);
-      // }
-      // if (s.matches("error")) {
-      //   updateFromContext(s.context);
-      //   rows = [];
-      //   columns = [];
-      // }
-      // if (s.matches("generatingWorkOrders")) {
-      //   console.log("Generating work orders...");
-      // }
+      updateFromContext(s.context);
       console.log("State:", state);
     });
 
     return () => {
       sub.unsubscribe?.();
-      actor.stop();
+      // Safe to stop since this is a per-component instance
+      actorExcel.stop();
     };
   });
 </script>
