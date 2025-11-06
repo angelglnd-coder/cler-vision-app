@@ -1,5 +1,5 @@
 <script>
-  import { actor } from "../machines/woExcelLoaderMachine";
+  import { woExcelLoaderActor as actor } from "../machines/woExcelLoaderMachine";
   import { onMount } from "svelte";
   import WorkOrderView from "../components/WorkOrderView.svelte";
 
