@@ -255,7 +255,7 @@ function makeColumns() {
 const LS19_CODES = new Set(["B18", "C18", "F12", "F14", "F18"]);
 const LS28_CODES = new Set(["PK29", "PL27", "PL29", "PM27"]);
 
-export const woExcelLoaderchine = setup({
+export const woExcelLoaderMachine = setup({
   actions: {
     setFileMeta: assign({
       fileName: ({ event }) => event.input?.file?.name ?? null,
@@ -720,4 +720,8 @@ export const woExcelLoaderchine = setup({
   },
 });
 
-export const actor = createActor(woExcelLoaderchine);
+// Export the machine for creating actor instances per component
+// Don't export a singleton actor to avoid sharing state between components
+export function createWoExcelLoaderActor() {
+  return createActor(woExcelLoaderMachine);
+}
