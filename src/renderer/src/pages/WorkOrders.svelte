@@ -2,7 +2,8 @@
   import { actor } from "../machines/woMachine.js";
   import { onMount } from "svelte";
   import WorkOrderView from "../components/WorkOrderView.svelte";
-  import { ChevronRight,PackagePlus } from "@lucide/svelte";
+  import CreateWorkOrderDialog from "../components/CreateWorkOrderDialog.svelte";
+  import { ChevronRight, PackagePlus } from "@lucide/svelte";
 
   import { Grid, Willow } from "@svar-ui/svelte-grid";
   import { Splitpanes, Pane } from "svelte-splitpanes";
@@ -13,6 +14,7 @@
   let visiblePane = false;
   let selected = null;
   let woRef;
+  let dialogOpen = false;
 
   // same safeKey you already use elsewhere
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
@@ -80,12 +82,13 @@
     window.print();
   }
 
-  function onPick(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    console.log("Selected file:", file.name);
-    // TODO: Process the Excel file to create work orders
-    // You can send this to your state machine or process it directly
+  function openCreateDialog() {
+    dialogOpen = true;
+  }
+
+  function handleWorkOrdersCreated() {
+    // Reload work orders after successful creation
+    loadWorkOrders();
   }
 
   onMount(() => {
@@ -105,6 +108,7 @@
     loadWorkOrders();
 
     return () => {
+      console.log("woMachine stopped");
       sub.unsubscribe?.();
       actor.stop();
     };
@@ -228,7 +232,6 @@
   }
 </style>
 
-
 {#if state?.matches("loading") || state?.matches("refreshing")}
   <div style="padding: 2rem;">
     <span style="color: #3b82f6; font-size: 1rem;">
@@ -244,16 +247,15 @@
         <ol class="breadcrumb-item">
           <li>
             <PackagePlus class="size-4" />
-            <span class="breadcrumb-current">Work Orders</span></li>
+            <span class="breadcrumb-current">Work Orders</span>
+          </li>
         </ol>
       </nav>
-
-      <input id="file-input" type="file" accept=".xlsx" class="sr-only" on:change={onPick} />
 
       <div
         style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;"
       >
-        <label for="file-input" class="pretty-btn">➕ Create</label>
+        <button class="pretty-btn" on:click={openCreateDialog}>➕ Create</button>
         <button class="pretty-btn" on:click={onClick}>
           {visiblePane ? "◀ Hide" : "▶ Show"} Preview
         </button>
@@ -301,4 +303,7 @@
     <button class="pretty-btn" on:click={loadWorkOrders}>🔄 Retry</button>
     <button class="pretty-btn" on:click={reset}>↩️ Reset</button>
   </div>
+{/if}
+{#if dialogOpen}
+  <CreateWorkOrderDialog bind:open={dialogOpen} onSuccess={handleWorkOrdersCreated} />
 {/if}
