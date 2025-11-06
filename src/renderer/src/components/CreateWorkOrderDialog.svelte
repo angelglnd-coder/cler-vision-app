@@ -137,6 +137,7 @@
   .dialog-content {
     max-height: 70vh;
     overflow-y: auto;
+    width: 100%;
   }
 
   .loading-message {
@@ -193,52 +194,12 @@
     padding: 1rem;
   }
 
-  .table-wrapper {
+  .grid-wrapper {
+    height: 60vh;
+    width: 100%;
     overflow-x: auto;
-    max-height: 60vh;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-  }
-
-  .data-table thead {
-    background: #f9fafb;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .data-table th {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 2px solid #e5e7eb;
-    white-space: nowrap;
-  }
-
-  .data-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f3f4f6;
-    color: #1f2937;
-    white-space: nowrap;
-  }
-
-  .data-table tbody tr:hover {
-    background: #f9fafb;
-  }
-
-  .info-message {
-    color: #6b7280;
-    font-size: 0.875rem;
-    text-align: center;
-    padding: 0.5rem;
   }
 
   .mt-4 {
@@ -247,7 +208,7 @@
 </style>
 
 <Dialog.Root bind:open>
-  <Dialog.Content class={rows.length > 0 ? "max-w-[90vw]" : "sm:max-w-[425px]"}>
+  <Dialog.Content class={state?.matches("ready") && rows.length > 0 ? "!max-w-[95vw] !w-[95vw]" : "!max-w-[600px]"}>
     <Dialog.Header>
       <Dialog.Title>Create Work Order</Dialog.Title>
       <Dialog.Description>
@@ -319,29 +280,10 @@
             </div>
           {/if}
 
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  {#each columns.slice(0, 10) as column, i (column.field || i)}
-                    <th>{column.title}</th>
-                  {/each}
-                </tr>
-              </thead>
-              <tbody>
-                {#each rows as row, rowIdx (rowIdx)}
-                  <tr>
-                    {#each columns.slice(0, 10) as column, colIdx (column.field || colIdx)}
-                      <td>{getSafeValue(row, column.field)}</td>
-                    {/each}
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="info-message">
-            Showing first 10 columns of {columns.length} total columns
+          <div class="grid-wrapper">
+            <Willow>
+              <Grid data={rows} {columns} />
+            </Willow>
           </div>
         </div>
       {/if}
