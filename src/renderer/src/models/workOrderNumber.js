@@ -20,8 +20,8 @@
  * @returns {string} Formatted work order number (e.g., "003-000001 0")
  */
 export function formatWorkOrderNumber(soldTo, sequence, printCount = 0) {
-  const soldToStr = String(soldTo).padStart(3, '0');
-  const sequenceStr = String(sequence).padStart(6, '0');
+  const soldToStr = String(soldTo).padStart(3, "0");
+  const sequenceStr = String(sequence).padStart(6, "0");
   const printCountStr = String(printCount);
 
   // Validate components
@@ -46,8 +46,8 @@ export function formatWorkOrderNumber(soldTo, sequence, printCount = 0) {
  * @returns {{soldTo: string, sequence: string, printCount: string, baseNumber: string}}
  */
 export function parseWorkOrderNumber(workOrderNumber) {
-  if (!workOrderNumber || typeof workOrderNumber !== 'string') {
-    throw new Error('Work order number must be a non-empty string');
+  if (!workOrderNumber || typeof workOrderNumber !== "string") {
+    throw new Error("Work order number must be a non-empty string");
   }
 
   // Expected format: XXX-YYYYYY Z where XXX is SOLD_TO, YYYYYY is sequence, Z is print_count (with space)
@@ -55,7 +55,7 @@ export function parseWorkOrderNumber(workOrderNumber) {
 
   if (!match) {
     throw new Error(
-      `Invalid work order format: ${workOrderNumber}. Expected format: XXX-YYYYYY Z (e.g., 003-000001 0)`
+      `Invalid work order format: ${workOrderNumber}. Expected format: XXX-YYYYYY Z (e.g., 003-000001 0)`,
     );
   }
 
@@ -68,7 +68,7 @@ export function parseWorkOrderNumber(workOrderNumber) {
     soldTo,
     sequence,
     printCount,
-    baseNumber
+    baseNumber,
   };
 }
 
@@ -110,7 +110,7 @@ export function generateReprintWorkOrder(workOrderNumber) {
 
   if (newPrintCount > 9) {
     throw new Error(
-      `Cannot increment print_count beyond 9. Current: ${currentPrintCount}, WO: ${workOrderNumber}`
+      `Cannot increment print_count beyond 9. Current: ${currentPrintCount}, WO: ${workOrderNumber}`,
     );
   }
 
@@ -158,9 +158,7 @@ export function getNextSequence(soldTo, currentSequence) {
   const nextSeq = currentSequence + 1;
 
   if (nextSeq > 999999) {
-    throw new Error(
-      `Sequence limit exceeded for SOLD_TO ${soldTo}. Maximum sequence is 999999.`
-    );
+    throw new Error(`Sequence limit exceeded for SOLD_TO ${soldTo}. Maximum sequence is 999999.`);
   }
 
   return nextSeq;
@@ -172,8 +170,8 @@ export function getNextSequence(soldTo, currentSequence) {
  * @returns {string} Description of the reprint
  */
 export function getReprintReason(printCount) {
-  if (printCount === 0) return 'Original Work Order';
-  if (printCount === 1) return 'First Reprint (PNR/RMA)';
+  if (printCount === 0) return "Original Work Order";
+  if (printCount === 1) return "First Reprint (PNR/RMA)";
   return `Reprint #${printCount}`;
 }
 

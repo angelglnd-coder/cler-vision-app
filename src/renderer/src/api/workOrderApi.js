@@ -7,12 +7,6 @@ import config from "./config";
 
 export const getWorkOrderNextNumber = () => config.get("/workorders/next-number");
 // {
-//   "latestWoNumber": "003-000003 0",
-//   "prefix": "003",
-//   "sequentialNumber": 3,
-//   "suffix": "0",
-//   "nextNumber": 4
-// }
 
 /**
  * Fetch next sequence numbers for multiple SOLD_TO accounts
