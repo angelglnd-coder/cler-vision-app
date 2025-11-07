@@ -43,7 +43,7 @@
     state = actor.getSnapshot();
     const sub = actor.subscribe((s) => {
       state = s;
-      if (s.matches("ready")) render(s.context);
+      if (s.matches("ready") || s.matches("readyCalculations")) render(s.context);
       if (s.matches("error")) table?.clearData?.();
       console.log("state mch =>", state);
     });
@@ -97,7 +97,7 @@
   <button class="pretty-btn" on:click={reset}>Reset</button>
 {/if}
 <div bind:this={tableDiv} style="width: 1600px; overflow-x: auto; overflow-y: none;"></div>
-{#if state?.matches("ready")}
+{#if state?.matches("ready") || state?.matches("readyCalculations")}
   READY
 {/if}
 {#if state?.matches("error")}<div class="text-red-600">{state.context.errors?.[0]}</div>{/if}

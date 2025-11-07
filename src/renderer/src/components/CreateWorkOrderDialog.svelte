@@ -213,7 +213,7 @@
 
 <Dialog.Root bind:open>
   <Dialog.Content
-    class={state?.matches("ready") && rows.length > 0
+    class={(state?.matches("ready") || state?.matches("readyCalculations")) && rows.length > 0
       ? "!w-[95vw] !max-w-[95vw]"
       : "!max-w-[600px]"}
   >
@@ -268,7 +268,7 @@
             />
           </div>
         </div>
-      {:else if state?.matches("ready") && rows.length > 0}
+      {:else if (state?.matches("ready") || state?.matches("readyCalculations")) && rows.length > 0}
         <div class="data-preview">
           {#if submitSuccess}
             <div class="success-message">
@@ -300,7 +300,7 @@
     </div>
 
     <Dialog.Footer>
-      {#if state?.matches("ready") && rows.length > 0}
+      {#if (state?.matches("ready") || state?.matches("readyCalculations")) && rows.length > 0}
         <Button variant="outline" onclick={handleCancel} disabled={isSubmitting}>Cancel</Button>
         {#if !rows[0]?.WO_Number}
           <Button onclick={handleGenerateWorkOrders} disabled={isSubmitting}>
