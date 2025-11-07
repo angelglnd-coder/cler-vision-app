@@ -5,6 +5,56 @@ import config from "./config";
  * Handles all work order related API calls
  */
 
+export const getWorkOrderNextNumber = () => config.get("/workorders/next-number");
+// {
+//   "latestWoNumber": "003-000003 0",
+//   "prefix": "003",
+//   "sequentialNumber": 3,
+//   "suffix": "0",
+//   "nextNumber": 4
+// }
+
+/**
+ * Fetch next sequence numbers for multiple SOLD_TO accounts
+ * @param {string[]} soldToAccounts - Array of 3-digit SOLD_TO account codes
+ * @returns {Promise<Object>} Promise resolving to map of soldTo -> sequence data
+ * Example response:
+ * {
+ *   "003": { prefix: "003", sequentialNumber: 3, suffix: "0", latestWoNumber: "003-000003 0", nextNumber: 4 },
+ *   "005": { prefix: "005", sequentialNumber: 12, suffix: "0", latestWoNumber: "005-000012 0", nextNumber: 13 }
+ * }
+ */
+export const getWorkOrderNextNumbers = async (soldToAccounts) => {
+  if (!soldToAccounts || soldToAccounts.length === 0) {
+    return {};
+  }
+
+  // Make parallel requests for each SOLD_TO account
+  const promises = soldToAccounts.map(async (soldTo) => {
+    try {
+      const response = await config.get(`/workorders/next-number`, { params: { prefix: soldTo } });
+      return { soldTo, data: response };
+    } catch (error) {
+      console.error(`Failed to fetch sequence for SOLD_TO ${soldTo}:`, error);
+      return { soldTo, data: null, error: error.message };
+    }
+  });
+
+  const results = await Promise.all(promises);
+
+  // Convert array to map
+  const sequenceMap = {};
+  results.forEach(({ soldTo, data, error }) => {
+    if (data) {
+      sequenceMap[soldTo] = data;
+    } else {
+      sequenceMap[soldTo] = { error };
+    }
+  });
+
+  return sequenceMap;
+};
+
 /**
  * Fetch all work orders from the database
  * @returns {Promise} Promise resolving to work orders array

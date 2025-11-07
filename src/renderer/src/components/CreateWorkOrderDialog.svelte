@@ -61,6 +61,10 @@
   }
 
   function handleGenerateWorkOrders() {
+    console.log("handleGenerateWorkOrders called");
+    console.log("Current state:", state?.value);
+    console.log("isSubmitting:", isSubmitting);
+    console.log("rows[0]?.WO_Number:", rows[0]?.WO_Number);
     actorExcel.send({ type: "GENERATE.WO" });
   }
 
@@ -208,7 +212,11 @@
 </style>
 
 <Dialog.Root bind:open>
-  <Dialog.Content class={state?.matches("ready") && rows.length > 0 ? "!max-w-[95vw] !w-[95vw]" : "!max-w-[600px]"}>
+  <Dialog.Content
+    class={state?.matches("ready") && rows.length > 0
+      ? "!w-[95vw] !max-w-[95vw]"
+      : "!max-w-[600px]"}
+  >
     <Dialog.Header>
       <Dialog.Title>Create Work Order</Dialog.Title>
       <Dialog.Description>
@@ -241,7 +249,7 @@
       {:else if state?.matches("building")}
         <div class="loading-message">🏗️ Building data grid...</div>
       {:else if state?.matches("generatingWorkOrders")}
-        <div class="loading-message">🔢 Generating work order numbers...</div>
+        <div class="loading-message">🔢 Fetching sequences and generating work order numbers...</div>
       {:else if state?.matches("error")}
         <div class="error-container">
           <div class="error-title">❌ Error</div>
@@ -291,13 +299,13 @@
 
     <Dialog.Footer>
       {#if state?.matches("ready") && rows.length > 0}
-        <Button variant="outline" on:click={handleCancel} disabled={isSubmitting}>Cancel</Button>
+        <Button variant="outline" onclick={handleCancel} disabled={isSubmitting}>Cancel</Button>
         {#if !rows[0]?.WO_Number}
-          <Button on:click={handleGenerateWorkOrders} disabled={isSubmitting}>
+          <Button onclick={handleGenerateWorkOrders} disabled={isSubmitting}>
             Generate Work Orders
           </Button>
         {:else}
-          <Button on:click={handleSubmit} disabled={isSubmitting}>
+          <Button onclick={handleSubmit} disabled={isSubmitting}>
             {#if isSubmitting}
               Creating...
             {:else}
@@ -306,9 +314,9 @@
           </Button>
         {/if}
       {:else if state?.matches("error")}
-        <Button variant="outline" on:click={handleCancel}>Close</Button>
+        <Button variant="outline" onclick={handleCancel}>Close</Button>
       {:else}
-        <Button variant="outline" on:click={handleCancel}>Cancel</Button>
+        <Button variant="outline" onclick={handleCancel}>Cancel</Button>
       {/if}
     </Dialog.Footer>
   </Dialog.Content>

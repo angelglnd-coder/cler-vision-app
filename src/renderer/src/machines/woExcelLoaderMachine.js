@@ -11,6 +11,7 @@ import * as XLSX from "xlsx";
 import { notifyProgress } from "../utils/notify.js";
 import { lensCalc } from "../models/lensCalculations.js";
 import * as WO from "../models/workOrderNumber.js";
+import { getWorkOrderNextNumbers } from "../api/workOrderApi.js";
 
 const NUMERIC_FIELDS = new Set([
   "PW1_PW2",
@@ -332,6 +333,7 @@ export const woExcelLoaderMachine = setup({
     setGeneratedWorkOrders: assign({
       data: ({ event }) => event.output.rows,
       sequenceCounters: ({ event }) => event.output.sequenceCounters,
+      apiSequenceData: ({ event }) => event.output.apiSequenceData ?? {},
       woGenerationErrors: ({ event }) => event.output.errors ?? [],
       columns: ({ context }) => {
         const base = (context.columns ?? []).filter(Boolean);
@@ -516,39 +518,110 @@ export const woExcelLoaderMachine = setup({
       return { rows: flattened, neededErr: Array.from(neededErr) };
     }),
     generateWorkOrders: fromPromise(async ({ input }) => {
-      const { rows, soldToField = "Ship_Code", startingSequence = 1 } = input;
+      const { rows, soldToField = "Ship_Code" } = input;
 
       if (!rows || rows.length === 0) {
         throw new Error("No rows to generate work orders for");
       }
 
-      // Group rows by SOLD_TO account and track sequences
-      const sequenceCounters = {};
       const errors = [];
+      const sequenceCounters = {};
 
+      // Step 1: Extract unique SOLD_TO accounts from rows
+      const soldToAccounts = new Set();
+      rows.forEach((row, idx) => {
+        let soldTo = row.Sold_To;
+        if (!soldTo) {
+          errors.push(`Row ${idx + 1}: Missing SOLD_TO field - will be skipped`);
+          return;
+        }
+        // Convert to 3-digit format (pad or truncate)
+        soldTo = String(soldTo).replace(/[^\d]/g, "").slice(0, 3).padStart(3, "0");
+        soldToAccounts.add(soldTo);
+      });
+
+      const uniqueSoldTos = Array.from(soldToAccounts);
+      console.log("Unique SOLD_TO accounts:", uniqueSoldTos);
+
+      // Step 2: Fetch latest sequence numbers from API for all SOLD_TO accounts
+      let apiSequenceData = {};
+      try {
+        apiSequenceData = await notifyProgress(
+          getWorkOrderNextNumbers(uniqueSoldTos),
+          "fetching latest sequence numbers",
+        );
+        console.log("API sequence data:", apiSequenceData);
+      } catch (error) {
+        console.error("Failed to fetch sequence numbers from API:", error);
+        errors.push(
+          `API Error: ${error.message}. Cannot generate work orders without sequence data.`,
+        );
+        throw new Error(`Failed to fetch sequence numbers: ${error.message}`);
+      }
+
+      // Step 3: Initialize sequence counters from API data
+      for (const soldTo of uniqueSoldTos) {
+        const apiData = apiSequenceData[soldTo].data;
+
+        console.log("INSIDE =>", apiData);
+        if (apiData && apiData.error) {
+          errors.push(`SOLD_TO ${soldTo}: API error - ${apiData.error}`);
+          throw new Error(`Failed to get sequence for SOLD_TO ${soldTo}: ${apiData.error}`);
+        }
+
+        if (!apiData || apiData.nextNumber === undefined) {
+          errors.push(`SOLD_TO ${soldTo}: No sequence data from API`);
+          throw new Error(`No sequence data available for SOLD_TO ${soldTo}`);
+        }
+
+        // Use the next sequence number from API
+        const nextSequence = apiData.nextNumber;
+
+        // Validate against max limit (999999)
+        if (nextSequence > 999999) {
+          errors.push(`SOLD_TO ${soldTo}: Sequence limit exceeded (max 999999)`);
+          throw new Error(`SOLD_TO ${soldTo} has reached maximum sequence number (999999)`);
+        }
+
+        sequenceCounters[soldTo] = nextSequence;
+        console.log(
+          `SOLD_TO ${soldTo}: Starting at sequence ${nextSequence} (API current: ${apiData.sequentialNumber})`,
+        );
+      }
+
+      // Step 4: Generate work order numbers for each row
       const updatedRows = await notifyProgress(
         Promise.resolve().then(() => {
           return rows.map((row, idx) => {
             try {
-              // Get SOLD_TO from the specified field (Ship Code is primary)
+              // Get SOLD_TO from the specified field
               let soldTo = row.Sold_To;
 
-              console.log("ship TO", row.Ship_Code);
               if (!soldTo) {
-                errors.push(`Row ${idx + 1}: Missing SOLD_TO (${soldToField}) - skipped`);
+                errors.push(`Row ${idx + 1}: Missing SOLD_TO - skipped`);
                 return { ...row, WO_Number: null };
               }
 
               // Convert to 3-digit format (pad or truncate)
               soldTo = String(soldTo).replace(/[^\d]/g, "").slice(0, 3).padStart(3, "0");
 
-              // Initialize sequence counter for this SOLD_TO if not exists
+              // Get current sequence for this SOLD_TO
               if (!(soldTo in sequenceCounters)) {
-                sequenceCounters[soldTo] = startingSequence;
+                errors.push(`Row ${idx + 1}: No sequence counter for SOLD_TO ${soldTo}`);
+                return { ...row, WO_Number: null };
+              }
+
+              const sequence = sequenceCounters[soldTo];
+
+              // Validate sequence before generating
+              if (sequence > 999999) {
+                errors.push(
+                  `Row ${idx + 1}: Sequence ${sequence} exceeds limit for SOLD_TO ${soldTo}`,
+                );
+                return { ...row, WO_Number: null };
               }
 
               // Generate work order number
-              const sequence = sequenceCounters[soldTo];
               const woNumber = WO.generateNewWorkOrder(soldTo, sequence);
 
               // Increment sequence for next row with same SOLD_TO
@@ -578,7 +651,12 @@ export const woExcelLoaderMachine = setup({
         errors,
       });
 
-      return { rows: updatedRows, sequenceCounters, errors };
+      return {
+        rows: updatedRows,
+        sequenceCounters,
+        errors,
+        apiSequenceData, // Include API data for debugging/display
+      };
     }),
   },
 }).createMachine({
@@ -592,6 +670,7 @@ export const woExcelLoaderMachine = setup({
     data: [],
     columns: [],
     sequenceCounters: {},
+    apiSequenceData: {},
     woGenerationErrors: [],
   },
   states: {
