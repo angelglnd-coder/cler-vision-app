@@ -329,6 +329,10 @@ export const woExcelLoaderMachine = setup({
 
         return base;
       },
+      // Preserve WO generation data if it exists
+      sequenceCounters: ({ context }) => context.sequenceCounters ?? {},
+      apiSequenceData: ({ context }) => context.apiSequenceData ?? {},
+      woGenerationErrors: ({ context }) => context.woGenerationErrors ?? [],
     }),
     setGeneratedWorkOrders: assign({
       data: ({ event }) => event.output.rows,
