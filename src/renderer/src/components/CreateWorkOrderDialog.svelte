@@ -250,6 +250,8 @@
         <div class="loading-message">🏗️ Building data grid...</div>
       {:else if state?.matches("generatingWorkOrders")}
         <div class="loading-message">🔢 Fetching sequences and generating work order numbers...</div>
+      {:else if state?.matches("applyingFormulas")}
+        <div class="loading-message">🧮 Applying lens formulas and calculations...</div>
       {:else if state?.matches("error")}
         <div class="error-container">
           <div class="error-title">❌ Error</div>

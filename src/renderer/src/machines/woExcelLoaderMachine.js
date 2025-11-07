@@ -757,7 +757,7 @@ export const woExcelLoaderMachine = setup({
           startingSequence: event.startingSequence || 1,
         }),
         onDone: {
-          target: "ready",
+          target: "applyingFormulas",
           actions: "setGeneratedWorkOrders",
         },
         onError: { target: "error", actions: "setError" },
