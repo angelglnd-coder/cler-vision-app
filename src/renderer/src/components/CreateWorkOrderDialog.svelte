@@ -43,6 +43,84 @@
     fileName = ctx.fileName || "";
   }
 
+  // Helper to convert value to string, empty string if null/undefined
+  function toStringOrEmpty(value) {
+    if (value === null || value === undefined) return "";
+    return String(value);
+  }
+
+  // Helper for optional fields - return undefined if null/undefined/empty
+  function toStringOrUndefined(value) {
+    if (value === null || value === undefined || value === "") return undefined;
+    return String(value);
+  }
+
+  // Transform Excel row data to API format (camelCase)
+  function transformRowForAPI(row) {
+    const transformed = {
+      woNumber: toStringOrEmpty(row.WO_Number),
+      patientName: toStringOrEmpty(row.Patient_Name),
+      po: toStringOrEmpty(row.PO),
+      poDate: toStringOrUndefined(row.PO_date), // Date field - omit if empty
+      no: toStringOrEmpty(row.number),
+      odOs: toStringOrEmpty(row.od_os),
+      kCode: toStringOrEmpty(row.k_code),
+      pCode: toStringOrEmpty(row.p_code),
+      spec: toStringOrEmpty(row.SPEC),
+      cyl: toStringOrEmpty(row.Cyl),
+      diam: toStringOrEmpty(row.Diam),
+      color: toStringOrEmpty(row.Color),
+      laser: toStringOrEmpty(row.Laser),
+      design: toStringOrEmpty(row.Design),
+      vietLabel: toStringOrEmpty(row.Viet_Label),
+      labeling: toStringOrEmpty(row.Labeling),
+      shipCode: toStringOrEmpty(row.Ship_Code),
+      previousSO: toStringOrEmpty(row.previous_so),
+      note: toStringOrEmpty(row.Note),
+      device: toStringOrEmpty(row.Device),
+      mfg: toStringOrEmpty(row.Mfg),
+      matCode: toStringOrEmpty(row.Mat_Code),
+      matLot: toStringOrEmpty(row.Mat_Lot),
+      gtin: toStringOrEmpty(row.GTIN),
+      soldTo: toStringOrEmpty(row.Sold_To),
+      billTo: toStringOrEmpty(row.Bill_To),
+      cldfile: toStringOrEmpty(row.cldfile),
+      type: toStringOrEmpty(row.Type),
+      cylP: toStringOrEmpty(row.Cyl_p),
+      edgeThick: toStringOrEmpty(row.Edge_Thick),
+      centerThick: toStringOrEmpty(row.Center_Thick),
+      eValue: toStringOrEmpty(row.eValue),
+      // Calculated fields (already in correct format or need mapping)
+      bc1: toStringOrEmpty(row.BC1_BC2 || row.bc1),
+      bc2: toStringOrEmpty(row.BC1_BC2 || row.bc2),
+      pw1: toStringOrEmpty(row.PW1_PW2 || row.pw1),
+      pw2: toStringOrEmpty(row.PW1_PW2 || row.pw2),
+      oz1: toStringOrEmpty(row.OZ1_OZ2 || row.oz1),
+      oz2: toStringOrEmpty(row.OZ1_OZ2 || row.oz2),
+      rc1Radius: toStringOrEmpty(row.RC1_radius),
+      ac1Radius: toStringOrEmpty(row.AC1_radius),
+      ac2Radius: toStringOrEmpty(row.AC2_radius),
+      ac3Radius: toStringOrEmpty(row.AC3_radius),
+      rc1Tor: toStringOrEmpty(row.RC1_tor),
+      ac1Tor: toStringOrEmpty(row.AC1_tor),
+      ac2Tor: toStringOrEmpty(row.AC2_tor),
+      ac3Tor: toStringOrEmpty(row.AC3_tor),
+      rc1Width: toStringOrEmpty(row.RC1_width),
+      ac1Width: toStringOrEmpty(row.AC1_width),
+      ac2Width: toStringOrEmpty(row.AC2_width),
+      ac3Width: toStringOrEmpty(row.AC3_width),
+      pc1Radius: toStringOrEmpty(row.PC1_Radius || row.PC_radius),
+      pc2Radius: toStringOrEmpty(row.PC2_Radius),
+      pcwidth: toStringOrEmpty(row.PC_width),
+    };
+
+    // Filter out only undefined values
+    // Keep empty strings for now to match .http file format
+    return Object.fromEntries(
+      Object.entries(transformed).filter(([, value]) => value !== undefined),
+    );
+  }
+
   function handleFileSelect(event) {
     const file = event.target.files?.[0];
     if (!file) return;
