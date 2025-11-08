@@ -7,31 +7,31 @@
   // safe getters
   const g = (k, fb = "") => row?.[k] ?? fb;
 
-  // header data
+  // header data - using camelCase field names from API
   const data = {
-    poDate: g("PO_date"),
-    customerPO: g("PO"),
-    woNumber: g("WO_Number", g("WO")),
+    poDate: g("poDate"),
+    customerPO: g("po"),
+    woNumber: g("woNumber"),
 
-    soldTo: g("Sold_To", g("Account_ID", g("Bill_To"))),
-    cart: g("Shopping_Cart"),
-    deviceText: g("Device", "OrthoK"),
+    soldTo: g("soldTo"),
+    cart: g("shoppingCart"),
+    deviceText: g("device", "OrthoK"),
 
-    shipTo: g("Ship_Code"),
-    patient: g("Patient_Name"),
-    laserMark: g("Laser"),
+    shipTo: g("shipCode"),
+    patient: g("patientName"),
+    laserMark: g("laser"),
 
-    billTo: g("Bill_To"),
-    doctor: g("Doctor_Name"),
-    deviceType: g("Device_Type", g("Type")),
+    billTo: g("billTo"),
+    doctor: g("doctorName"),
+    deviceType: g("deviceType", g("type")),
 
     prgm: g("cldfile"),
 
-    cont1: g("Mat_Code"),
-    cont2: g("Mat_Lot"),
-    cont3: g("GTIN"),
-    color: g("Color"),
-    brand: g("Brand", g("Labeling")),
+    cont1: g("matCode"),
+    cont2: g("matLot"),
+    cont3: g("gtin"),
+    color: g("color"),
+    brand: g("brand", g("labeling")),
   };
 
   // computed helpers
@@ -41,31 +41,31 @@
     return Number.isFinite(n) ? n.toFixed(digits) : (v ?? "") || "";
   };
 
-  // calc rows
+  // calc rows - using camelCase field names from API
   const specRows = [
-    { desc: "BC1", param: pick(row.BC1_BC2) },
-    { desc: "BC2", param: pick(row.BC1_BC2) },
-    { desc: "PW1", param: pick(row.PW1_PW2) },
-    { desc: "PW2", param: pick(row.PW1_PW2) },
-    { desc: "OZ1", param: pick(row.OZ1_OZ2) },
-    { desc: "OZ2", param: pick(row.OZ1_OZ2) },
-    { desc: "RC 1 Radius", param: pick(row.RC1_radius) },
-    { desc: "RC 1 Tor", param: pick(row.RC1_tor) },
-    { desc: "AC 1 Radius", param: pick(row.AC1_radius) },
-    { desc: "AC 1 Tor", param: pick(row.AC1_tor) },
-    { desc: "AC 2 Radius", param: pick(row.AC2_radius) },
-    { desc: "AC 2 Tor", param: pick(row.AC2_tor) },
-    { desc: "AC 3 Radius", param: pick(row.AC3_radius) },
-    { desc: "AC 3 Tor", param: pick(row.AC3_tor) },
-    { desc: "RC 1 Width", param: pick(row.RC1_width) },
-    { desc: "AC 1 Width", param: pick(row.AC1_width) },
-    { desc: "AC 2 Width", param: pick(row.AC2_width) },
-    { desc: "AC 3 Width", param: pick(row.AC3_width) },
-    { desc: "PC Width", param: pick(row.PC_width) },
-    { desc: "PC 1", param: pick(row.PC1_Radius ?? row.PC_radius) },
-    { desc: "PC 2", param: pick(row.PC2_Radius ?? row.PC_radius) },
-    { desc: "Edge Thick", param: pick(row.Edge_Thick) },
-    { desc: "Center Thick", param: pick(row.Center_Thick) },
+    { desc: "BC1", param: pick(row.bc1) },
+    { desc: "BC2", param: pick(row.bc2) },
+    { desc: "PW1", param: pick(row.pw1) },
+    { desc: "PW2", param: pick(row.pw2) },
+    { desc: "OZ1", param: pick(row.oz1) },
+    { desc: "OZ2", param: pick(row.oz2) },
+    { desc: "RC 1 Radius", param: pick(row.rc1Radius) },
+    { desc: "RC 1 Tor", param: pick(row.rc1Tor) },
+    { desc: "AC 1 Radius", param: pick(row.ac1Radius) },
+    { desc: "AC 1 Tor", param: pick(row.ac1Tor) },
+    { desc: "AC 2 Radius", param: pick(row.ac2Radius) },
+    { desc: "AC 2 Tor", param: pick(row.ac2Tor) },
+    { desc: "AC 3 Radius", param: pick(row.ac3Radius) },
+    { desc: "AC 3 Tor", param: pick(row.ac3Tor) },
+    { desc: "RC 1 Width", param: pick(row.rc1Width) },
+    { desc: "AC 1 Width", param: pick(row.ac1Width) },
+    { desc: "AC 2 Width", param: pick(row.ac2Width) },
+    { desc: "AC 3 Width", param: pick(row.ac3Width) },
+    { desc: "PC Width", param: pick(row.pcwidth) },
+    { desc: "PC 1", param: pick(row.pc1Radius) },
+    { desc: "PC 2", param: pick(row.pc2Radius) },
+    { desc: "Edge Thick", param: pick(row.edgeThick) },
+    { desc: "Center Thick", param: pick(row.centerThick) },
   ];
 
   function openDeviceLink() {

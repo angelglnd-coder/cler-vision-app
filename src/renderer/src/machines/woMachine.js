@@ -1,6 +1,6 @@
 import { assign, setup, fromPromise, createActor } from "xstate";
 import { getWorkOrders, getWorkOrderById, getWorkOrdersFiltered } from "../api/workOrderApi.js";
-import { WO_COLUMNS } from "../utils/woColumns.js";
+import { WO_COLUMNS, COLUMN_DISPLAY_NAMES } from "../utils/woColumns.js";
 
 /**
  * Work Order Machine
@@ -60,7 +60,7 @@ const NUMERIC_FIELDS = new Set([
  */
 function makeColumns() {
   return WO_COLUMNS.map((col) => ({
-    title: col,
+    title: COLUMN_DISPLAY_NAMES[col] || col,
     field: col,
     headerFilter: "input",
     headerSort: true,
