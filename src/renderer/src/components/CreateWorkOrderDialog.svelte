@@ -3,7 +3,7 @@
   import { Button } from "$lib/components/ui/button";
   import { createWoExcelLoaderActor } from "../machines/woExcelLoaderMachine.js";
   import { onMount } from "svelte";
-  import { createWorkOrder } from "../api/workOrderApi.js";
+  import { createWorkOrdersBatch } from "../api/workOrderApi.js";
   import { Grid, Willow } from "@svar-ui/svelte-grid";
 
   let { open = $bindable(false), onSuccess = () => {} } = $props();
@@ -152,15 +152,31 @@
     submitSuccess = false;
 
     try {
-      // Create each work order via API
-      const promises = rows.map((row) => createWorkOrder(row));
-      await Promise.all(promises);
+      // Transform all rows to API format (camelCase, filter out error columns)
+      const transformedRows = rows
+        .map(transformRowForAPI)
+        .filter(row => row.woNumber && row.woNumber.trim() !== ''); // Filter out rows without WO number
 
+      console.log('Sending batch create request:', {
+        count: transformedRows.length,
+        sample: transformedRows[0]
+      });
+
+      // Create all work orders in a single batch request
+      const result = await createWorkOrdersBatch(transformedRows);
+
+      const createdCount = result.data.count || 0;
       submitSuccess = true;
-      console.log(`Successfully created ${rows.length} work orders`);
+      console.log(`Successfully created ${createdCount} work orders`, result);
 
-      // Reload the work orders in the main grid
-      // woMachineActor.send({ type: "LOAD" });
+      // Warn if fewer work orders were created than expected
+      if (createdCount < transformedRows.length) {
+        console.warn(`Warning: Only ${createdCount} of ${transformedRows.length} work orders were created`);
+        submitError = `Warning: Only ${createdCount} of ${transformedRows.length} work orders were created. Check backend logs for validation errors.`;
+      }
+
+      // Call success callback to refresh parent component
+      onSuccess();
 
       // Close dialog after brief delay to show success
       setTimeout(() => {
@@ -170,7 +186,12 @@
       }, 1000);
     } catch (error) {
       console.error("Error creating work orders:", error);
-      submitError = error.message || "Failed to create work orders";
+      console.error("Error response data:", error.response?.data);
+      console.error("Error response status:", error.response?.status);
+
+      // Try to get a more specific error message from the backend
+      const backendMessage = error.response?.data?.message || error.response?.data?.error;
+      submitError = backendMessage || error.message || "Failed to create work orders";
       isSubmitting = false;
     }
   }
@@ -327,7 +348,9 @@
       {:else if state?.matches("building")}
         <div class="loading-message">🏗️ Building data grid...</div>
       {:else if state?.matches("generatingWorkOrders")}
-        <div class="loading-message">🔢 Fetching sequences and generating work order numbers...</div>
+        <div class="loading-message">
+          🔢 Fetching sequences and generating work order numbers...
+        </div>
       {:else if state?.matches("applyingFormulas")}
         <div class="loading-message">🧮 Applying lens formulas and calculations...</div>
       {:else if state?.matches("error")}
