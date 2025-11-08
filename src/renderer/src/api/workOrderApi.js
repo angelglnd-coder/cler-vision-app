@@ -77,6 +77,16 @@ export const getWorkOrdersFiltered = (filters) => config.get("/workorders", { pa
 export const createWorkOrder = (workOrderData) => config.post("/workorders", workOrderData);
 
 /**
+ * Create multiple work orders in batch
+ * @param {Array<Object>} workOrdersArray - Array of work order data objects
+ * @returns {Promise} Promise resolving to created work orders
+ */
+export const createWorkOrdersBatch = (workOrdersArray) => {
+  console.log("testint =>", workOrdersArray);
+  return config.post("/workorders/batch", { workOrders: workOrdersArray });
+};
+
+/**
  * Update an existing work order
  * @param {string|number} id - Work order ID
  * @param {Object} workOrderData - Updated work order data
