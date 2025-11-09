@@ -1,15 +1,41 @@
 <!-- WorkOrderViewHeader.svelte -->
 <script>
   import Barcode from "./Barcode.svelte";
+  import SmallBarcode from "./SmallBarcode.svelte";
 
   export let row = {};
 
   // safe getters
   const g = (k, fb = "") => row?.[k] ?? fb;
 
+  // Format date to YYYY-MM-DD
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "—";
+
+    try {
+      let date;
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      } else if (typeof dateValue === 'string') {
+        date = new Date(dateValue);
+      } else {
+        return "—";
+      }
+
+      if (isNaN(date.getTime())) return "—";
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      return "—";
+    }
+  };
+
   // header data - using camelCase field names from API
   const data = {
-    poDate: g("poDate"),
+    poDate: formatDate(g("poDate")),
     customerPO: g("po"),
     woNumber: g("woNumber"),
 
@@ -31,6 +57,7 @@
     cont2: g("matLot"),
     cont3: g("gtin"),
     color: g("color"),
+    odOs: g("odOs"),
     brand: g("brand", g("labeling")),
   };
 
@@ -364,7 +391,6 @@
     <div class="card">
       <div class="head">
         <div class="h">CONT</div>
-        <div class="muted">materials</div>
       </div>
       <div class="code">{data.cont1 || "—"}</div>
       <div class="code">{data.cont2 || "—"}</div>
@@ -373,10 +399,16 @@
     <div class="card">
       <div class="head">
         <div class="h">GTIN / Color</div>
-        <div class="muted">identifiers</div>
       </div>
-      <div class="code">{data.cont3 || "—"}</div>
+      {#if data.cont3 && data.cont3 !== "—"}
+        <SmallBarcode value={data.cont3} width={1} height={20} margin={1} />
+      {:else}
+        <div class="code">—</div>
+      {/if}
       <div class="code">{data.color || "—"}</div>
+      {#if data.odOs && data.odOs !== "—"}
+        <div class="code" style="font-size: 1.1rem; font-weight: 700;">{data.odOs}</div>
+      {/if}
     </div>
 
     <div class="card">
