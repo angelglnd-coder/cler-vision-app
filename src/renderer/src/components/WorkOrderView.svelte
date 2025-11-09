@@ -69,13 +69,26 @@
   };
 
   // calc rows - using camelCase field names from API
+  // Priority parameters first - each on its own row (8 rows total)
+  // Empty items are inserted to force each parameter to occupy left column only
   const specRows = [
-    { desc: "BC1", param: pick(row.bc1) },
-    { desc: "BC2", param: pick(row.bc2) },
-    { desc: "PW1", param: pick(row.pw1) },
-    { desc: "PW2", param: pick(row.pw2) },
-    { desc: "OZ1", param: pick(row.oz1) },
-    { desc: "OZ2", param: pick(row.oz2) },
+    { desc: "BC 1", param: pick(row.bc1) },
+    { desc: "RC 1 Width", param: pick(row.rc1Width) }, // RC 1 Width in first row right column
+    { desc: "BC 2", param: pick(row.bc2) },
+    { desc: "AC 1 Width", param: pick(row.ac1Width) }, // AC 1 Width in second row right column
+    { desc: "PWR 1", param: pick(row.pw1) },
+    { desc: "AC 2 Width", param: pick(row.ac2Width) }, // AC 2 Width in third row right column
+    { desc: "PWR 2", param: pick(row.pw2) },
+    { desc: "AC 3 Width", param: pick(row.ac3Width) }, // AC 3 Width in fourth row right column
+    { desc: "DIAM", param: pick(row.diam) },
+   { desc: "PC Width", param: pick(row.pcwidth) },
+    { desc: "OZ 1", param: pick(row.oz1) },
+   { desc: "PC 1", param: pick(row.pc1Radius) },
+    { desc: "OZ 2", param: pick(row.oz2) },
+   { desc: "PC 2", param: pick(row.pc2Radius) },
+    { desc: "Center Thick", param: pick(row.centerThick) },
+    { desc: "Edge Thick", param: pick(row.edgeThick) },
+    // Remaining parameters
     { desc: "RC 1 Radius", param: pick(row.rc1Radius) },
     { desc: "RC 1 Tor", param: pick(row.rc1Tor) },
     { desc: "AC 1 Radius", param: pick(row.ac1Radius) },
@@ -84,15 +97,10 @@
     { desc: "AC 2 Tor", param: pick(row.ac2Tor) },
     { desc: "AC 3 Radius", param: pick(row.ac3Radius) },
     { desc: "AC 3 Tor", param: pick(row.ac3Tor) },
-    { desc: "RC 1 Width", param: pick(row.rc1Width) },
-    { desc: "AC 1 Width", param: pick(row.ac1Width) },
-    { desc: "AC 2 Width", param: pick(row.ac2Width) },
-    { desc: "AC 3 Width", param: pick(row.ac3Width) },
-    { desc: "PC Width", param: pick(row.pcwidth) },
-    { desc: "PC 1", param: pick(row.pc1Radius) },
-    { desc: "PC 2", param: pick(row.pc2Radius) },
-    { desc: "Edge Thick", param: pick(row.edgeThick) },
-    { desc: "Center Thick", param: pick(row.centerThick) },
+    
+    
+    
+    
   ];
 
   function openDeviceLink() {
