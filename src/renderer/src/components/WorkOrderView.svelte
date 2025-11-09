@@ -251,8 +251,7 @@
   .t-head {
     display: grid;
     grid-template-columns:
-      minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr)
-      minmax(240px, 2.4fr);
+      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr);
     align-items: center;
     background: var(--light);
     border-bottom: 1px solid var(--line);
@@ -261,8 +260,13 @@
   .t-row {
     display: grid;
     grid-template-columns:
-      minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr)
-      minmax(120px, 1.2fr) minmax(120px, 1.2fr);
+      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr);
+    align-items: stretch;
+  }
+  .t-row-with-qc {
+    display: grid;
+    grid-template-columns:
+      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr);
     align-items: stretch;
   }
   .cell {
@@ -283,11 +287,16 @@
     border-right: none;
   }
   .t-row .cell.num {
-    justify-content: center;
-    font-variant-numeric: tabular-nums;
+    /* justify-content: center;
+    font-variant-numeric: tabular-nums; */
   }
   .t-row:last-child .cell {
     border-bottom: none;
+  }
+  .cell.qc-hidden {
+    border-bottom: none;
+    border-left: none;
+    padding: 0;
   }
 
   /* print tweaks */
@@ -422,22 +431,32 @@
   <!-- Calculations table -->
   <div class="flex-table">
     <div class="t-head">
+      <div class="cell">QC</div>
       <div class="cell">Desc.</div>
       <div class="cell">Param.</div>
       <div class="cell">Desc.</div>
       <div class="cell">Param.</div>
-      <div class="cell" style="justify-content: center; text-align:center;">QC</div>
     </div>
-
     {#each Array(Math.ceil(specRows.length / 2)) as _, i}
-      <div class="t-row">
-        <div class="cell">{specRows[i * 2]?.desc || ""}</div>
-        <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
-        <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
-        <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
-        <div class="cell"></div>
-        <div class="cell"></div>
-      </div>
+      {#if i < 8}
+        <!-- First 8 rows with QC column -->
+        <div class="t-row-with-qc">
+          <div class="cell"></div>
+          <div class="cell">{specRows[i * 2]?.desc || ""}</div>
+          <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
+          <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
+          <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
+        </div>
+      {:else}
+        <!-- Remaining rows without QC column (hidden QC cell for alignment) -->
+        <div class="t-row">
+          <div class="cell qc-hidden"></div>
+          <div class="cell">{specRows[i * 2]?.desc || ""}</div>
+          <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
+          <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
+          <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
+        </div>
+      {/if}
     {/each}
   </div>
 </div>
