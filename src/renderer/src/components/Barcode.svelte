@@ -1,9 +1,9 @@
 <script>
-  import { onMount } from 'svelte';
-  import JsBarcode from 'jsbarcode';
+  import { onMount } from "svelte";
+  import JsBarcode from "jsbarcode";
 
-  export let value = '';
-  export let format = 'CODE128';
+  export let value = "";
+  export let format = "CODE128";
   export let width = 2;
   export let height = 50;
   export let displayValue = true;
@@ -33,12 +33,12 @@
         displayValue: displayValue,
         fontSize: fontSize,
         margin: margin,
-        background: '#ffffff',
-        lineColor: '#000000',
+        background: "#ffffff",
+        lineColor: "#000000",
       });
     } catch (err) {
       error = true;
-      console.error('Barcode generation error:', err);
+      console.error("Barcode generation error:", err);
     }
   }
 </script>

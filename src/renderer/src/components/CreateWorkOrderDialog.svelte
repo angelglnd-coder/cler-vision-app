@@ -155,11 +155,11 @@
       // Transform all rows to API format (camelCase, filter out error columns)
       const transformedRows = rows
         .map(transformRowForAPI)
-        .filter(row => row.woNumber && row.woNumber.trim() !== ''); // Filter out rows without WO number
+        .filter((row) => row.woNumber && row.woNumber.trim() !== ""); // Filter out rows without WO number
 
-      console.log('Sending batch create request:', {
+      console.log("Sending batch create request:", {
         count: transformedRows.length,
-        sample: transformedRows[0]
+        sample: transformedRows[0],
       });
 
       // Create all work orders in a single batch request
@@ -171,7 +171,9 @@
 
       // Warn if fewer work orders were created than expected
       if (createdCount < transformedRows.length) {
-        console.warn(`Warning: Only ${createdCount} of ${transformedRows.length} work orders were created`);
+        console.warn(
+          `Warning: Only ${createdCount} of ${transformedRows.length} work orders were created`,
+        );
         submitError = `Warning: Only ${createdCount} of ${transformedRows.length} work orders were created. Check backend logs for validation errors.`;
       }
 

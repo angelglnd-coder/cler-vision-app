@@ -1,5 +1,5 @@
 <script>
-  const versions = window.electron.process.versions
+  const versions = window.electron.process.versions;
 </script>
 
 <ul class="versions">

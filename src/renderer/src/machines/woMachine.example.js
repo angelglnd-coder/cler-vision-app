@@ -52,9 +52,9 @@ function exampleLoadFiltered() {
     type: "LOAD_FILTERED",
     filters: {
       status: "active",
-      customer: "003"
+      customer: "003",
       // Add any filters your API supports
-    }
+    },
   });
 }
 
@@ -145,10 +145,4 @@ function createWorkOrderTable(actor) {
 }
 */
 
-export {
-  exampleLoadAll,
-  exampleLoadById,
-  exampleLoadFiltered,
-  exampleRefresh,
-  exampleReset,
-};
+export { exampleLoadAll, exampleLoadById, exampleLoadFiltered, exampleRefresh, exampleReset };

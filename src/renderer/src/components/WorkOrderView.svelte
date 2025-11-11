@@ -16,7 +16,7 @@
       let date;
       if (dateValue instanceof Date) {
         date = dateValue;
-      } else if (typeof dateValue === 'string') {
+      } else if (typeof dateValue === "string") {
         date = new Date(dateValue);
       } else {
         return "—";
@@ -25,8 +25,8 @@
       if (isNaN(date.getTime())) return "—";
 
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     } catch (error) {
       return "—";
@@ -81,11 +81,11 @@
     { desc: "PWR 2", param: pick(row.pw2) },
     { desc: "AC 3 Width", param: pick(row.ac3Width) }, // AC 3 Width in fourth row right column
     { desc: "DIAM", param: pick(row.diam) },
-   { desc: "PC Width", param: pick(row.pcwidth) },
+    { desc: "PC Width", param: pick(row.pcwidth) },
     { desc: "OZ 1", param: pick(row.oz1) },
-   { desc: "PC 1", param: pick(row.pc1Radius) },
+    { desc: "PC 1", param: pick(row.pc1Radius) },
     { desc: "OZ 2", param: pick(row.oz2) },
-   { desc: "PC 2", param: pick(row.pc2Radius) },
+    { desc: "PC 2", param: pick(row.pc2Radius) },
     { desc: "Center Thick", param: pick(row.centerThick) },
     { desc: "Edge Thick", param: pick(row.edgeThick) },
     // Remaining parameters
@@ -97,10 +97,6 @@
     { desc: "AC 2 Tor", param: pick(row.ac2Tor) },
     { desc: "AC 3 Radius", param: pick(row.ac3Radius) },
     { desc: "AC 3 Tor", param: pick(row.ac3Tor) },
-    
-    
-    
-    
   ];
 
   function openDeviceLink() {
@@ -259,7 +255,8 @@
   .t-head {
     display: grid;
     grid-template-columns:
-      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr);
+      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr)
+      minmax(80px, 0.8fr);
     align-items: center;
     background: var(--light);
     border-bottom: 1px solid var(--line);
@@ -268,13 +265,15 @@
   .t-row {
     display: grid;
     grid-template-columns:
-      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr);
+      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr)
+      minmax(80px, 0.8fr);
     align-items: stretch;
   }
   .t-row-with-qc {
     display: grid;
     grid-template-columns:
-      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr) minmax(80px, 0.8fr);
+      minmax(50px, 0.5fr) minmax(100px, 1fr) minmax(80px, 0.8fr) minmax(100px, 1fr)
+      minmax(80px, 0.8fr);
     align-items: stretch;
   }
   .cell {

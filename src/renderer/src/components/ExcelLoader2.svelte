@@ -6,7 +6,6 @@
   import { downloadAsZip } from "../utils/downloadZip";
   import { Button } from "$lib/components/ui/button";
 
-
   let tableDiv, table, state;
   let queName = "";
   actor.start();
