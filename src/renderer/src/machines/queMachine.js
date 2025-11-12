@@ -1,5 +1,6 @@
 import { assign, setup, fromPromise, createActor } from "xstate";
 import { getWorkOrderById, getWorkOrders } from "../api/workOrderApi.js";
+import { createQueueBulk } from "../api/queueApi.js";
 import { makeWOStem } from "../utils/names.js";
 import { formatDif } from "../utils/difSchema.js";
 
@@ -16,6 +17,7 @@ import { formatDif } from "../utils/difSchema.js";
  * - loadingWorkOrder: Fetching work order details from API (legacy/fallback)
  * - ready: Queue file active with groups, can add more groups or finalize
  * - finalizing: Generating final queue file with all groups
+ * - savingToDatabase: Saving queue data to database
  * - complete: Queue file ready for download/save
  * - error: Error occurred during workflow
  *
@@ -25,7 +27,7 @@ import { formatDif } from "../utils/difSchema.js";
  * 3. SCAN_BARCODE: scanning -> validatingWorkOrder (local validation)
  * 4. Success: validatingWorkOrder -> scanning (work order added to group)
  * 5. CONFIRM_GROUP: scanning -> ready (group confirmed)
- * 6. FINALIZE: ready -> finalizing -> complete
+ * 6. FINALIZE: ready -> finalizing -> savingToDatabase -> complete
  *
  * Events:
  * - CREATE_QUEUE: Start creating a new queue file (provide name)
@@ -34,7 +36,7 @@ import { formatDif } from "../utils/difSchema.js";
  * - CONFIRM_GROUP_WITH_THICKNESS: Confirm group with custom thickness (provide thickness)
  * - CANCEL_GROUP: Cancel current group and return to scanning
  * - ADD_ANOTHER_GROUP: Start scanning for another thickness group
- * - FINALIZE: Generate final queue file
+ * - FINALIZE: Generate final queue file and save to database
  * - RESET: Clear all data and return to idle
  * - RETRY: Retry after error
  */
@@ -135,7 +137,12 @@ export const queMachine = setup({
       queFile: ({ event }) => event.output.queFile,
       difFiles: ({ event }) => event.output.difFiles,
       emitErrors: ({ event }) => event.output.errors ?? [],
+      dbPayload: ({ event }) => event.output.dbPayload,
       error: null,
+    }),
+
+    setSavedQueueId: assign({
+      savedQueueId: ({ event }) => event.output?.id || event.output?.queueId || null,
     }),
 
     setError: assign({
@@ -173,6 +180,8 @@ export const queMachine = setup({
       queFile: null,
       difFiles: () => [],
       emitErrors: () => [],
+      dbPayload: null,
+      savedQueueId: null,
       error: null,
       workOrdersById: () => ({}),
       workOrdersLoadedAt: null,
@@ -273,8 +282,28 @@ export const queMachine = setup({
 
       let position = 1;
 
+      // Prepare database payload
+      const dbPayload = {
+        name: queueFileName || "queue.QUE",
+        status: "idle",
+        groups: [],
+      };
+
       // Process each group
       groups.forEach((group, groupIdx) => {
+        // Use the group's thickness for all work orders in this group
+        const groupThickness = group.thickness;
+        if (!Number.isFinite(groupThickness)) {
+          errors.push(`Group ${groupIdx + 1}: missing thickness — skipped`);
+          return;
+        }
+
+        const dbGroup = {
+          thickness: groupThickness,
+          groupOrder: groupIdx,
+          workOrders: [],
+        };
+
         group.workOrders.forEach((wo, woIdx) => {
           if (!wo?.woNumber) {
             errors.push(`Group ${groupIdx + 1}, WO ${woIdx + 1}: missing woNumber — skipped`);
@@ -290,25 +319,59 @@ export const queMachine = setup({
           const difText = formatDif(wo, { mtnum, ctnum });
           difFiles.push({ name: difName, text: difText });
 
-          // Add line to queue file
-          const thickness = wo.thickness;
-          if (!Number.isFinite(thickness)) {
-            errors.push(`WO ${wo.woNumber}: missing thickness`);
-            return;
-          }
+          // Add line to queue file using the group's thickness
+          queLines.push(`"${difName}" ${difName} ${position} ${groupThickness}`);
 
-          queLines.push(`"${difName}" ${difName} ${position} ${thickness}`);
+          // Add work order to DB payload
+          dbGroup.workOrders.push({
+            woNumber: wo.woNumber,
+            position: position,
+            orderInGroup: woIdx,
+          });
+
           position++;
         });
+
+        // Add group to DB payload if it has work orders
+        if (dbGroup.workOrders.length > 0) {
+          dbPayload.groups.push(dbGroup);
+        }
       });
 
       const queText = ["queue file", ...queLines].join(EOL) + EOL;
+      console.log("generateQueueFile =>", {
+        queFile: { name: queueFileName || "queue.QUE", text: queText },
+        difFiles,
+        errors,
+        dbPayload,
+      });
 
       return {
         queFile: { name: queueFileName || "queue.QUE", text: queText },
         difFiles,
         errors,
+        dbPayload,
       };
+    }),
+
+    // Save queue to database
+    saveQueueToDatabase: fromPromise(async ({ input }) => {
+      const { dbPayload } = input;
+
+      if (!dbPayload) {
+        throw new Error("No queue data to save");
+      }
+
+      try {
+        const response = await createQueueBulk(dbPayload);
+        console.log("Queue saved to database:", response);
+        return response.data || response;
+      } catch (error) {
+        console.error("Error saving queue to database:", error);
+        throw new Error(
+          error.response?.data?.message || error.message || "Failed to save queue to database",
+        );
+      }
     }),
   },
 }).createMachine({
@@ -322,6 +385,8 @@ export const queMachine = setup({
     queFile: null,
     difFiles: [],
     emitErrors: [],
+    dbPayload: null, // Database-ready payload for saving queue
+    savedQueueId: null, // ID of the saved queue in database
     error: null,
     workOrdersById: {}, // Fast lookup map: { [woNumber]: workOrder }
     workOrdersLoadedAt: null, // Timestamp when work orders were preloaded
@@ -443,11 +508,29 @@ export const queMachine = setup({
           queueFileName: context.queueFileName,
         }),
         onDone: {
-          target: "complete",
+          target: "savingToDatabase",
           actions: "setFinalQueueFile",
         },
         onError: {
           target: "error",
+          actions: "setError",
+        },
+      },
+    },
+
+    // Saving queue to database
+    savingToDatabase: {
+      invoke: {
+        src: "saveQueueToDatabase",
+        input: ({ context }) => ({
+          dbPayload: context.dbPayload,
+        }),
+        onDone: {
+          target: "complete",
+          actions: "setSavedQueueId",
+        },
+        onError: {
+          target: "complete",
           actions: "setError",
         },
       },

@@ -26,6 +26,13 @@ export const getQueueById = (id) => config.get(`/queues/${id}`);
 export const createQueue = (queueData) => config.post("/queues", queueData);
 
 /**
+ * Create a new queue file with groups and work orders in bulk
+ * @param {Object} queueData - Queue file data with groups and work orders
+ * @returns {Promise} Promise resolving to created queue file with all relations
+ */
+export const createQueueBulk = (queueData) => config.post("/queues/bulk", queueData);
+
+/**
  * Update an existing queue file
  * @param {string|number} id - Queue file ID
  * @param {Object} queueData - Updated queue file data
