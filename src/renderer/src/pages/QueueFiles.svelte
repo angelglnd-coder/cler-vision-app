@@ -8,6 +8,7 @@
   import { downloadAsZip } from "../utils/downloadZip.js";
   import { Splitpanes, Pane } from "svelte-splitpanes";
   import { Grid, Willow } from "@svar-ui/svelte-grid";
+  import { ChevronRight, ChevronDown } from "@lucide/svelte";
 
   // Create actor instance
   const actor = createActor(queMachine);
@@ -20,9 +21,12 @@
   let showThicknessDialog = $state(false);
   let adjustedThickness = $state(0.26);
   let barcodeInput;
+  let expandedQueueIds = $state(new Set());
+  let expandedGroupIds = $state(new Set());
 
   // Computed values
   let currentStateName = $derived(state.value);
+  let isLoadingQueues = $derived(currentStateName === "loadingQueues");
   let isIdle = $derived(currentStateName === "idle");
   let isScanning = $derived(currentStateName === "scanning");
   let isReady = $derived(currentStateName === "ready");
@@ -40,6 +44,7 @@
   let error = $derived(state.context.error);
   let emitErrors = $derived(state.context.emitErrors || []);
   let currentQueueFileName = $derived(state.context.queueFileName);
+  let queues = $derived(state.context.queues || []);
 
   // Statistics
   let totalGroups = $derived(groups.length);
@@ -128,7 +133,7 @@
 
   function handleConfirmGroup() {
     // Open dialog instead of confirming immediately
-    adjustedThickness = currentGroupThickness || 0.26;
+    adjustedThickness = currentGroupThickness || 0.24;
     showThicknessDialog = true;
   }
 
@@ -177,6 +182,45 @@
     if (event.key === "Enter") {
       handleScanBarcode();
     }
+  }
+
+  function toggleQueueExpansion(queueId) {
+    const newSet = new Set(expandedQueueIds);
+    if (newSet.has(queueId)) {
+      newSet.delete(queueId);
+      // Clear all expanded groups for this queue
+      const groupsToRemove = Array.from(expandedGroupIds).filter((id) => id.startsWith(queueId));
+      groupsToRemove.forEach((id) => expandedGroupIds.delete(id));
+    } else {
+      newSet.add(queueId);
+    }
+    expandedQueueIds = newSet;
+  }
+
+  function toggleGroupExpansion(queueId, groupId) {
+    const fullId = `${queueId}-${groupId}`;
+    const newSet = new Set(expandedGroupIds);
+    if (newSet.has(fullId)) {
+      newSet.delete(fullId);
+    } else {
+      newSet.add(fullId);
+    }
+    expandedGroupIds = newSet;
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString();
+  }
+
+  function formatThickness(thickness) {
+    if (!thickness) return "N/A";
+    // Handle MongoDB $numberDecimal format
+    if (thickness.$numberDecimal) {
+      return parseFloat(thickness.$numberDecimal).toFixed(2);
+    }
+    return parseFloat(thickness).toFixed(2);
   }
 </script>
 
@@ -496,6 +540,220 @@
   :global(.splitpanes__pane) {
     overflow-y: auto;
   }
+
+  .queue-list-container {
+    margin-top: 1.5rem;
+  }
+
+  .queue-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .queue-list-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .queue-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .queue-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .queue-row:hover {
+    background-color: #f9fafb;
+  }
+
+  .queue-row-icon {
+    flex-shrink: 0;
+    margin-right: 0.75rem;
+    color: #6b7280;
+  }
+
+  .queue-row-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .queue-name {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .queue-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+    width: fit-content;
+  }
+
+  .queue-status.idle {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  .queue-status.exported {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  .queue-info-item {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .queue-date {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .group-list {
+    background-color: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .group-item {
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .group-item:last-child {
+    border-bottom: none;
+  }
+
+  .group-row {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .group-row:hover {
+    background-color: #f3f4f6;
+  }
+
+  .group-row-icon {
+    flex-shrink: 0;
+    margin-right: 0.75rem;
+    color: #6b7280;
+  }
+
+  .group-row-content {
+    flex: 1;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .group-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #1e40af;
+  }
+
+  .group-thickness {
+    font-size: 0.875rem;
+    color: #4b5563;
+  }
+
+  .group-wo-count {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .work-order-list {
+    background-color: #ffffff;
+    padding: 0.5rem 1rem 0.5rem 5rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .wo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  .wo-table thead {
+    position: sticky;
+    top: 0;
+    background-color: #f9fafb;
+    z-index: 1;
+  }
+
+  .wo-table th {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .wo-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.1s;
+  }
+
+  .wo-table tbody tr:hover {
+    background-color: #f9fafb;
+  }
+
+  .wo-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .wo-table td {
+    padding: 0.5rem 0.75rem;
+    color: #1f2937;
+  }
+
+  .wo-table td.wo-number {
+    font-weight: 500;
+    color: #1e40af;
+  }
+
+  .wo-table td.wo-position {
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .wo-table td.wo-order {
+    text-align: center;
+  }
+
+  .loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    color: #6b7280;
+  }
 </style>
 
 <div class="queue-container">
@@ -504,40 +762,152 @@
     <p class="subtitle">Create queue files by scanning work order barcodes</p>
   </header>
 
-  <!-- Idle State: Create New Queue -->
-  {#if isIdle}
-    <div class="state-card centered">
-      <h2>Create a New Queue File</h2>
-      <p class="instruction">Start by creating and naming a new queue file</p>
-
-      <Button size="lg" onclick={() => (showCreateDialog = true)}>Create Queue File</Button>
-
-      <!-- Create Queue Dialog -->
-      <Dialog.Root bind:open={showCreateDialog}>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>Create Queue File</Dialog.Title>
-            <Dialog.Description>
-              Enter a name for your queue file. The .QUE extension will be added automatically.
-            </Dialog.Description>
-          </Dialog.Header>
-
-          <div class="dialog-body">
-            <Input
-              type="text"
-              placeholder="Enter queue file name"
-              bind:value={queueFileName}
-              onkeypress={(e) => e.key === "Enter" && handleCreateQueue()}
-            />
-          </div>
-
-          <Dialog.Footer>
-            <Button variant="outline" onclick={() => (showCreateDialog = false)}>Cancel</Button>
-            <Button onclick={handleCreateQueue} disabled={!queueFileName.trim()}>Create</Button>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Root>
+  <!-- Loading Queues State -->
+  {#if isLoadingQueues}
+    <div class="state-card">
+      <div class="loading-state">
+        <p>Loading queues...</p>
+      </div>
     </div>
+  {/if}
+
+  <!-- Idle State: Create New Queue + Queue List -->
+  {#if isIdle}
+    <div class="state-card">
+      <div class="queue-list-container">
+        <div class="queue-list-header">
+          <h2>Queue Files</h2>
+          <Button onclick={() => (showCreateDialog = true)}>Create New Queue</Button>
+        </div>
+
+        {#if queues.length === 0}
+          <div style="text-align: center; padding: 3rem; color: #6b7280;">
+            <p>No queue files yet. Create your first queue file to get started.</p>
+          </div>
+        {:else}
+          <div class="queue-list">
+            {#each queues as queue (queue._id)}
+              <div class="queue-item">
+                <!-- Queue Row -->
+                <div class="queue-row" onclick={() => toggleQueueExpansion(queue._id)}>
+                  <div class="queue-row-icon">
+                    {#if expandedQueueIds.has(queue._id)}
+                      <ChevronDown size={20} />
+                    {:else}
+                      <ChevronRight size={20} />
+                    {/if}
+                  </div>
+                  <div class="queue-row-content">
+                    <div class="queue-name">{queue.name}</div>
+                    <div>
+                      <span class="queue-status {queue.status}">{queue.status}</span>
+                    </div>
+                    <div class="queue-info-item">{queue.groups?.length || 0} Groups</div>
+                    <div class="queue-info-item">
+                      {queue.groups?.reduce((sum, g) => sum + (g.workOrders?.length || 0), 0) || 0} WOs
+                    </div>
+                    <div class="queue-date">Created: {formatDate(queue.createdAt)}</div>
+                  </div>
+                </div>
+
+                <!-- Expanded Groups -->
+                {#if expandedQueueIds.has(queue._id) && queue.groups && queue.groups.length > 0}
+                  <div class="group-list">
+                    {#each queue.groups as group, groupIdx (group._id)}
+                      <div class="group-item">
+                        <!-- Group Row -->
+                        <div
+                          class="group-row"
+                          onclick={() => toggleGroupExpansion(queue._id, group._id)}
+                        >
+                          <div class="group-row-icon">
+                            {#if expandedGroupIds.has(`${queue._id}-${group._id}`)}
+                              <ChevronDown size={16} />
+                            {:else}
+                              <ChevronRight size={16} />
+                            {/if}
+                          </div>
+                          <div class="group-row-content">
+                            <span class="group-label">Group {groupIdx + 1}</span>
+                            <span class="group-thickness">
+                              Thickness: {formatThickness(group.thickness)} mm
+                            </span>
+                            <span class="group-wo-count">
+                              {group.workOrders?.length || 0} work orders
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Expanded Work Orders -->
+                        {#if expandedGroupIds.has(`${queue._id}-${group._id}`) && group.workOrders && group.workOrders.length > 0}
+                          <div class="work-order-list">
+                            <table class="wo-table">
+                              <thead>
+                                <tr>
+                                  <th>Pos</th>
+                                  <th>Order</th>
+                                  <th>Work Order</th>
+                                  <th>Patient</th>
+                                  <th>PO</th>
+                                  <th>Spec</th>
+                                  <th>Color</th>
+                                  <th>Design</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {#each group.workOrders as woItem (woItem._id)}
+                                  {@const wo = woItem.workOrder}
+                                  <tr>
+                                    <td class="wo-position">{woItem.position}</td>
+                                    <td class="wo-order">{woItem.orderInGroup}</td>
+                                    <td class="wo-number">{wo?.woNumber || "N/A"}</td>
+                                    <td>{wo?.patientName || "N/A"}</td>
+                                    <td>{wo?.po || "N/A"}</td>
+                                    <td>{wo?.spec || "N/A"}</td>
+                                    <td>{wo?.color || "N/A"}</td>
+                                    <td>{wo?.design || "N/A"}</td>
+                                  </tr>
+                                {/each}
+                              </tbody>
+                            </table>
+                          </div>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Create Queue Dialog -->
+    <Dialog.Root bind:open={showCreateDialog}>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>Create Queue File</Dialog.Title>
+          <Dialog.Description>
+            Enter a name for your queue file. The .QUE extension will be added automatically.
+          </Dialog.Description>
+        </Dialog.Header>
+
+        <div class="dialog-body">
+          <Input
+            type="text"
+            placeholder="Enter queue file name"
+            bind:value={queueFileName}
+            onkeypress={(e) => e.key === "Enter" && handleCreateQueue()}
+          />
+        </div>
+
+        <Dialog.Footer>
+          <Button variant="outline" onclick={() => (showCreateDialog = false)}>Cancel</Button>
+          <Button onclick={handleCreateQueue} disabled={!queueFileName.trim()}>Create</Button>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog.Root>
   {/if}
 
   <!-- Scanning State -->

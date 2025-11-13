@@ -1,6 +1,6 @@
 import { assign, setup, fromPromise, createActor } from "xstate";
 import { getWorkOrderById, getWorkOrders } from "../api/workOrderApi.js";
-import { createQueueBulk } from "../api/queueApi.js";
+import { createQueueBulk, getQueues } from "../api/queueApi.js";
 import { makeWOStem } from "../utils/names.js";
 import { formatDif } from "../utils/difSchema.js";
 
@@ -74,8 +74,8 @@ export const queMachine = setup({
       currentGroup: ({ context, event }) => {
         const workOrder = event.output;
 
-        // Assign default thickness of 0.26 to all work orders
-        const thickness = 0.26;
+        // Assign default thickness of 0.24 to all work orders
+        const thickness = 0.24;
 
         return [...context.currentGroup, { ...workOrder, thickness }];
       },
@@ -172,6 +172,22 @@ export const queMachine = setup({
       error: null,
     }),
 
+    setQueues: assign({
+      queues: ({ event }) => {
+        const response = event.output;
+        // Handle axios response wrapper
+        let queues = response?.data || response;
+
+        // Check if data is nested (response.data.data)
+        if (queues?.data && Array.isArray(queues.data)) {
+          queues = queues.data;
+        }
+
+        return Array.isArray(queues) ? queues : [];
+      },
+      error: null,
+    }),
+
     clearAll: assign({
       queueFileName: "",
       groups: () => [],
@@ -189,6 +205,20 @@ export const queMachine = setup({
   },
 
   actors: {
+    // Fetch all queues from the database
+    fetchQueues: fromPromise(async () => {
+      try {
+        const response = await getQueues();
+        console.log("fetchQueues response =>", response);
+        return response;
+      } catch (error) {
+        console.error("Error fetching queues:", error);
+        throw new Error(
+          error.response?.data?.message || error.message || "Failed to fetch queues",
+        );
+      }
+    }),
+
     // Preload all work orders for local validation
     preloadWorkOrders: fromPromise(async () => {
       try {
@@ -376,7 +406,7 @@ export const queMachine = setup({
   },
 }).createMachine({
   id: "queue",
-  initial: "idle",
+  initial: "loadingQueues",
   context: {
     queueFileName: "",
     groups: [], // Confirmed groups: [{ thickness, workOrders, confirmedAt }]
@@ -390,13 +420,32 @@ export const queMachine = setup({
     error: null,
     workOrdersById: {}, // Fast lookup map: { [woNumber]: workOrder }
     workOrdersLoadedAt: null, // Timestamp when work orders were preloaded
+    queues: [], // List of existing queues from database
   },
   states: {
+    // Loading existing queues from database
+    loadingQueues: {
+      invoke: {
+        src: "fetchQueues",
+        onDone: {
+          target: "idle",
+          actions: "setQueues",
+        },
+        onError: {
+          target: "idle",
+          actions: "setError",
+        },
+      },
+    },
+
     idle: {
       on: {
         CREATE_QUEUE: {
           target: "loadingWorkOrders",
           actions: "setQueueName",
+        },
+        REFRESH_QUEUES: {
+          target: "loadingQueues",
         },
       },
     },
@@ -540,7 +589,7 @@ export const queMachine = setup({
     complete: {
       on: {
         RESET: {
-          target: "idle",
+          target: "loadingQueues",
           actions: "clearAll",
         },
       },
