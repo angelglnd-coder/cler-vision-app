@@ -688,6 +688,7 @@
     background-color: #ffffff;
     padding: 0.5rem 1rem 0.5rem 5rem;
     max-height: 400px;
+    overflow-x: auto;
     overflow-y: auto;
   }
 
@@ -705,15 +706,25 @@
   }
 
   .wo-table th {
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem 1rem;
     text-align: left;
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: #6b7280;
     text-transform: uppercase;
     letter-spacing: 0.025em;
     border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
   }
+
+  .wo-table th:nth-child(1) { width: 60px; } /* Pos */
+  .wo-table th:nth-child(2) { width: 80px; } /* Order */
+  .wo-table th:nth-child(3) { width: 220px; } /* Work Order */
+  .wo-table th:nth-child(4) { min-width: 200px; } /* Patient */
+  .wo-table th:nth-child(5) { min-width: 150px; } /* PO */
+  .wo-table th:nth-child(6) { min-width: 200px; } /* Spec */
+  .wo-table th:nth-child(7) { min-width: 120px; } /* Color */
+  .wo-table th:nth-child(8) { min-width: 120px; } /* Design */
 
   .wo-table tbody tr {
     border-bottom: 1px solid #f3f4f6;
@@ -729,8 +740,9 @@
   }
 
   .wo-table td {
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem 1rem;
     color: #1f2937;
+    white-space: nowrap;
   }
 
   .wo-table td.wo-number {
@@ -859,8 +871,8 @@
                                   {@const wo = woItem.workOrder}
                                   <tr>
                                     <td class="wo-position">{woItem.position}</td>
-                                    <td class="wo-order">{woItem.orderInGroup}</td>
-                                    <td class="wo-number">{wo?.woNumber || "N/A"}</td>
+                                    <td class="wo-order">{wo?.no || woItem.orderInGroup}</td>
+                                    <td class="wo-number">{woItem.woNumber || wo?.woNumber || "N/A"}</td>
                                     <td>{wo?.patientName || "N/A"}</td>
                                     <td>{wo?.po || "N/A"}</td>
                                     <td>{wo?.spec || "N/A"}</td>
