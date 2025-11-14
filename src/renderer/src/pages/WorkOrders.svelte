@@ -13,6 +13,7 @@
   let columns = [];
   let visiblePane = false;
   let selected = null;
+  let selectedBatchNo = null;
   let woRef;
   let dialogOpen = false;
 
@@ -36,6 +37,7 @@
     actor.send({ type: "RESET" });
     rows = [];
     selected = null;
+    selectedBatchNo = null;
     visiblePane = false;
   }
 
@@ -54,6 +56,21 @@
     });
   }
 
+  function getRowStyle(row) {
+    const baseClass = "hover-highlight";
+    // Highlight rows with the same batch number as the selected row
+    if (selectedBatchNo && row.batchNo && row.batchNo === selectedBatchNo) {
+      console.log(`Highlighting row with batchNo: ${row.batchNo}`);
+      return `${baseClass} batch-highlight`;
+    }
+    return baseClass;
+  }
+
+  // Force grid to re-render when selectedBatchNo changes
+  $: if (selectedBatchNo !== null) {
+    rows = [...rows];
+  }
+
   function render(ctx) {
     rows = ctx.workOrders || [];
     columns = toSvarColumns(ctx.columns || []);
@@ -69,7 +86,9 @@
 
     if (row) {
       selected = { index, row };
+      selectedBatchNo = row.batchNo || null;
       console.log("updated selection", selected);
+      console.log("selected batch number:", selectedBatchNo);
       visiblePane = true;
     }
   }
