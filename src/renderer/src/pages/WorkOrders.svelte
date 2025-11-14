@@ -218,6 +218,13 @@
   :global(.hover-highlight) {
     cursor: pointer;
   }
+  :global(.batch-highlight) {
+    background-color: rgba(255, 235, 59, 0.3) !important;
+    border-left: 3px solid #f9a825 !important;
+  }
+  :global(.batch-highlight:hover) {
+    background-color: rgba(255, 235, 59, 0.5) !important;
+  }
 
   /* Print styles - hide everything except WorkOrderView */
   @media print {
@@ -284,10 +291,16 @@
             ✓ {state.context.total} work order{state.context.total !== 1 ? "s" : ""} loaded
           </span>
         {/if}
+
+        {#if selectedBatchNo}
+          <span style="color: #f9a825; font-size: 0.875rem; background: rgba(255, 235, 59, 0.2); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+            📦 Batch: {selectedBatchNo}
+          </span>
+        {/if}
       </div>
 
       <Willow>
-        <Grid data={rows} {columns} rowStyle={() => "hover-highlight"} onselectrow={onRowClick} />
+        <Grid data={rows} {columns} rowStyle={getRowStyle} onselectrow={onRowClick} />
       </Willow>
     </Pane>
     {#if visiblePane}
