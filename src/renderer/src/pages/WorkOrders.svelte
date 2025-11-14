@@ -16,6 +16,8 @@
   let selectedBatchNo = null;
   let woRef;
   let dialogOpen = false;
+  let batchPrintData = [];
+  let isBatchPrinting = false;
 
   // same safeKey you already use elsewhere
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
@@ -99,6 +101,39 @@
 
   function printWO() {
     window.print();
+  }
+
+  function printBatch() {
+    if (!selectedBatchNo) return;
+
+    // Get all work orders with the selected batch number
+    const batchWorkOrders = rows.filter(row => row.batchNo === selectedBatchNo);
+
+    if (batchWorkOrders.length === 0) {
+      alert('No work orders found for this batch.');
+      return;
+    }
+
+    console.log(`Printing ${batchWorkOrders.length} work orders for batch ${selectedBatchNo}`);
+    console.log('Batch work orders:', batchWorkOrders.map(wo => ({
+      woNumber: wo.woNumber,
+      patient: wo.patientName,
+      id: wo.id
+    })));
+
+    // Set batch printing mode and store the batch work orders
+    isBatchPrinting = true;
+    batchPrintData = batchWorkOrders;
+
+    // Longer delay to ensure DOM fully renders all components
+    setTimeout(() => {
+      window.print();
+      // Clear batch print data after printing
+      setTimeout(() => {
+        batchPrintData = [];
+        isBatchPrinting = false;
+      }, 500);
+    }, 300);
   }
 
   function openCreateDialog() {
@@ -226,6 +261,13 @@
     background-color: rgba(255, 235, 59, 0.5) !important;
   }
 
+  /* Hide batch print area on screen, show only when printing */
+  :global(.batch-print-area) {
+    position: absolute;
+    left: -9999px;
+    visibility: hidden;
+  }
+
   /* Print styles - hide everything except WorkOrderView */
   @media print {
     @page {
@@ -236,8 +278,16 @@
       visibility: hidden;
     }
     :global(.print-area),
-    :global(.print-area *) {
+    :global(.print-area *),
+    :global(.batch-print-area),
+    :global(.batch-print-area *) {
       visibility: visible;
+    }
+    /* Hide single print area when batch printing is active */
+    :global(.print-area.hide-for-batch),
+    :global(.print-area.hide-for-batch *) {
+      visibility: hidden !important;
+      display: none !important;
     }
     :global(.print-area) {
       position: absolute;
@@ -247,6 +297,20 @@
       page-break-inside: avoid;
       page-break-after: avoid;
       page-break-before: avoid;
+    }
+    :global(.batch-print-area) {
+      position: absolute;
+      left: 0 !important;
+      top: 0;
+      width: 100%;
+      visibility: visible !important;
+    }
+    :global(.batch-print-item) {
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+    :global(.batch-print-item:last-child) {
+      page-break-after: auto;
     }
     :global(.splitpanes__splitter) {
       display: none !important;
@@ -296,6 +360,9 @@
           <span style="color: #f9a825; font-size: 0.875rem; background: rgba(255, 235, 59, 0.2); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
             📦 Batch: {selectedBatchNo}
           </span>
+          <button class="pretty-btn" on:click={printBatch}>
+            🖨️ Print Batch {selectedBatchNo}
+          </button>
         {/if}
       </div>
 
@@ -315,7 +382,7 @@
             </div>
           </div>
           {#key selected?.row?.id ?? selected?.index}
-            <div bind:this={woRef} class="print-area">
+            <div bind:this={woRef} class="print-area {isBatchPrinting ? 'hide-for-batch' : ''}">
               <WorkOrderView row={selected.row}></WorkOrderView>
             </div>
           {/key}
@@ -338,4 +405,15 @@
 {/if}
 {#if dialogOpen}
   <CreateWorkOrderDialog bind:open={dialogOpen} onSuccess={handleWorkOrdersCreated} />
+{/if}
+
+<!-- Hidden batch print area -->
+{#if batchPrintData.length > 0}
+  <div class="batch-print-area">
+    {#each batchPrintData as woData, index (woData.id || woData.woNumber || index)}
+      <div class="batch-print-item">
+        <WorkOrderView row={woData}></WorkOrderView>
+      </div>
+    {/each}
+  </div>
 {/if}
