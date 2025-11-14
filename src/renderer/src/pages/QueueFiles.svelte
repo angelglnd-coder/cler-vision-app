@@ -717,14 +717,30 @@
     white-space: nowrap;
   }
 
-  .wo-table th:nth-child(1) { width: 60px; } /* Pos */
-  .wo-table th:nth-child(2) { width: 80px; } /* Order */
-  .wo-table th:nth-child(3) { width: 220px; } /* Work Order */
-  .wo-table th:nth-child(4) { min-width: 200px; } /* Patient */
-  .wo-table th:nth-child(5) { min-width: 150px; } /* PO */
-  .wo-table th:nth-child(6) { min-width: 200px; } /* Spec */
-  .wo-table th:nth-child(7) { min-width: 120px; } /* Color */
-  .wo-table th:nth-child(8) { min-width: 120px; } /* Design */
+  .wo-table th:nth-child(1) {
+    width: 60px;
+  } /* Pos */
+  .wo-table th:nth-child(2) {
+    width: 80px;
+  } /* Order */
+  .wo-table th:nth-child(3) {
+    width: 220px;
+  } /* Work Order */
+  .wo-table th:nth-child(4) {
+    min-width: 200px;
+  } /* Patient */
+  .wo-table th:nth-child(5) {
+    min-width: 150px;
+  } /* PO */
+  .wo-table th:nth-child(6) {
+    min-width: 200px;
+  } /* Spec */
+  .wo-table th:nth-child(7) {
+    min-width: 120px;
+  } /* Color */
+  .wo-table th:nth-child(8) {
+    min-width: 120px;
+  } /* Design */
 
   .wo-table tbody tr {
     border-bottom: 1px solid #f3f4f6;
@@ -872,7 +888,9 @@
                                   <tr>
                                     <td class="wo-position">{woItem.position}</td>
                                     <td class="wo-order">{wo?.no || woItem.orderInGroup}</td>
-                                    <td class="wo-number">{woItem.woNumber || wo?.woNumber || "N/A"}</td>
+                                    <td class="wo-number"
+                                      >{woItem.woNumber || wo?.woNumber || "N/A"}</td
+                                    >
                                     <td>{wo?.patientName || "N/A"}</td>
                                     <td>{wo?.po || "N/A"}</td>
                                     <td>{wo?.spec || "N/A"}</td>
