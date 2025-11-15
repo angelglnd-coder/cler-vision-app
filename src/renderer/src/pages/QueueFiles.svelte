@@ -175,6 +175,13 @@
     },
   ];
 
+  // Responsive configuration to help with animation issues
+  const responsive = {
+    "800": {
+      columns: treeColumns,
+    },
+  };
+
   let treeData = $derived(getTreeData(queues));
   let api = $state();
 
@@ -836,9 +843,15 @@
             <p>No queue files yet. Create your first queue file to get started.</p>
           </div>
         {:else}
-          <div style="padding: 20px; width: 100%;" class="grid-wrapper">
+          <div style="width: 1000px; padding: 20px; margin-top: 10px;">
             <Willow>
-              <Grid bind:this={api} tree={true} data={treeData} columns={treeColumns} />
+              <Grid
+                bind:this={api}
+                tree={true}
+                data={treeData}
+                columns={treeColumns}
+                {responsive}
+              />
             </Willow>
           </div>
         {/if}
