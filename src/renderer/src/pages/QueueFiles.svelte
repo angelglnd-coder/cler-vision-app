@@ -783,59 +783,27 @@
     color: #6b7280;
   }
 
-  /* Force grid wrapper to full width immediately */
-  .grid-wrapper {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Nuclear option: disable ALL animations on grid wrapper and descendants */
-  .grid-wrapper :global(*) {
-    transition: none !important;
-    animation: none !important;
-    transition-property: none !important;
-    transition-duration: 0s !important;
-    animation-duration: 0s !important;
-    transition-delay: 0s !important;
-    animation-delay: 0s !important;
-    will-change: auto !important;
-  }
-
   /* Disable ALL Grid animations and transitions */
-  :global(*[class*="wx-"]),
-  :global(*[class*="wx-"] *) {
-    transition: none !important;
-    animation: none !important;
-    transition-property: none !important;
-    transition-duration: 0s !important;
-    animation-duration: 0s !important;
-    will-change: auto !important;
-  }
-
-  /* Specific targeting for common animated elements */
   :global(.wx-grid),
   :global(.wx-grid *),
-  :global(.wx-willow),
-  :global(.wx-willow *),
-  :global(.wx-cell),
-  :global(.wx-header-cell),
-  :global(.wx-row),
-  :global(.wx-col),
-  :global(.wx-layout),
-  :global(.wx-content) {
+  :global(.wx-grid .wx-row),
+  :global(.wx-grid .wx-cell),
+  :global(.wx-grid-header),
+  :global([class*="wx-"]) {
     transition: none !important;
     animation: none !important;
+    transition-property: none !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
     will-change: auto !important;
   }
 
-  /* Force disable all CSS properties that could animate */
-  :global(*[class*="wx-"]) {
-    transition-delay: 0s !important;
-    animation-delay: 0s !important;
-    transition-timing-function: step-start !important;
-    animation-timing-function: step-start !important;
+  /* Override any motion-related CSS variables */
+  :global(.wx-grid) {
+    --wx-transition-duration: 0s !important;
+    --wx-animation-duration: 0s !important;
   }
 </style>
 
