@@ -8,7 +8,6 @@
   import { downloadAsZip } from "../utils/downloadZip.js";
   import { Splitpanes, Pane } from "svelte-splitpanes";
   import { Grid, Willow } from "@svar-ui/svelte-grid";
-  import { ChevronRight, ChevronDown } from "@lucide/svelte";
 
   // Create actor instance
   const actor = createActor(queMachine);
@@ -21,8 +20,6 @@
   let showThicknessDialog = $state(false);
   let adjustedThickness = $state(0.26);
   let barcodeInput;
-  let expandedQueueIds = $state(new Set());
-  let expandedGroupIds = $state(new Set());
 
   // Computed values
   let currentStateName = $derived(state.value);
@@ -100,6 +97,86 @@
       thickness: wo.thickness,
     })),
   );
+
+  // Transform queues to tree data structure for Grid
+  // Following the official example format from TreeTable.svelte
+  function getTreeData(queues) {
+    if (!queues || queues.length === 0) return [];
+
+    return queues.map(queue => {
+      // Create base queue row with all properties
+      const queueRow = {
+        id: queue._id,
+        name: queue.name,
+        status: queue.status,
+        info: `${queue.groups?.length || 0} Groups, ${queue.groups?.reduce((sum, g) => sum + (g.workOrders?.length || 0), 0) || 0} WOs`,
+        created: formatDate(queue.createdAt),
+      };
+
+      // Add nested groups if they exist
+      if (queue.groups && queue.groups.length > 0) {
+        queueRow.open = false; // Start collapsed
+        queueRow.data = queue.groups.map((group, groupIdx) => {
+          // Create group row with all properties
+          const groupRow = {
+            id: `${queue._id}-${group._id}`,
+            name: `Group ${groupIdx + 1} (${formatThickness(group.thickness)} mm)`,
+            status: "",
+            info: `${group.workOrders?.length || 0} work orders`,
+            created: "",
+          };
+
+          // Add nested work orders if they exist
+          if (group.workOrders && group.workOrders.length > 0) {
+            groupRow.open = false; // Start collapsed
+            groupRow.data = group.workOrders.map(woItem => {
+              const wo = woItem.workOrder || {};
+              // Work order rows (leaf nodes) - no nested data
+              return {
+                id: woItem._id,
+                name: woItem.woNumber || wo.woNumber || "N/A",
+                status: wo.patientName || "N/A",
+                info: `${wo.po || "N/A"} | ${wo.spec || "N/A"}`,
+                created: `${wo.color || "N/A"} | ${wo.design || "N/A"}`,
+              };
+            });
+          }
+
+          return groupRow;
+        });
+      }
+
+      return queueRow;
+    });
+  }
+
+  // Tree grid columns following the official example pattern
+  const treeColumns = [
+    {
+      id: "name",
+      header: "Queue / Group / Work Order",
+      flexgrow: 1,
+      treetoggle: true,
+    },
+    {
+      id: "status",
+      header: "Status / Patient",
+      width: 200,
+    },
+    {
+      id: "info",
+      header: "Info / PO & Spec",
+      width: 250,
+    },
+    {
+      id: "created",
+      header: "Created / Color & Design",
+      width: 250,
+    },
+  ];
+
+  let treeData = $derived(getTreeData(queues));
+  let api = $state();
 
   onMount(() => {
     actor.start();
@@ -182,30 +259,6 @@
     if (event.key === "Enter") {
       handleScanBarcode();
     }
-  }
-
-  function toggleQueueExpansion(queueId) {
-    const newSet = new Set(expandedQueueIds);
-    if (newSet.has(queueId)) {
-      newSet.delete(queueId);
-      // Clear all expanded groups for this queue
-      const groupsToRemove = Array.from(expandedGroupIds).filter((id) => id.startsWith(queueId));
-      groupsToRemove.forEach((id) => expandedGroupIds.delete(id));
-    } else {
-      newSet.add(queueId);
-    }
-    expandedQueueIds = newSet;
-  }
-
-  function toggleGroupExpansion(queueId, groupId) {
-    const fullId = `${queueId}-${groupId}`;
-    const newSet = new Set(expandedGroupIds);
-    if (newSet.has(fullId)) {
-      newSet.delete(fullId);
-    } else {
-      newSet.add(fullId);
-    }
-    expandedGroupIds = newSet;
   }
 
   function formatDate(dateString) {
@@ -557,6 +610,7 @@
     font-weight: 600;
   }
 
+  /* Queue List Styles */
   .queue-list {
     display: flex;
     flex-direction: column;
@@ -688,91 +742,37 @@
     background-color: #ffffff;
     padding: 0.5rem 1rem 0.5rem 5rem;
     max-height: 400px;
-    overflow-x: auto;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
-  .wo-table {
-    width: 100%;
-    border-collapse: collapse;
+  /* Grid hover effect styling */
+  .work-order-list :global(.wx-grid) {
+    height: 350px;
     font-size: 0.875rem;
   }
 
-  .wo-table thead {
-    position: sticky;
-    top: 0;
-    background-color: #f9fafb;
-    z-index: 1;
+  .work-order-list :global(.wx-grid .wx-row.hover-highlight:hover) {
+    background-color: #f9fafb !important;
   }
 
-  .wo-table th {
-    padding: 0.75rem 1rem;
-    text-align: left;
+  .work-order-list :global(.wx-grid .wx-header) {
+    background-color: #f9fafb;
     font-weight: 600;
     font-size: 0.8rem;
     color: #6b7280;
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    border-bottom: 2px solid #e5e7eb;
-    white-space: nowrap;
   }
 
-  .wo-table th:nth-child(1) {
-    width: 60px;
-  } /* Pos */
-  .wo-table th:nth-child(2) {
-    width: 80px;
-  } /* Order */
-  .wo-table th:nth-child(3) {
-    width: 220px;
-  } /* Work Order */
-  .wo-table th:nth-child(4) {
-    min-width: 200px;
-  } /* Patient */
-  .wo-table th:nth-child(5) {
-    min-width: 150px;
-  } /* PO */
-  .wo-table th:nth-child(6) {
-    min-width: 200px;
-  } /* Spec */
-  .wo-table th:nth-child(7) {
-    min-width: 120px;
-  } /* Color */
-  .wo-table th:nth-child(8) {
-    min-width: 120px;
-  } /* Design */
-
-  .wo-table tbody tr {
-    border-bottom: 1px solid #f3f4f6;
-    transition: background-color 0.1s;
-  }
-
-  .wo-table tbody tr:hover {
-    background-color: #f9fafb;
-  }
-
-  .wo-table tbody tr:last-child {
-    border-bottom: none;
-  }
-
-  .wo-table td {
+  .work-order-list :global(.wx-grid .wx-cell) {
     padding: 0.75rem 1rem;
     color: #1f2937;
-    white-space: nowrap;
   }
 
-  .wo-table td.wo-number {
+  /* Work order number cell styling */
+  .work-order-list :global(.wx-grid .wx-cell[data-col-id="woNumber"]) {
     font-weight: 500;
     color: #1e40af;
-  }
-
-  .wo-table td.wo-position {
-    text-align: center;
-    font-weight: 600;
-  }
-
-  .wo-table td.wo-order {
-    text-align: center;
   }
 
   .loading-state {
@@ -781,6 +781,61 @@
     align-items: center;
     padding: 3rem;
     color: #6b7280;
+  }
+
+  /* Force grid wrapper to full width immediately */
+  .grid-wrapper {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Nuclear option: disable ALL animations on grid wrapper and descendants */
+  .grid-wrapper :global(*) {
+    transition: none !important;
+    animation: none !important;
+    transition-property: none !important;
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation-delay: 0s !important;
+    will-change: auto !important;
+  }
+
+  /* Disable ALL Grid animations and transitions */
+  :global(*[class*="wx-"]),
+  :global(*[class*="wx-"] *) {
+    transition: none !important;
+    animation: none !important;
+    transition-property: none !important;
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    will-change: auto !important;
+  }
+
+  /* Specific targeting for common animated elements */
+  :global(.wx-grid),
+  :global(.wx-grid *),
+  :global(.wx-willow),
+  :global(.wx-willow *),
+  :global(.wx-cell),
+  :global(.wx-header-cell),
+  :global(.wx-row),
+  :global(.wx-col),
+  :global(.wx-layout),
+  :global(.wx-content) {
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+  }
+
+  /* Force disable all CSS properties that could animate */
+  :global(*[class*="wx-"]) {
+    transition-delay: 0s !important;
+    animation-delay: 0s !important;
+    transition-timing-function: step-start !important;
+    animation-timing-function: step-start !important;
   }
 </style>
 
@@ -813,101 +868,10 @@
             <p>No queue files yet. Create your first queue file to get started.</p>
           </div>
         {:else}
-          <div class="queue-list">
-            {#each queues as queue (queue._id)}
-              <div class="queue-item">
-                <!-- Queue Row -->
-                <div class="queue-row" onclick={() => toggleQueueExpansion(queue._id)}>
-                  <div class="queue-row-icon">
-                    {#if expandedQueueIds.has(queue._id)}
-                      <ChevronDown size={20} />
-                    {:else}
-                      <ChevronRight size={20} />
-                    {/if}
-                  </div>
-                  <div class="queue-row-content">
-                    <div class="queue-name">{queue.name}</div>
-                    <div>
-                      <span class="queue-status {queue.status}">{queue.status}</span>
-                    </div>
-                    <div class="queue-info-item">{queue.groups?.length || 0} Groups</div>
-                    <div class="queue-info-item">
-                      {queue.groups?.reduce((sum, g) => sum + (g.workOrders?.length || 0), 0) || 0} WOs
-                    </div>
-                    <div class="queue-date">Created: {formatDate(queue.createdAt)}</div>
-                  </div>
-                </div>
-
-                <!-- Expanded Groups -->
-                {#if expandedQueueIds.has(queue._id) && queue.groups && queue.groups.length > 0}
-                  <div class="group-list">
-                    {#each queue.groups as group, groupIdx (group._id)}
-                      <div class="group-item">
-                        <!-- Group Row -->
-                        <div
-                          class="group-row"
-                          onclick={() => toggleGroupExpansion(queue._id, group._id)}
-                        >
-                          <div class="group-row-icon">
-                            {#if expandedGroupIds.has(`${queue._id}-${group._id}`)}
-                              <ChevronDown size={16} />
-                            {:else}
-                              <ChevronRight size={16} />
-                            {/if}
-                          </div>
-                          <div class="group-row-content">
-                            <span class="group-label">Group {groupIdx + 1}</span>
-                            <span class="group-thickness">
-                              Thickness: {formatThickness(group.thickness)} mm
-                            </span>
-                            <span class="group-wo-count">
-                              {group.workOrders?.length || 0} work orders
-                            </span>
-                          </div>
-                        </div>
-
-                        <!-- Expanded Work Orders -->
-                        {#if expandedGroupIds.has(`${queue._id}-${group._id}`) && group.workOrders && group.workOrders.length > 0}
-                          <div class="work-order-list">
-                            <table class="wo-table">
-                              <thead>
-                                <tr>
-                                  <th>Pos</th>
-                                  <th>Order</th>
-                                  <th>Work Order</th>
-                                  <th>Patient</th>
-                                  <th>PO</th>
-                                  <th>Spec</th>
-                                  <th>Color</th>
-                                  <th>Design</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {#each group.workOrders as woItem (woItem._id)}
-                                  {@const wo = woItem.workOrder}
-                                  <tr>
-                                    <td class="wo-position">{woItem.position}</td>
-                                    <td class="wo-order">{wo?.no || woItem.orderInGroup}</td>
-                                    <td class="wo-number"
-                                      >{woItem.woNumber || wo?.woNumber || "N/A"}</td
-                                    >
-                                    <td>{wo?.patientName || "N/A"}</td>
-                                    <td>{wo?.po || "N/A"}</td>
-                                    <td>{wo?.spec || "N/A"}</td>
-                                    <td>{wo?.color || "N/A"}</td>
-                                    <td>{wo?.design || "N/A"}</td>
-                                  </tr>
-                                {/each}
-                              </tbody>
-                            </table>
-                          </div>
-                        {/if}
-                      </div>
-                    {/each}
-                  </div>
-                {/if}
-              </div>
-            {/each}
+          <div style="padding: 20px; width: 100%;" class="grid-wrapper">
+            <Willow>
+              <Grid bind:this={api} tree={true} data={treeData} columns={treeColumns} />
+            </Willow>
           </div>
         {/if}
       </div>

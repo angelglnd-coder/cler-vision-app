@@ -107,19 +107,22 @@
     if (!selectedBatchNo) return;
 
     // Get all work orders with the selected batch number
-    const batchWorkOrders = rows.filter(row => row.batchNo === selectedBatchNo);
+    const batchWorkOrders = rows.filter((row) => row.batchNo === selectedBatchNo);
 
     if (batchWorkOrders.length === 0) {
-      alert('No work orders found for this batch.');
+      alert("No work orders found for this batch.");
       return;
     }
 
     console.log(`Printing ${batchWorkOrders.length} work orders for batch ${selectedBatchNo}`);
-    console.log('Batch work orders:', batchWorkOrders.map(wo => ({
-      woNumber: wo.woNumber,
-      patient: wo.patientName,
-      id: wo.id
-    })));
+    console.log(
+      "Batch work orders:",
+      batchWorkOrders.map((wo) => ({
+        woNumber: wo.woNumber,
+        patient: wo.patientName,
+        id: wo.id,
+      })),
+    );
 
     // Set batch printing mode and store the batch work orders
     isBatchPrinting = true;
@@ -357,7 +360,9 @@
         {/if}
 
         {#if selectedBatchNo}
-          <span style="color: #f9a825; font-size: 0.875rem; background: rgba(255, 235, 59, 0.2); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+          <span
+            style="color: #f9a825; font-size: 0.875rem; background: rgba(255, 235, 59, 0.2); padding: 0.25rem 0.5rem; border-radius: 0.25rem;"
+          >
             📦 Batch: {selectedBatchNo}
           </span>
           <button class="pretty-btn" on:click={printBatch}>
