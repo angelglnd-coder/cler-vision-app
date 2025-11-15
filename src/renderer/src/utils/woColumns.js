@@ -32,6 +32,7 @@ export const WO_COLUMNS = [
   "edgeThick",
   "centerThick",
   "eValue",
+  "containerCode",
   "bc1",
   "bc2",
   "pw1",
@@ -90,6 +91,7 @@ export const WO_COLUMNS_EXCEL = [
   "Edge_Thick",
   "Center_Thick",
   "eValue",
+  "Container Code",
 ];
 // 2) Expected columns (display names for messages)
 export const EXPECTED_REQUIRED = [
@@ -127,6 +129,7 @@ export const EXPECTED_REQUIRED = [
   "Edge_Thick",
   "Center_Thick",
   "eValue",
+  "Container Code",
 ];
 
 export const EXPECTED_OPTIONAL = [
@@ -172,6 +175,7 @@ export const COLUMN_DISPLAY_NAMES = {
   edgeThick: "Edge Thick",
   centerThick: "Center Thick",
   eValue: "E-Value",
+  containerCode: "Container Code",
   bc1: "BC1",
   bc2: "BC2",
   pw1: "PW1",

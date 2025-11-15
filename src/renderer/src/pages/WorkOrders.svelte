@@ -23,7 +23,7 @@
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
 
   // define desired sticky headers in human form
-  const PIN_LEFT_RAW = ["WO_Number", "Patient_Name", "PO"];
+  const PIN_LEFT_RAW = ["WO_Number", "Patient_Name", "PO", "Container_Code"];
 
   // …then normalize to the actual column ids
   const PIN_LEFT = new Set(PIN_LEFT_RAW.map(safeKey));

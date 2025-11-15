@@ -90,6 +90,7 @@
       edgeThick: toStringOrEmpty(row.Edge_Thick),
       centerThick: toStringOrEmpty(row.Center_Thick),
       eValue: toStringOrEmpty(row.eValue),
+      containerCode: toStringOrEmpty(row.Container_Code),
       // Calculated fields (already in correct format or need mapping)
       bc1: toStringOrEmpty(row.BC1_BC2 || row.bc1),
       bc2: toStringOrEmpty(row.BC1_BC2 || row.bc2),
