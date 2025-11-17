@@ -70,6 +70,25 @@ function makeColumns() {
 }
 
 /**
+ * Format date to YYYY/MM/DD
+ * @param {string|Date} date - Date to format
+ * @returns {string|null} Formatted date or null
+ */
+function formatDate(date) {
+  if (!date) return null;
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}/${month}/${day}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Normalize work order data to ensure consistent structure
  * @param {Array} workOrders - Raw work orders from API
  * @returns {Array} Normalized work orders
@@ -85,6 +104,10 @@ function normalizeWorkOrders(workOrders) {
       if (value !== null && NUMERIC_FIELDS.has(col)) {
         const num = Number(value);
         value = Number.isFinite(num) ? num : null;
+      }
+      // Format date fields
+      if (col === "poDate" && value !== null) {
+        value = formatDate(value);
       }
       normalized[col] = value;
     }
