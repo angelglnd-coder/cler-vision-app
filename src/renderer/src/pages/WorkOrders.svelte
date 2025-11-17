@@ -238,6 +238,20 @@
     background: #f3f4f6;
     border-color: #d1d5db;
   }
+  .pretty-btn.teal {
+    background: #f0fdfa;
+    border-color: #14b8a6;
+    color: #0f766e;
+  }
+  .pretty-btn.teal:hover {
+    background: #ccfbf1;
+    border-color: #0d9488;
+  }
+  .pretty-btn.teal:disabled {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #9ca3af;
+  }
   /* Grid container for proper scrolling within Splitpanes */
   .pane-content {
     display: flex;
@@ -298,11 +312,11 @@
     cursor: pointer;
   }
   :global(.batch-highlight) {
-    background-color: rgba(255, 235, 59, 0.3) !important;
-    border-left: 3px solid #f9a825 !important;
+    background-color: rgba(204, 251, 241, 0.15) !important;
+    border-left: 3px solid #5eead4 !important;
   }
   :global(.batch-highlight:hover) {
-    background-color: rgba(255, 235, 59, 0.5) !important;
+    background-color: rgba(204, 251, 241, 0.3) !important;
   }
 
   /* Hide batch print area on screen, show only when printing */
@@ -395,19 +409,8 @@
             {visiblePane ? "◀ Hide" : "▶ Show"} Preview
           </button>
 
-          {#if state.context?.total}
-            <span style="color: #10b981; font-size: 0.875rem;">
-              ✓ {state.context.total} work order{state.context.total !== 1 ? "s" : ""} loaded
-            </span>
-          {/if}
-
           {#if selectedBatchNo}
-            <span
-              style="color: #f9a825; font-size: 0.875rem; background: rgba(255, 235, 59, 0.2); padding: 0.25rem 0.5rem; border-radius: 0.25rem;"
-            >
-              📦 Batch: {selectedBatchNo}
-            </span>
-            <button class="pretty-btn" on:click={printBatch}>
+            <button class="pretty-btn teal" on:click={printBatch}>
               🖨️ Print Batch {selectedBatchNo}
             </button>
           {/if}
@@ -434,7 +437,7 @@
           >
             <strong>WO Preview</strong>
             <div style="display:flex; gap:.5rem;">
-              <button class="pretty-btn" on:click={printWO}>Print</button>
+              <button class="pretty-btn teal" on:click={printWO}>Print</button>
             </div>
           </div>
           {#key selected?.row?.id ?? selected?.index}
