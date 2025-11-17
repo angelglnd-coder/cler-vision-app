@@ -249,5 +249,5 @@ export const woMachine = setup({
   },
 });
 
-// Create and export the actor
-export const actor = createActor(woMachine);
+// Export the machine definition for component-scoped actor creation
+// Components should create their own actors using createActor(woMachine)
