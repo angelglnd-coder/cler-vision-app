@@ -213,9 +213,7 @@ export const queMachine = setup({
         return response;
       } catch (error) {
         console.error("Error fetching queues:", error);
-        throw new Error(
-          error.response?.data?.message || error.message || "Failed to fetch queues",
-        );
+        throw new Error(error.response?.data?.message || error.message || "Failed to fetch queues");
       }
     }),
 

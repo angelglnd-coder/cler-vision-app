@@ -103,7 +103,7 @@
   function getTreeData(queues) {
     if (!queues || queues.length === 0) return [];
 
-    return queues.map(queue => {
+    return queues.map((queue) => {
       // Create base queue row with all properties
       const queueRow = {
         id: queue._id,
@@ -129,7 +129,7 @@
           // Add nested work orders if they exist
           if (group.workOrders && group.workOrders.length > 0) {
             groupRow.open = false; // Start collapsed
-            groupRow.data = group.workOrders.map(woItem => {
+            groupRow.data = group.workOrders.map((woItem) => {
               const wo = woItem.workOrder || {};
               // Work order rows (leaf nodes) - no nested data
               return {
