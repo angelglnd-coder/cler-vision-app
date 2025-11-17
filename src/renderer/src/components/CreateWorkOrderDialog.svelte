@@ -57,7 +57,6 @@
 
   // Transform Excel row data to API format (camelCase)
   function transformRowForAPI(row) {
-    console.log('indide TRRR =>', row)
     const transformed = {
       woNumber: toStringOrEmpty(row.WO_Number),
       patientName: toStringOrEmpty(row.Patient_Name),

@@ -244,11 +244,58 @@
     background: #f3f4f6;
     border-color: #d1d5db;
   }
-  .grid-wrap {
-    height: 80vh;
-    min-width: 640px;
-    overflow-x: auto;
+  /* Grid container for proper scrolling within Splitpanes */
+  .pane-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
   }
+
+  .grid-container {
+    flex: 1;
+    min-height: 0;
+    height: 0; /* Force flex item to respect container height */
+    overflow: hidden !important;
+  }
+
+  /* Make Willow fill the container */
+  .grid-container :global(.wx-willow) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+  }
+
+  /* Grid should fill Willow */
+  .grid-container :global(.wx-grid) {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* The scroll container inside Grid - this is where scrolling happens */
+  .grid-container :global(.wx-scroll) {
+    flex: 1 !important;
+    overflow: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Prevent scrolling on any other nested divs */
+  .grid-container :global(.wx-grid > div:not(.wx-scroll)) {
+    overflow: visible !important;
+  }
+
+  /* Target all possible scroll containers and force only the right one */
+  .grid-container :global(*) {
+    overflow: visible !important;
+  }
+
+  .grid-container :global(.wx-scroll) {
+    overflow: auto !important;
+  }
+
   :global(.hover-highlight:hover) {
     background-color: rgba(180, 220, 255, 0.4) !important;
     transition: background-color 0.15s ease;
@@ -336,44 +383,54 @@
 {#if state?.matches("ready")}
   <Splitpanes style="height: 100%">
     <Pane>
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <ol class="breadcrumb-item">
-          <li>
-            <PackagePlus class="size-4" />
-            <span class="breadcrumb-current">Work Orders</span>
-          </li>
-        </ol>
-      </nav>
+      <div class="pane-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol class="breadcrumb-item">
+            <li>
+              <PackagePlus class="size-4" />
+              <span class="breadcrumb-current">Work Orders</span>
+            </li>
+          </ol>
+        </nav>
 
-      <div
-        style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;"
-      >
-        <button class="pretty-btn" on:click={openCreateDialog}>➕ Create</button>
-        <button class="pretty-btn" on:click={onClick}>
-          {visiblePane ? "◀ Hide" : "▶ Show"} Preview
-        </button>
-
-        {#if state.context?.total}
-          <span style="color: #10b981; font-size: 0.875rem;">
-            ✓ {state.context.total} work order{state.context.total !== 1 ? "s" : ""} loaded
-          </span>
-        {/if}
-
-        {#if selectedBatchNo}
-          <span
-            style="color: #f9a825; font-size: 0.875rem; background: rgba(255, 235, 59, 0.2); padding: 0.25rem 0.5rem; border-radius: 0.25rem;"
-          >
-            📦 Batch: {selectedBatchNo}
-          </span>
-          <button class="pretty-btn" on:click={printBatch}>
-            🖨️ Print Batch {selectedBatchNo}
+        <div
+          style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;"
+        >
+          <button class="pretty-btn" on:click={openCreateDialog}>➕ Create</button>
+          <button class="pretty-btn" on:click={onClick}>
+            {visiblePane ? "◀ Hide" : "▶ Show"} Preview
           </button>
-        {/if}
-      </div>
 
-      <Willow>
-        <Grid data={rows} {columns} rowStyle={getRowStyle} onselectrow={onRowClick} />
-      </Willow>
+          {#if state.context?.total}
+            <span style="color: #10b981; font-size: 0.875rem;">
+              ✓ {state.context.total} work order{state.context.total !== 1 ? "s" : ""} loaded
+            </span>
+          {/if}
+
+          {#if selectedBatchNo}
+            <span
+              style="color: #f9a825; font-size: 0.875rem; background: rgba(255, 235, 59, 0.2); padding: 0.25rem 0.5rem; border-radius: 0.25rem;"
+            >
+              📦 Batch: {selectedBatchNo}
+            </span>
+            <button class="pretty-btn" on:click={printBatch}>
+              🖨️ Print Batch {selectedBatchNo}
+            </button>
+          {/if}
+        </div>
+
+        <div class="grid-container">
+          <Willow>
+            <Grid
+              data={rows}
+              {columns}
+              rowStyle={getRowStyle}
+              onselectrow={onRowClick}
+              autoHeight={false}
+            />
+          </Willow>
+        </div>
+      </div>
     </Pane>
     {#if visiblePane}
       <Pane maxSize={35}>

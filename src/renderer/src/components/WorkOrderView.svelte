@@ -59,6 +59,7 @@
     color: g("color"),
     odOs: g("odOs"),
     brand: g("brand", g("labeling")),
+    containerCode: g("containerCode"),
   };
 
   // computed helpers
@@ -432,6 +433,11 @@
         <div class="h" style="margin-left:auto;">Brand</div>
       </div>
       <div class="code" style="text-align:right;">{data.brand || "—"}</div>
+      {#if data.containerCode && data.containerCode !== "—"}
+        <div class="code" style="text-align:right; margin-top: 4px; font-size: 0.85rem; color: var(--muted);">
+          {data.containerCode}
+        </div>
+      {/if}
     </div>
   </div>
 
