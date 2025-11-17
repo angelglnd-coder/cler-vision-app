@@ -1,23 +1,31 @@
 <script>
-  import { actor } from "../machines/woMachine.js";
+  import { woMachine } from "../machines/woMachine.js";
+  import { createActor } from "xstate";
   import { onMount } from "svelte";
   import WorkOrderView from "../components/WorkOrderView.svelte";
   import CreateWorkOrderDialog from "../components/CreateWorkOrderDialog.svelte";
-  import { ChevronRight, PackagePlus } from "@lucide/svelte";
+  import { PackagePlus } from "@lucide/svelte";
 
   import { Grid, Willow } from "@svar-ui/svelte-grid";
   import { Splitpanes, Pane } from "svelte-splitpanes";
 
-  let state;
-  let rows = [];
-  let columns = [];
-  let visiblePane = false;
-  let selected = null;
-  let selectedBatchNo = null;
+  // Create actor instance
+  const actor = createActor(woMachine);
+
+  // Reactive state
+  let state = $state(actor.getSnapshot());
+
+  // Derived values from state context
+  let rows = $derived(state.context?.workOrders || []);
+
+  // Component state
+  let visiblePane = $state(false);
+  let selected = $state(null);
+  let selectedBatchNo = $state(null);
   let woRef;
-  let dialogOpen = false;
-  let batchPrintData = [];
-  let isBatchPrinting = false;
+  let dialogOpen = $state(false);
+  let batchPrintData = $state([]);
+  let isBatchPrinting = $state(false);
 
   // same safeKey you already use elsewhere
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
@@ -29,22 +37,20 @@
   const PIN_LEFT = new Set(PIN_LEFT_RAW.map(safeKey));
   console.log("Pinned fields:", [...PIN_LEFT]);
 
-  actor.start();
-
   function loadWorkOrders() {
     actor.send({ type: "LOAD" });
   }
 
   function reset() {
     actor.send({ type: "RESET" });
-    rows = [];
     selected = null;
     selectedBatchNo = null;
     visiblePane = false;
   }
 
-  function toSvarColumns(tabCols = []) {
-    return tabCols.map((c) => {
+  // Derived computed columns
+  let svarColumns = $derived(
+    (state.context?.columns || []).map((c) => {
       const id = c.field || c.title || Math.random().toString(36).slice(2);
       return {
         id, // Grid uses this as the field key
@@ -55,8 +61,8 @@
         align: c.hozAlign === "right" ? "right" : "left",
         pinned: PIN_LEFT.has(id) ? "left" : undefined,
       };
-    });
-  }
+    }),
+  );
 
   function getRowStyle(row) {
     const baseClass = "hover-highlight";
@@ -68,22 +74,15 @@
     return baseClass;
   }
 
-  // Force grid to re-render when selectedBatchNo changes
-  $: if (selectedBatchNo !== null) {
-    rows = [...rows];
-  }
-
-  function render(ctx) {
-    rows = ctx.workOrders || [];
-    columns = toSvarColumns(ctx.columns || []);
+  // Log when rows are loaded
+  $effect(() => {
     console.log("Work Orders loaded:", rows.length);
-    console.log("columns =>", columns);
-  }
+    console.log("columns =>", svarColumns);
+  });
 
   function onRowClick(event) {
     console.log("clicked row:", event.id);
-    const currentContext = actor.getSnapshot().context.workOrders;
-    const index = currentContext.findIndex((r) => r.id === event.id);
+    const index = rows.findIndex((r) => r.id === event.id);
     const row = index >= 0 ? rows[index] : null;
 
     if (row) {
@@ -96,6 +95,7 @@
   }
 
   function onClick() {
+    console.log("onCLickkk");
     visiblePane = !visiblePane;
   }
 
@@ -149,16 +149,10 @@
   }
 
   onMount(() => {
-    state = actor.getSnapshot();
-    const sub = actor.subscribe((s) => {
-      state = s;
-      if (s.matches("ready")) {
-        render(s.context);
-      }
-      if (s.matches("error")) {
-        rows = [];
-      }
-      console.log("state mch =>", state);
+    actor.start();
+    const sub = actor.subscribe((newState) => {
+      state = newState;
+      console.log("state mch =>", newState);
     });
 
     // Automatically load work orders on mount
@@ -423,7 +417,7 @@
           <Willow>
             <Grid
               data={rows}
-              {columns}
+              columns={svarColumns}
               rowStyle={getRowStyle}
               onselectrow={onRowClick}
               autoHeight={false}
