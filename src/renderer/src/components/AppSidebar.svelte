@@ -35,7 +35,7 @@
         <Sidebar.MenuItem>
           <Sidebar.MenuButton>
             <a
-              href={p("/workorders")}
+              href={p("/")}
               use:isActiveLink={{ className: "bg-accent text-accent-foreground" }}
               class="flex items-center gap-2"
             >
