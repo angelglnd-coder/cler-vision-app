@@ -7,13 +7,13 @@
 
 <Sidebar.Provider>
   <AppSidebar />
-  <main class="min-h-screen overflow-x-hidden">
+  <main class="flex h-screen flex-col overflow-hidden">
     <div class="p-2">
       <Sidebar.Trigger />
       <!-- toggles the sidebar -->
     </div>
 
-    <section class="p-4">
+    <section class="min-h-0 flex-1 overflow-hidden p-4">
       <Router />
     </section>
   </main>
