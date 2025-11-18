@@ -44,26 +44,38 @@
           </Sidebar.MenuButton>
         </Sidebar.MenuItem> -->
         <Sidebar.MenuItem>
-          <Sidebar.MenuButton>
-            <a
-              href={p("/")}
-              use:isActiveLink={{ className: "bg-accent text-accent-foreground" }}
-              class="flex items-center gap-2"
-            >
-              <PackagePlus class="size-4" /> <span>Work Orders</span>
-            </a>
-          </Sidebar.MenuButton>
+          <Tooltip.Provider>
+            <Tooltip.Root open={sidebar.state === "collapsed" ? undefined : false}>
+              <Tooltip.Trigger asChild>
+                <Sidebar.MenuButton isActive={isActive("/")}>
+                  {#snippet child({ props })}
+                    <a href={p("/")} {...props}>
+                      <PackagePlus class="size-4 min-h-4 min-w-4 shrink-0" />
+                      <span>Work Orders</span>
+                    </a>
+                  {/snippet}
+                </Sidebar.MenuButton>
+              </Tooltip.Trigger>
+              <Tooltip.Content side="right">Work Orders</Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
         </Sidebar.MenuItem>
         <Sidebar.MenuItem>
-          <Sidebar.MenuButton>
-            <a
-              href={p("/queuefiles")}
-              use:isActiveLink={{ className: "bg-accent text-accent-foreground" }}
-              class="flex items-center gap-2"
-            >
-              <Combine class="size-4" /> <span>QUE Files</span>
-            </a>
-          </Sidebar.MenuButton>
+          <Tooltip.Provider>
+            <Tooltip.Root open={sidebar.state === "collapsed" ? undefined : false}>
+              <Tooltip.Trigger asChild>
+                <Sidebar.MenuButton isActive={isActive("/queuefiles")}>
+                  {#snippet child({ props })}
+                    <a href={p("/queuefiles")} {...props}>
+                      <Combine class="size-4 min-h-4 min-w-4 shrink-0" />
+                      <span>QUE Files</span>
+                    </a>
+                  {/snippet}
+                </Sidebar.MenuButton>
+              </Tooltip.Trigger>
+              <Tooltip.Content side="right">QUE Files</Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
         </Sidebar.MenuItem>
       </Sidebar.Menu>
     </Sidebar.Group>
