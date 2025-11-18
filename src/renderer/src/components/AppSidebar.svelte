@@ -1,19 +1,30 @@
 <script>
-  // JS-friendly import. If you’re TS, you can use lang="ts".
+  // JS-friendly import. If you're TS, you can use lang="ts".
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-  import { Settings, ChevronDown, ListCheckIcon, PackagePlus, Combine } from "@lucide/svelte";
-  import { p } from "../router/router";
-  import { isActiveLink } from "sv-router";
+  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+  import { Settings, ChevronDown, ListCheckIcon, PackagePlus, Combine, LogOut, Briefcase } from "@lucide/svelte";
+  import { p, isActive } from "../router/router";
+  import { useSidebar } from "$lib/components/ui/sidebar/context.svelte.js";
+
+  const sidebar = useSidebar();
 </script>
 
 <Sidebar.Root collapsible="icon" variant="sidebar">
   <Sidebar.Header class="px-2">
     <Sidebar.Menu>
       <Sidebar.MenuItem>
-        <Sidebar.MenuButton>
-          My Workspace
-          <ChevronDown class="ml-auto" />
-        </Sidebar.MenuButton>
+        <Tooltip.Provider>
+          <Tooltip.Root open={sidebar.state === "collapsed" ? undefined : false}>
+            <Tooltip.Trigger asChild>
+              <Sidebar.MenuButton>
+                <Briefcase class="size-4 min-h-4 min-w-4 shrink-0" />
+                <span>My Workspace</span>
+                <ChevronDown class="ml-auto size-4 min-h-4 min-w-4 shrink-0" />
+              </Sidebar.MenuButton>
+            </Tooltip.Trigger>
+            <Tooltip.Content side="right">My Workspace</Tooltip.Content>
+          </Tooltip.Root>
+        </Tooltip.Provider>
       </Sidebar.MenuItem>
     </Sidebar.Menu>
   </Sidebar.Header>
