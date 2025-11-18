@@ -85,10 +85,17 @@
       <Sidebar.GroupLabel>Settings</Sidebar.GroupLabel>
       <Sidebar.Menu>
         <Sidebar.MenuItem>
-          <Sidebar.MenuButton>
-            <Settings class="size-4" />
-            <span>Preferences</span>
-          </Sidebar.MenuButton>
+          <Tooltip.Provider>
+            <Tooltip.Root open={sidebar.state === "collapsed" ? undefined : false}>
+              <Tooltip.Trigger asChild>
+                <Sidebar.MenuButton>
+                  <Settings class="size-4 min-h-4 min-w-4 shrink-0" />
+                  <span>Preferences</span>
+                </Sidebar.MenuButton>
+              </Tooltip.Trigger>
+              <Tooltip.Content side="right">Preferences</Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
         </Sidebar.MenuItem>
       </Sidebar.Menu>
     </Sidebar.Group>
@@ -97,7 +104,17 @@
   <Sidebar.Footer class="px-2">
     <Sidebar.Menu>
       <Sidebar.MenuItem>
-        <Sidebar.MenuButton>Logout</Sidebar.MenuButton>
+        <Tooltip.Provider>
+          <Tooltip.Root open={sidebar.state === "collapsed" ? undefined : false}>
+            <Tooltip.Trigger asChild>
+              <Sidebar.MenuButton>
+                <LogOut class="size-4 min-h-4 min-w-4 shrink-0" />
+                <span>Logout</span>
+              </Sidebar.MenuButton>
+            </Tooltip.Trigger>
+            <Tooltip.Content side="right">Logout</Tooltip.Content>
+          </Tooltip.Root>
+        </Tooltip.Provider>
       </Sidebar.MenuItem>
     </Sidebar.Menu>
   </Sidebar.Footer>
