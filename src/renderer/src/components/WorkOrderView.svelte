@@ -423,7 +423,7 @@
       row-gap: 6px;
     }
     .sheet.responsive .barcode-container {
-      margin: -12px 0 8px 0;
+      margin: -12px auto 8px auto;
     }
   }
 
