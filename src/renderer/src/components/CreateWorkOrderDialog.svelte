@@ -305,6 +305,7 @@
     overflow-x: auto;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
+    overflow: hidden;
   }
 
   .mt-4 {
