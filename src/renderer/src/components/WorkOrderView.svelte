@@ -152,12 +152,21 @@
     border: 1px solid rgba(14, 165, 233, 0.3);
   }
 
+  .barcode-container {
+    display: flex;
+    justify-content: center;
+    margin: -17px 0 10px 0;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   /* header grid (3 columns of key/value) */
   .kv {
     display: grid;
     grid-template-columns:
-      minmax(100px, 140px) minmax(100px, 1fr) minmax(100px, 140px) minmax(100px, 1fr)
-      minmax(100px, 140px) minmax(100px, 1fr);
+      minmax(100px, 140px) minmax(100px, 200px) minmax(100px, 140px) minmax(100px, 200px)
+      minmax(100px, 140px) minmax(100px, 200px);
     column-gap: 14px;
     row-gap: 8px;
     align-items: center;
@@ -352,8 +361,8 @@
 
   <!-- Barcode Section -->
   {#if data.woNumber}
-    <div style="display: flex; justify-content: center; margin: -17px 0 10px 0;">
-      <Barcode value={data.woNumber} height={40} width={2} fontSize={12} margin={10} />
+    <div class="barcode-container">
+      <Barcode value={data.woNumber} height={35} width={1.5} fontSize={11} margin={8} />
     </div>
   {/if}
 
@@ -435,7 +444,10 @@
       </div>
       <div class="code" style="text-align:right;">{data.brand || "—"}</div>
       {#if data.containerCode && data.containerCode !== "—"}
-        <div class="code" style="text-align:right; margin-top: 4px; font-size: 0.85rem; color: var(--muted);">
+        <div
+          class="code"
+          style="text-align:right; margin-top: 4px; font-size: 0.85rem; color: var(--muted);"
+        >
           {data.containerCode}
         </div>
       {/if}
