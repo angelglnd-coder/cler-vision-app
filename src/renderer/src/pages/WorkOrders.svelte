@@ -430,7 +430,7 @@
       </div>
     </Pane>
     {#if visiblePane}
-      <Pane maxSize={35}>
+      <Pane maxSize={35} minSize={35}>
         {#if selected}
           <div
             style="display:flex; justify-content: space-between; align-items:center; padding:.5rem 1rem; border-bottom:1px solid #eee;"
@@ -471,7 +471,7 @@
   <div class="batch-print-area">
     {#each batchPrintData as woData, index (woData.id || woData.woNumber || index)}
       <div class="batch-print-item">
-        <WorkOrderView row={woData}></WorkOrderView>
+        <WorkOrderView row={woData} enableResponsive={false}></WorkOrderView>
       </div>
     {/each}
   </div>
