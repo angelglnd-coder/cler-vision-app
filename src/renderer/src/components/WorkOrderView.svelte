@@ -4,6 +4,7 @@
   import SmallBarcode from "./SmallBarcode.svelte";
 
   export let row = {};
+  export let enableResponsive = true;
 
   // safe getters
   const g = (k, fb = "") => row?.[k] ?? fb;
@@ -343,7 +344,7 @@
   }
 </style>
 
-<div class="sheet">
+<div class="sheet {enableResponsive ? 'responsive' : ''}">
   <!-- Top title -->
   <div class="titlebar">
     <div class="badge">PRGM: {data.prgm || "—"}</div>
