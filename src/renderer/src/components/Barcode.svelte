@@ -59,7 +59,8 @@
   }
 
   canvas {
-    max-width: 70%;
+    display: block;
+    margin: 0 auto;
     height: auto;
   }
 </style>
