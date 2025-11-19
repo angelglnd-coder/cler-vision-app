@@ -164,10 +164,15 @@
   /* header grid (3 columns of key/value) */
   .kv {
     display: grid;
-    grid-template-columns:
-      minmax(100px, 140px) minmax(100px, 200px) minmax(100px, 140px) minmax(100px, 200px)
-      minmax(100px, 140px) minmax(100px, 200px);
+    grid-template-columns: repeat(3, 1fr);
     column-gap: 14px;
+    row-gap: 8px;
+    align-items: start;
+  }
+  .kv-col {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 12px;
     row-gap: 8px;
     align-items: center;
   }
@@ -288,13 +293,13 @@
     align-items: stretch;
   }
   .cell {
-    padding: 12px;
+    padding: 8px 12px;
     border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     font-size: 0.92rem;
     overflow-wrap: break-word;
     word-break: break-word;
-    min-height: 44px;
+    min-height: 36px;
   }
   .t-row .cell {
     display: flex;
@@ -324,47 +329,50 @@
       container-name: work-order;
     }
 
-    /* Header grid: For wide screens, keep 2 columns for better readability */
-    @container work-order (min-width: 801px) {
+    /* Make cards smaller in responsive mode */
+    .sheet.responsive .card {
+      padding: 8px 10px;
+    }
+    .sheet.responsive .card .head {
+      margin-bottom: 4px;
+    }
+    .sheet.responsive .card .head .h {
+      font-size: 0.75rem;
+    }
+    .sheet.responsive .card .code {
+      font-size: 0.8rem;
+    }
+
+    /* Header grid: Reduce to 2 columns on small screens */
+    @container work-order (max-width: 400px) {
       .sheet.responsive .kv {
-        grid-template-columns:
-          minmax(100px, 140px) minmax(100px, 200px)
-          minmax(100px, 140px) minmax(100px, 200px);
+        grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    /* Header grid: Reduce from 6 columns (3 pairs) to 4 columns (2 pairs) */
-    @container work-order (max-width: 800px) {
+    /* Header grid: Reduce to 1 column for very narrow containers */
+    @container work-order (max-width: 300px) {
       .sheet.responsive .kv {
-        grid-template-columns:
-          minmax(90px, 130px) minmax(100px, 1fr)
-          minmax(90px, 130px) minmax(100px, 1fr);
-      }
-    }
-
-    /* Header grid: Reduce to 2 columns (1 pair) for narrow containers */
-    @container work-order (max-width: 500px) {
-      .sheet.responsive .kv {
-        grid-template-columns: minmax(80px, 110px) minmax(100px, 1fr);
+        grid-template-columns: 1fr;
       }
     }
 
     /* Content cards: Stack from 3 to 2 columns */
-    @container work-order (max-width: 600px) {
+    @container work-order (max-width: 400px) {
       .sheet.responsive .grid-3 {
         grid-template-columns: 1fr 1fr;
       }
     }
 
     /* Content cards: Stack to single column */
-    @container work-order (max-width: 400px) {
+    @container work-order (max-width: 300px) {
       .sheet.responsive .grid-3 {
         grid-template-columns: 1fr;
       }
     }
 
     /* Spec table: Adjust column widths for better fit */
-    @container work-order (max-width: 600px) {
+    @container work-order (max-width: 400px) {
       .sheet.responsive .t-head,
       .sheet.responsive .t-row,
       .sheet.responsive .t-row-with-qc {
@@ -375,12 +383,47 @@
     }
 
     /* Spec table: Further reduce for very narrow containers */
-    @container work-order (max-width: 450px) {
+    @container work-order (max-width: 300px) {
       .sheet.responsive .t-head,
       .sheet.responsive .t-row,
       .sheet.responsive .t-row-with-qc {
         grid-template-columns: 40px 1fr 70px 1fr 70px;
       }
+    }
+  }
+
+  /* Height-based responsive using viewport height (not container query) */
+  @media not print and (max-height: 900px) {
+    .sheet.responsive .cell {
+      padding: 6px 10px;
+      min-height: 32px;
+      font-size: 0.88rem;
+    }
+    .sheet.responsive .t-head .cell {
+      padding: 6px 10px;
+      font-size: 0.88rem;
+    }
+  }
+
+  /* Even more compact for very limited viewport height */
+  @media not print and (max-height: 700px) {
+    .sheet.responsive .cell {
+      padding: 4px 8px;
+      min-height: 28px;
+      font-size: 0.85rem;
+    }
+    .sheet.responsive .t-head .cell {
+      padding: 4px 8px;
+      font-size: 0.85rem;
+    }
+    .sheet.responsive .kv {
+      row-gap: 6px;
+    }
+    .sheet.responsive .kv-col {
+      row-gap: 6px;
+    }
+    .sheet.responsive .barcode-container {
+      margin: -12px 0 8px 0;
     }
   }
 
@@ -433,49 +476,57 @@
     </div>
   {/if}
 
-  <!-- 3× key/value header grid -->
+  <!-- 3-column layout -->
   <div class="kv">
-    <!-- Row 1 -->
-    <div class="label">PO Date:</div>
-    <div class="value">{data.poDate || "—"}</div>
-    <div class="label">Customer PO#:</div>
-    <div class="value">{data.customerPO || "—"}</div>
-    <div class="label">WO #</div>
-    <div class="value">{data.woNumber || "—"}</div>
+    <!-- Column 1 -->
+    <div class="kv-col">
+      <div class="label">PO Date:</div>
+      <div class="value">{data.poDate || "—"}</div>
 
-    <!-- Row 2 -->
-    <div class="label">Sold To:</div>
-    <div class="value">{data.soldTo || "—"}</div>
-    <div class="label">Shopping Cart#</div>
-    <div class="value">{data.cart || "—"}</div>
-    <div class="label">Device:</div>
-    <div class="value">
-      <span class="link" on:click={openDeviceLink}>{data.deviceText || "—"}</span>
+      <div class="label">Sold To:</div>
+      <div class="value">{data.soldTo || "—"}</div>
+
+      <div class="label">Ship To:</div>
+      <div class="value">{data.shipTo || "—"}</div>
+
+      <div class="label">Bill To:</div>
+      <div class="value">{data.billTo || "—"}</div>
     </div>
 
-    <!-- Row 3 -->
-    <div class="label">Ship To:</div>
-    <div class="value">{data.shipTo || "—"}</div>
-    <div class="label">Patient Name</div>
-    <div class="value">{data.patient || "—"}</div>
-    <div class="label">Laser Mark:</div>
-    <div class="value code">{data.laserMark || "—"}</div>
+    <!-- Column 2 -->
+    <div class="kv-col">
+      <div class="label">Customer PO#:</div>
+      <div class="value">{data.customerPO || "—"}</div>
 
-    <!-- Row 4 -->
-    <div class="label">Bill To:</div>
-    <div class="value">{data.billTo || "—"}</div>
-    <div class="label">Doctor's Name</div>
-    <div class="value">{data.doctor || "—"}</div>
-    <div class="label">Device Type:</div>
-    <div class="value">{data.deviceType || "—"}</div>
+      <div class="label">Shopping Cart#</div>
+      <div class="value">{data.cart || "—"}</div>
 
-    <!-- Row 5 -->
-    <div class="label"></div>
-    <div class="value"></div>
-    <div class="label"></div>
-    <div class="value"></div>
-    <div class="label">Blank THKN:</div>
-    <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
+      <div class="label">Patient Name</div>
+      <div class="value">{data.patient || "—"}</div>
+
+      <div class="label">Doctor's Name</div>
+      <div class="value">{data.doctor || "—"}</div>
+    </div>
+
+    <!-- Column 3 -->
+    <div class="kv-col">
+      <div class="label">WO #</div>
+      <div class="value">{data.woNumber || "—"}</div>
+
+      <div class="label">Device:</div>
+      <div class="value">
+        <span class="link" on:click={openDeviceLink}>{data.deviceText || "—"}</span>
+      </div>
+
+      <div class="label">Laser Mark:</div>
+      <div class="value code">{data.laserMark || "—"}</div>
+
+      <div class="label">Device Type:</div>
+      <div class="value">{data.deviceType || "—"}</div>
+
+      <div class="label">Blank THKN:</div>
+      <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
+    </div>
   </div>
 
   <div class="rule"></div>
@@ -495,7 +546,7 @@
         <div class="h">GTIN / Color</div>
       </div>
       {#if data.cont3 && data.cont3 !== "—"}
-        <SmallBarcode value={data.cont3} width={1} height={20} margin={1} />
+        <SmallBarcode value={data.cont3} width={1} height={enableResponsive ? 16 : 20} margin={1} />
       {:else}
         <div class="code">—</div>
       {/if}
