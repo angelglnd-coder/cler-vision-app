@@ -317,6 +317,73 @@
     padding: 0;
   }
 
+  /* Container queries for responsive layout (not applied to print) */
+  @media not print {
+    .sheet.responsive {
+      container-type: inline-size;
+      container-name: work-order;
+    }
+
+    /* Header grid: For wide screens, keep 2 columns for better readability */
+    @container work-order (min-width: 801px) {
+      .sheet.responsive .kv {
+        grid-template-columns:
+          minmax(100px, 140px) minmax(100px, 200px)
+          minmax(100px, 140px) minmax(100px, 200px);
+      }
+    }
+
+    /* Header grid: Reduce from 6 columns (3 pairs) to 4 columns (2 pairs) */
+    @container work-order (max-width: 800px) {
+      .sheet.responsive .kv {
+        grid-template-columns:
+          minmax(90px, 130px) minmax(100px, 1fr)
+          minmax(90px, 130px) minmax(100px, 1fr);
+      }
+    }
+
+    /* Header grid: Reduce to 2 columns (1 pair) for narrow containers */
+    @container work-order (max-width: 500px) {
+      .sheet.responsive .kv {
+        grid-template-columns: minmax(80px, 110px) minmax(100px, 1fr);
+      }
+    }
+
+    /* Content cards: Stack from 3 to 2 columns */
+    @container work-order (max-width: 600px) {
+      .sheet.responsive .grid-3 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Content cards: Stack to single column */
+    @container work-order (max-width: 400px) {
+      .sheet.responsive .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Spec table: Adjust column widths for better fit */
+    @container work-order (max-width: 600px) {
+      .sheet.responsive .t-head,
+      .sheet.responsive .t-row,
+      .sheet.responsive .t-row-with-qc {
+        grid-template-columns:
+          minmax(40px, 0.5fr) minmax(80px, 1fr) minmax(70px, 0.8fr) minmax(80px, 1fr)
+          minmax(70px, 0.8fr);
+      }
+    }
+
+    /* Spec table: Further reduce for very narrow containers */
+    @container work-order (max-width: 450px) {
+      .sheet.responsive .t-head,
+      .sheet.responsive .t-row,
+      .sheet.responsive .t-row-with-qc {
+        grid-template-columns: 40px 1fr 70px 1fr 70px;
+      }
+    }
+  }
+
   /* print tweaks */
   @media print {
     .sheet {
