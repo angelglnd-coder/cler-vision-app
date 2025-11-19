@@ -163,12 +163,11 @@
         sample: transformedRows[0],
       });
 
-      // Create all work orders in a single batch request
       const result = await createWorkOrdersBatch(transformedRows);
-
       const createdCount = result.data.count || 0;
+
       submitSuccess = true;
-      console.log(`Successfully created ${createdCount} work orders`, result);
+      console.log(`Successfully created ${createdCount} work orders`);
 
       // Warn if fewer work orders were created than expected
       if (createdCount < transformedRows.length) {
