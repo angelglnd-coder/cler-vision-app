@@ -45,13 +45,11 @@
 
 <style>
   .barcode-container {
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 8px;
+    width: 100%;
     background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
   }
 
   .error {
