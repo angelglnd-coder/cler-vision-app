@@ -53,7 +53,7 @@ export const getWorkOrderNextNumbers = async (soldToAccounts) => {
  * Fetch all work orders from the database
  * @returns {Promise} Promise resolving to work orders array
  */
-export const getWorkOrders = () => config.get("/workorders");
+export const getWorkOrders = () => config.get("/workorders/all/recent");
 
 /**
  * Fetch a single work order by ID
