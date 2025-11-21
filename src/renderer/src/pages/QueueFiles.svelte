@@ -204,6 +204,20 @@
     actor.subscribe((newState) => {
       state = newState;
     });
+
+    // Add event listener for grid cell clicks to detect print action
+    document.addEventListener("click", (e) => {
+      // Check if click is on the print column cell
+      const cell = e.target.closest(".wx-cell");
+      if (cell && cell.getAttribute("data-col-id") === "print" && cell.textContent.trim() === "🖨️") {
+        // Get the row to find the queue ID
+        const row = e.target.closest(".wx-row");
+        if (row) {
+          const rowId = row.getAttribute("data-id");
+          handlePrintQueue(rowId);
+        }
+      }
+    });
   });
 
   onDestroy(() => {
@@ -296,6 +310,33 @@
     }
     return parseFloat(thickness).toFixed(2);
   }
+
+  function handlePrintQueue(queueId) {
+    // Set the queue ID to print
+    printQueueId = queueId;
+    isPrinting = true;
+
+    // Wait for content to render, then print
+    setTimeout(() => {
+      window.print();
+
+      // Restore original state after printing
+      setTimeout(() => {
+        isPrinting = false;
+        printQueueId = null;
+      }, 500);
+    }, 300);
+  }
+
+  // Get the queue data for printing
+  let printQueueData = $derived.by(() => {
+    if (!isPrinting || !printQueueId) return null;
+
+    const queue = queues.find((q) => q._id === printQueueId);
+    if (!queue) return null;
+
+    return queue;
+  });
 </script>
 
 <style>
