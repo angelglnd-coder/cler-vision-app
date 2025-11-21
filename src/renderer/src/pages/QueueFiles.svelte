@@ -108,9 +108,11 @@
       const queueRow = {
         id: queue._id,
         name: queue.name,
+        print: "🖨️", // Print icon in separate column
         status: queue.status,
         info: `${queue.groups?.length || 0} Groups, ${queue.groups?.reduce((sum, g) => sum + (g.workOrders?.length || 0), 0) || 0} WOs`,
         created: formatDate(queue.createdAt),
+        queueId: queue._id, // Store queue ID for print functionality
       };
 
       // Add nested groups if they exist
@@ -121,6 +123,7 @@
           const groupRow = {
             id: `${queue._id}-${group._id}`,
             name: `Group ${groupIdx + 1} (${formatThickness(group.thickness)} mm)`,
+            print: "", // Empty for group rows
             status: "",
             info: `${group.workOrders?.length || 0} work orders`,
             created: "",
@@ -135,6 +138,7 @@
               return {
                 id: woItem._id,
                 name: woItem.woNumber || wo.woNumber || "N/A",
+                print: "", // Empty for work order rows
                 status: wo.patientName || "N/A",
                 info: `${wo.po || "N/A"} | ${wo.spec || "N/A"}`,
                 created: `${wo.color || "N/A"} | ${wo.design || "N/A"}`,
@@ -157,6 +161,12 @@
       header: "Queue / Group / Work Order",
       flexgrow: 1,
       treetoggle: true,
+    },
+    {
+      id: "print",
+      header: "",
+      width: 50,
+      align: "center",
     },
     {
       id: "status",
@@ -182,7 +192,11 @@
     },
   };
 
+  let isPrinting = $state(false);
+  let printQueueId = $state(null);
+
   let treeData = $derived(getTreeData(queues));
+
   let api = $state();
 
   onMount(() => {
@@ -811,6 +825,125 @@
   :global(.wx-grid) {
     --wx-transition-duration: 0s !important;
     --wx-animation-duration: 0s !important;
+  }
+
+  /* Style for print column */
+  :global(.wx-grid .wx-cell[data-col-id="print"]) {
+    cursor: pointer;
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  :global(.wx-grid .wx-cell[data-col-id="print"]:hover) {
+    background-color: #f0f9ff;
+    transform: scale(1.1);
+  }
+
+  /* Add transition for print icon hover */
+  :global(.wx-grid .wx-cell[data-col-id="print"]) {
+    transition: background-color 0.15s, transform 0.15s !important;
+  }
+
+  /* Hide print area on screen */
+  .print-area {
+    display: none;
+  }
+
+  /* Print-specific styles */
+  @media print {
+    /* Hide everything by default */
+    * {
+      visibility: hidden;
+    }
+
+    /* Show only print area */
+    .print-area,
+    .print-area * {
+      visibility: visible !important;
+    }
+
+    /* Hide the grid completely */
+    .queue-list-container,
+    .queue-list-header,
+    .state-card {
+      display: none !important;
+    }
+
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .queue-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 0 !important;
+    }
+
+    /* Style the print area */
+    .print-area {
+      display: block !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 1cm;
+      background: white;
+    }
+
+    .print-area h1 {
+      font-size: 18pt;
+      margin-bottom: 0.5cm;
+      color: black;
+    }
+
+    .print-area h2 {
+      font-size: 14pt;
+      margin-top: 0.5cm;
+      margin-bottom: 0.3cm;
+      color: black;
+      border-bottom: 2px solid #333;
+      padding-bottom: 0.2cm;
+    }
+
+    .print-area p {
+      margin: 0.2cm 0;
+      font-size: 10pt;
+      color: black;
+    }
+
+    .print-group {
+      margin-bottom: 1cm;
+      page-break-inside: avoid;
+    }
+
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.3cm;
+      font-size: 9pt;
+    }
+
+    .print-table th,
+    .print-table td {
+      border: 1px solid #333;
+      padding: 0.2cm;
+      text-align: left;
+      color: black;
+    }
+
+    .print-table th {
+      background-color: #e5e5e5;
+      font-weight: bold;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .print-table tr {
+      page-break-inside: avoid;
+    }
   }
 </style>
 
