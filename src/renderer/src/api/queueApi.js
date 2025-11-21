@@ -9,7 +9,7 @@ import config from "./config";
  * Fetch all queue files from the database
  * @returns {Promise} Promise resolving to queue files array
  */
-export const getQueues = () => config.get("/queues");
+export const getQueues = () => config.get("/queues/all/recent");
 
 /**
  * Fetch a single queue file by ID
