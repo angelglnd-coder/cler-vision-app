@@ -154,6 +154,16 @@
     });
   }
 
+  // same safeKey you already use elsewhere
+  const safeKey = (col) => col.replace(/[^\w$]/g, "_");
+
+  // define desired sticky headers in human form
+  const PIN_LEFT_RAW = ["name", "print"];
+
+  // …then normalize to the actual column ids
+  const PIN_LEFT = new Set(PIN_LEFT_RAW.map(safeKey));
+  console.log("Pinned fields:", [...PIN_LEFT]);
+
   // Tree grid columns following the official example pattern
   const treeColumns = [
     {
@@ -161,27 +171,32 @@
       header: "Queue / Group / Work Order",
       flexgrow: 1,
       treetoggle: true,
+      pinned: PIN_LEFT.has("name") ? "left" : undefined,
     },
     {
       id: "print",
       header: "",
       width: 50,
       align: "center",
+      pinned: PIN_LEFT.has("print") ? "left" : undefined,
     },
     {
       id: "status",
       header: "Status / Patient",
       width: 200,
+      pinned: PIN_LEFT.has("status") ? "left" : undefined,
     },
     {
       id: "info",
       header: "Info / PO & Spec",
       width: 250,
+      pinned: PIN_LEFT.has("info") ? "left" : undefined,
     },
     {
       id: "created",
       header: "Created / Color & Design",
       width: 250,
+      pinned: PIN_LEFT.has("created") ? "left" : undefined,
     },
   ];
 
@@ -218,6 +233,20 @@
         }
       }
     });
+
+    // Debug: Log grid container dimensions after mount
+    // setTimeout(() => {
+    //   const gridContainer = document.querySelector('.grid-container');
+    //   const willow = document.querySelector('.wx-willow');
+    //   const grid = document.querySelector('.wx-grid');
+    //   const scroll = document.querySelector('.wx-scroll');
+    //   console.log('Grid container dimensions:', {
+    //     container: gridContainer?.getBoundingClientRect(),
+    //     willow: willow?.getBoundingClientRect(),
+    //     grid: grid?.getBoundingClientRect(),
+    //     scroll: scroll?.getBoundingClientRect(),
+    //   });
+    // }, 1000);
   });
 
   onDestroy(() => {
@@ -344,10 +373,15 @@
     padding: 2rem;
     width: 100%;
     max-width: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .queue-header {
     margin-bottom: 2rem;
+    flex-shrink: 0;
   }
 
   .queue-header h1 {
@@ -366,6 +400,11 @@
     border-radius: 8px;
     padding: 2rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .state-card.centered {
@@ -657,7 +696,11 @@
   }
 
   .queue-list-container {
-    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .queue-list-header {
@@ -665,11 +708,65 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    flex-shrink: 0;
   }
 
   .queue-list-header h2 {
     font-size: 1.5rem;
     font-weight: 600;
+  }
+
+  /* Grid container for proper scrolling */
+  .grid-container {
+    flex: 1;
+    min-height: 0;
+    height: 0; /* Force flex item to respect container height */
+    overflow: hidden !important;
+    width: 1000px;
+  }
+
+  /* Make Willow fill the container */
+  .grid-container :global(.wx-willow) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+  }
+
+  /* Grid should fill Willow */
+  .grid-container :global(.wx-grid) {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* The scroll container inside Grid - this is where scrolling happens */
+  .grid-container :global(.wx-scroll) {
+    flex: 1 !important;
+    overflow: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Prevent scrolling on any other nested divs */
+  .grid-container :global(.wx-grid > div:not(.wx-scroll)) {
+    overflow: visible !important;
+  }
+
+  /* Target all possible scroll containers and force only the right one */
+  .grid-container :global(*) {
+    overflow: visible !important;
+  }
+
+  .grid-container :global(.wx-scroll) {
+    overflow: auto !important;
+  }
+
+  /* Tree grid specific styles */
+  .grid-container :global(.wx-data-tree) {
+    overflow: auto !important;
+    flex: 1 !important;
+    min-height: 0 !important;
   }
 
   /* Queue List Styles */
@@ -1017,14 +1114,15 @@
             <p>No queue files yet. Create your first queue file to get started.</p>
           </div>
         {:else}
-          <div style="width: 1000px; padding: 20px; margin-top: 10px;">
-            <Willow>
+          <div class="grid-container">
+            <Willow >
               <Grid
                 bind:this={api}
                 tree={true}
                 data={treeData}
                 columns={treeColumns}
-                {responsive}
+                autoHeight={false}
+                
               />
             </Willow>
           </div>
