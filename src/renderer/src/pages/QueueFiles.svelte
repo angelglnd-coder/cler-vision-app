@@ -8,6 +8,8 @@
   import { downloadAsZip } from "../utils/downloadZip.js";
   import { Splitpanes, Pane } from "svelte-splitpanes";
   import { Grid, Willow } from "@svar-ui/svelte-grid";
+  import { getQueueById } from "../api/queueApi.js";
+  import { generateQueueFiles } from "../utils/generateQueueFiles.js";
 
   // Create actor instance
   const actor = createActor(queMachine);
@@ -20,6 +22,8 @@
   let showThicknessDialog = $state(false);
   let adjustedThickness = $state(0.26);
   let barcodeInput;
+  let isDownloading = $state(false);
+  let downloadQueueId = $state(null);
 
   // Computed values
   let currentStateName = $derived(state.value);
@@ -355,6 +359,64 @@
         printQueueId = null;
       }, 500);
     }, 300);
+  }
+
+  async function handleDownloadQueue(queueId) {
+    try {
+      isDownloading = true;
+      downloadQueueId = queueId;
+
+      // Fetch full queue data from backend
+      const response = await getQueueById(queueId);
+      let queue = response?.data || response;
+
+      // Handle nested data structure
+      if (queue?.data) {
+        queue = queue.data;
+      }
+
+      if (!queue || !queue._id) {
+        throw new Error("Invalid queue data received from server");
+      }
+
+      // Generate files using utility
+      const { queFile, difFiles, errors } = generateQueueFiles(queue);
+
+      // Log warnings if any
+      if (errors.length > 0) {
+        console.warn("File generation warnings:", errors);
+      }
+
+      // Check if any files were generated
+      if (difFiles.length === 0) {
+        throw new Error("No files could be generated. Check queue data.");
+      }
+
+      // Download as ZIP
+      const zipName = queFile.name.replace(".QUE", ".zip");
+      await downloadAsZip(queFile, difFiles, zipName);
+
+      console.log(`Downloaded ${difFiles.length} DIF files + 1 QUE file`);
+
+    } catch (error) {
+      console.error("Error downloading queue files:", error);
+
+      // User-friendly error messages
+      let errorMessage = "Failed to download queue files";
+      if (error.code === "ECONNABORTED") {
+        errorMessage = "Request timeout. Please try again.";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Queue not found in database.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      alert(errorMessage);
+
+    } finally {
+      isDownloading = false;
+      downloadQueueId = null;
+    }
   }
 
   // Get the queue data for printing
