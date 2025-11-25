@@ -29,7 +29,7 @@ export const getWorkOrderNextNumbers = async (soldToAccounts) => {
       const response = await config.get(`/workorders/next-number`, { params: { prefix: soldTo } });
       return { soldTo, data: response };
     } catch (error) {
-      console.error(`Failed to fetch sequence for SOLD_TO ${soldTo}:`, error);
+      // console.error(`Failed to fetch sequence for SOLD_TO ${soldTo}:`, error);
       return { soldTo, data: null, error: error.message };
     }
   });
@@ -82,7 +82,7 @@ export const createWorkOrder = (workOrderData) => config.post("/workorders", wor
  * @returns {Promise} Promise resolving to created work orders
  */
 export const createWorkOrdersBatch = (workOrdersArray) => {
-  console.log("testint =>", workOrdersArray);
+  // console.log("testint =>", workOrdersArray);
   return config.post("/workorders/batch", { workOrders: workOrdersArray });
 };
 

@@ -178,7 +178,7 @@ export const woMachine = setup({
     fetchWorkOrders: fromPromise(async () => {
       try {
         const response = await getWorkOrders();
-        console.log("API response =>", response);
+        // console.log("API response =>", response);
         const data = normalizeWorkOrders(response.data.data);
         return {
           data,
@@ -186,7 +186,7 @@ export const woMachine = setup({
           total: data.length,
         };
       } catch (error) {
-        console.error("Error fetching work orders:", error);
+        // console.error("Error fetching work orders:", error);
         throw new Error(
           error.response?.data?.message || error.message || "Failed to fetch work orders",
         );
