@@ -5,3 +5,9 @@ out
 .eslintcache
 *.log*
 private
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
