@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: cler-vision-app5
+appId: com.clervision.app
+productName: clerVisionApp
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: cler-vision-app5
+  executableName: clerVisionApp
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

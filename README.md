@@ -1,6 +1,6 @@
-# cler-vision-app5
+# CLER Vision App
 
-An Electron application with Svelte
+A desktop application for managing work orders and queue files in the optical lens manufacturing process.
 
 ## Recommended IDE Setup
 
