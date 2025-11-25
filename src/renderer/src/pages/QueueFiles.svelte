@@ -1064,7 +1064,9 @@
 
   /* Add transition for print icon hover */
   :global(.wx-grid .wx-cell[data-col-id="print"]) {
-    transition: background-color 0.15s, transform 0.15s !important;
+    transition:
+      background-color 0.15s,
+      transform 0.15s !important;
   }
 
   /* Hide print area on screen */
@@ -1167,6 +1169,17 @@
     .print-table tr {
       page-break-inside: avoid;
     }
+  }
+
+  /* Actions column (print/download) styling */
+  :global(.wx-grid .wx-cell[data-col-id="print"]) {
+    cursor: pointer;
+    font-size: 1.2rem;
+    user-select: none;
+  }
+
+  :global(.wx-grid .wx-cell[data-col-id="print"]:hover) {
+    background-color: rgba(59, 130, 246, 0.1);
   }
 </style>
 
