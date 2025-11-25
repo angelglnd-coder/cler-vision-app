@@ -1213,14 +1213,13 @@
           </div>
         {:else}
           <div class="grid-container">
-            <Willow >
+            <Willow>
               <Grid
                 bind:this={api}
                 tree={true}
                 data={treeData}
                 columns={treeColumns}
                 autoHeight={false}
-                
               />
             </Willow>
           </div>
@@ -1523,7 +1522,10 @@
       <p>Status: {printQueueData.status}</p>
       <p>Total Groups: {printQueueData.groups?.length || 0}</p>
       <p>
-        Total Work Orders: {printQueueData.groups?.reduce((sum, g) => sum + (g.workOrders?.length || 0), 0) || 0}
+        Total Work Orders: {printQueueData.groups?.reduce(
+          (sum, g) => sum + (g.workOrders?.length || 0),
+          0,
+        ) || 0}
       </p>
 
       {#if printQueueData.groups && printQueueData.groups.length > 0}
