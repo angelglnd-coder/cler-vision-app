@@ -89,15 +89,32 @@ function formatDate(date) {
 }
 
 /**
+ * Extract numeric value from WO Number for sorting
+ * @param {string} woNumber - WO Number (e.g., "003-000237 0")
+ * @returns {number} Numeric value for comparison
+ */
+function parseWoNumber(woNumber) {
+  if (!woNumber) return 0;
+  // Extract the numeric portion from format like "003-000237 0"
+  const match = String(woNumber).match(/(\d+)-(\d+)/);
+  if (match) {
+    // Combine prefix and sequential number for sorting
+    // e.g., "003-000237" -> 3000237
+    return parseInt(match[1]) * 1000000 + parseInt(match[2]);
+  }
+  return 0;
+}
+
+/**
  * Normalize work order data to ensure consistent structure
  * @param {Array} workOrders - Raw work orders from API
- * @returns {Array} Normalized work orders
+ * @returns {Array} Normalized and sorted work orders
  */
 function normalizeWorkOrders(workOrders) {
   if (!Array.isArray(workOrders)) return [];
 
-  return workOrders.map((wo) => {
-    const normalized = {};
+  const normalized = workOrders.map((wo) => {
+    const normalizedWo = {};
     for (const col of WO_COLUMNS) {
       let value = wo[col] ?? null;
       // Convert numeric fields to numbers
@@ -109,9 +126,24 @@ function normalizeWorkOrders(workOrders) {
       if (col === "poDate" && value !== null) {
         value = formatDate(value);
       }
-      normalized[col] = value;
+      normalizedWo[col] = value;
     }
-    return normalized;
+    return normalizedWo;
+  });
+
+  // Sort by Batch No (descending) then WO Number (descending)
+  return normalized.sort((a, b) => {
+    // Primary sort: Batch No (descending - latest batches first)
+    const batchA = Number(a.batchNo) || 0;
+    const batchB = Number(b.batchNo) || 0;
+    if (batchA !== batchB) {
+      return batchB - batchA; // Descending order
+    }
+
+    // Secondary sort: WO Number (descending - latest WO numbers first)
+    const woA = parseWoNumber(a.woNumber);
+    const woB = parseWoNumber(b.woNumber);
+    return woB - woA; // Descending order
   });
 }
 
