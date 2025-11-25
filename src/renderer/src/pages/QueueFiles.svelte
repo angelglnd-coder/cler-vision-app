@@ -112,7 +112,9 @@
       const queueRow = {
         id: queue._id,
         name: queue.name,
-        print: "🖨️", // Print icon in separate column
+        print: isDownloading && downloadQueueId === queue._id
+          ? "🖨️ ⏳"
+          : "🖨️ ⬇️", // Print and Download icons (or loading state)
         status: queue.status,
         info: `${queue.groups?.length || 0} Groups, ${queue.groups?.reduce((sum, g) => sum + (g.workOrders?.length || 0), 0) || 0} WOs`,
         created: formatDate(queue.createdAt),
@@ -179,8 +181,8 @@
     },
     {
       id: "print",
-      header: "",
-      width: 50,
+      header: "Actions",
+      width: 100,
       align: "center",
       pinned: PIN_LEFT.has("print") ? "left" : undefined,
     },
@@ -224,16 +226,37 @@
       state = newState;
     });
 
-    // Add event listener for grid cell clicks to detect print action
+    // Add event listener for grid cell clicks to detect print and download actions
     document.addEventListener("click", (e) => {
-      // Check if click is on the print column cell
+      // Check if click is on the print/actions column cell
       const cell = e.target.closest(".wx-cell");
-      if (cell && cell.getAttribute("data-col-id") === "print" && cell.textContent.trim() === "🖨️") {
-        // Get the row to find the queue ID
+      if (cell && cell.getAttribute("data-col-id") === "print") {
+        // Prevent action if already downloading
+        if (isDownloading) {
+          e.preventDefault();
+          return;
+        }
+
+        const cellText = cell.textContent?.trim();
         const row = e.target.closest(".wx-row");
+
         if (row) {
           const rowId = row.getAttribute("data-id");
-          handlePrintQueue(rowId);
+
+          // Check if cell contains icons (not empty like group/wo rows)
+          if (cellText && (cellText.includes("🖨️") || cellText.includes("⬇️"))) {
+            // Get click position to determine which icon was clicked
+            const cellRect = cell.getBoundingClientRect();
+            const clickX = e.clientX - cellRect.left;
+            const cellWidth = cellRect.width;
+
+            // If clicked on left half, it's print; if right half, it's download
+            if (clickX < cellWidth / 2) {
+              handlePrintQueue(rowId);
+            } else {
+              handleDownloadQueue(rowId);
+            }
+          }
         }
       }
     });
