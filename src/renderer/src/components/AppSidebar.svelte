@@ -68,9 +68,13 @@
       <Sidebar.GroupLabel>Settings</Sidebar.GroupLabel>
       <Sidebar.Menu>
         <Sidebar.MenuItem>
-          <Sidebar.MenuButton tooltipContent="Preferences">
-            <Settings class="size-4 min-h-4 min-w-4 shrink-0" />
-            <span>Preferences</span>
+          <Sidebar.MenuButton isActive={isActive("/preferences")} tooltipContent="Preferences">
+            {#snippet child({ props })}
+              <a href={p("/preferences")} {...props}>
+                <Settings class="size-4 min-h-4 min-w-4 shrink-0" />
+                <span>Preferences</span>
+              </a>
+            {/snippet}
           </Sidebar.MenuButton>
         </Sidebar.MenuItem>
       </Sidebar.Menu>
