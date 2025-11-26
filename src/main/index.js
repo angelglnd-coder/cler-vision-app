@@ -23,7 +23,12 @@ function createWindow() {
   });
 
   mainWindow.on("ready-to-show", () => {
-    mainWindow.show();
+    const settings = getCurrentSettings();
+
+    // Only show window if not set to start minimized
+    if (!settings || !settings.tray.startMinimized) {
+      mainWindow.show();
+    }
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -31,13 +36,46 @@ function createWindow() {
     return { action: "deny" };
   });
 
+  // Handle window close event
+  mainWindow.on("close", (event) => {
+    const settings = getCurrentSettings();
+
+    if (!isQuitting && settings && settings.tray.closeToTray && process.platform === "win32") {
+      event.preventDefault();
+      mainWindow.hide();
+
+      // Show notification if enabled
+      if (settings.tray.showNotifications) {
+        const tray = getTray();
+        if (tray) {
+          tray.displayBalloon({
+            title: "clerVisionApp",
+            content: "Application minimized to tray"
+          });
+        }
+      }
+    }
+  });
+
+  // Handle window minimize event
+  mainWindow.on("minimize", (event) => {
+    const settings = getCurrentSettings();
+
+    if (settings && settings.tray.minimizeToTray && process.platform === "win32") {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+  if (!app.isPackaged && process.env["ELECTRON_RENDERER_URL"]) {
     mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
+
+  return mainWindow;
 }
 
 // This method will be called when Electron has finished
