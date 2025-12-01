@@ -107,6 +107,51 @@
     },
   ];
 
+  // Grid configuration for batch display table
+  const batchColumns = [
+    {
+      id: "woNumber",
+      header: "Work Order",
+      width: 150,
+      sortable: true,
+      filter: false,
+      align: "left",
+      pinned: "left",
+    },
+    {
+      id: "patientName",
+      header: "Patient Name",
+      width: 200,
+      sortable: true,
+      filter: false,
+      align: "left",
+    },
+    {
+      id: "batchNo",
+      header: "Batch No",
+      width: 100,
+      sortable: true,
+      filter: false,
+      align: "left",
+    },
+    {
+      id: "thickness",
+      header: "Thickness",
+      width: 100,
+      sortable: true,
+      filter: false,
+      align: "right",
+    },
+    {
+      id: "status",
+      header: "Status",
+      width: 150,
+      sortable: false,
+      filter: false,
+      align: "left",
+    },
+  ];
+
   // Derived state for table rows
   let tableRows = $derived(
     currentGroup.map((wo) => ({
@@ -115,6 +160,48 @@
       patientName: wo.patientName || "N/A",
       type: wo.type || "N/A",
       thickness: wo.thickness,
+    })),
+  );
+
+  // Helper function to check work order status
+  function getWorkOrderStatus(woNumber) {
+    // Check if in current group
+    if (currentGroup.some((wo) => wo.woNumber === woNumber)) {
+      return "In Current Group";
+    }
+    // Check if already assigned to a confirmed group
+    if (assignedWorkOrders.includes(woNumber)) {
+      return "Assigned";
+    }
+    return "Available";
+  }
+
+  // Helper function for row styling
+  function getRowStyle(row) {
+    const woNumber = row.woNumber;
+
+    // Check if in current group (being built)
+    if (currentGroup.some((wo) => wo.woNumber === woNumber)) {
+      return "batch-in-current";
+    }
+
+    // Check if already assigned to a confirmed group
+    if (assignedWorkOrders.includes(woNumber)) {
+      return "batch-assigned";
+    }
+
+    return "batch-available";
+  }
+
+  // Derived state for batch table rows
+  let batchTableRows = $derived(
+    batchWorkOrders.map((wo) => ({
+      id: wo.woNumber || wo.id,
+      woNumber: wo.woNumber || "N/A",
+      patientName: wo.patientName || "N/A",
+      batchNo: wo.batchNo || "N/A",
+      thickness: wo.thickness || "N/A",
+      status: getWorkOrderStatus(wo.woNumber),
     })),
   );
 
