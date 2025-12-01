@@ -189,9 +189,7 @@
       const queueRow = {
         id: queue._id,
         name: queue.name,
-        print: isDownloading && downloadQueueId === queue._id
-          ? "🖨️ ⏳"
-          : "🖨️ ⬇️", // Print and Download icons (or loading state)
+        print: isDownloading && downloadQueueId === queue._id ? "🖨️ ⏳" : "🖨️ ⬇️", // Print and Download icons (or loading state)
         status: queue.status,
         info: `${queue.groups?.length || 0} Groups, ${queue.groups?.reduce((sum, g) => sum + (g.workOrders?.length || 0), 0) || 0} WOs`,
         created: formatDate(queue.createdAt),
@@ -510,7 +508,6 @@
       }
 
       alert(errorMessage);
-
     } finally {
       isDownloading = false;
       downloadQueueId = null;
