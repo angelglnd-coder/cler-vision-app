@@ -424,6 +424,23 @@
     setTimeout(() => barcodeInput?.focus(), 100);
   }
 
+  function handleAddGroup() {
+    // Select first N available work orders
+    const selectedWorkOrders = availableWorkOrders.slice(0, numberOfRows);
+
+    // Add thickness to each work order
+    const workOrdersWithThickness = selectedWorkOrders.map((wo) => ({
+      ...wo,
+      thickness: groupThickness,
+    }));
+
+    // Send to state machine to add to currentGroup
+    actor.send({ type: "ADD_WORK_ORDERS_TO_GROUP", workOrders: workOrdersWithThickness });
+
+    // Reset number of rows for next group
+    numberOfRows = Math.min(1, availableWorkOrders.length - selectedWorkOrders.length);
+  }
+
   function handleCancelGroup() {
     actor.send({ type: "CANCEL_GROUP" });
     setTimeout(() => barcodeInput?.focus(), 100);
