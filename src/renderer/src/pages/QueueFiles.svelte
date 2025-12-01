@@ -46,6 +46,22 @@
   let emitErrors = $derived(state.context.emitErrors || []);
   let currentQueueFileName = $derived(state.context.queueFileName);
   let queues = $derived(state.context.queues || []);
+  let batchWorkOrders = $derived(state.context.batchWorkOrders || []);
+  let currentBatchNo = $derived(state.context.currentBatchNo);
+  let assignedWorkOrders = $derived(state.context.assignedWorkOrders || []);
+  let groupingMode = $derived(state.context.groupingMode || false);
+
+  // Local state for grouping interface
+  let groupThickness = $state(0.24);
+  let numberOfRows = $state(1);
+
+  // Computed values for grouping
+  let availableWorkOrders = $derived(
+    batchWorkOrders.filter((wo) => !assignedWorkOrders.includes(wo.woNumber)),
+  );
+  let assignedCount = $derived(assignedWorkOrders.length);
+  let totalBatchCount = $derived(batchWorkOrders.length);
+  let allAssigned = $derived(assignedCount >= totalBatchCount && totalBatchCount > 0);
 
   // Statistics
   let totalGroups = $derived(groups.length);
