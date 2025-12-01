@@ -201,6 +201,10 @@ export const queMachine = setup({
       error: null,
       workOrdersById: () => ({}),
       workOrdersLoadedAt: null,
+      batchWorkOrders: () => [],
+      currentBatchNo: null,
+      assignedWorkOrders: () => [],
+      groupingMode: false,
     }),
   },
 
@@ -419,6 +423,10 @@ export const queMachine = setup({
     workOrdersById: {}, // Fast lookup map: { [woNumber]: workOrder }
     workOrdersLoadedAt: null, // Timestamp when work orders were preloaded
     queues: [], // List of existing queues from database
+    batchWorkOrders: [], // All work orders in the current batch
+    currentBatchNo: null, // The batch number being processed
+    assignedWorkOrders: [], // Track which work orders are assigned to groups (woNumbers)
+    groupingMode: false, // Whether user is in grouping mode
   },
   states: {
     // Loading existing queues from database
