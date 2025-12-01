@@ -510,6 +510,11 @@ export const queMachine = setup({
           target: "validatingWorkOrder",
           actions: "setScannedBarcode",
         },
+        ADD_WORK_ORDERS_TO_GROUP: {
+          actions: assign({
+            currentGroup: ({ context, event }) => [...context.currentGroup, ...event.workOrders],
+          }),
+        },
         CONFIRM_GROUP: {
           target: "ready",
           actions: "confirmCurrentGroup",
