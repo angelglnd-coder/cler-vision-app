@@ -19,8 +19,6 @@
   let queueFileName = $state("");
   let scannedBarcode = $state("");
   let showCreateDialog = $state(false);
-  let showThicknessDialog = $state(false);
-  let adjustedThickness = $state(0.26);
   let barcodeInput;
   let isDownloading = $state(false);
   let downloadQueueId = $state(null);
@@ -68,44 +66,6 @@
   let totalWorkOrders = $derived(
     groups.reduce((sum, group) => sum + group.workOrders.length, 0) + currentGroup.length,
   );
-  let currentGroupThickness = $derived(currentGroup.length > 0 ? currentGroup[0].thickness : null);
-
-  // Grid configuration for current group table
-  const columns = [
-    {
-      id: "woNumber",
-      header: "Work Order",
-      width: 150,
-      sortable: true,
-      filter: false,
-      align: "left",
-      pinned: "left",
-    },
-    {
-      id: "patientName",
-      header: "Patient Name",
-      width: 200,
-      sortable: true,
-      filter: false,
-      align: "left",
-    },
-    {
-      id: "type",
-      header: "Type",
-      width: 120,
-      sortable: true,
-      filter: false,
-      align: "left",
-    },
-    {
-      id: "thickness",
-      header: "Thickness",
-      width: 100,
-      sortable: true,
-      filter: false,
-      align: "right",
-    },
-  ];
 
   // Grid configuration for batch display table
   const batchColumns = [
@@ -151,17 +111,6 @@
       align: "left",
     },
   ];
-
-  // Derived state for table rows
-  let tableRows = $derived(
-    currentGroup.map((wo) => ({
-      id: wo.woNumber,
-      woNumber: wo.woNumber,
-      patientName: wo.patientName || "N/A",
-      type: wo.type || "N/A",
-      thickness: wo.thickness,
-    })),
-  );
 
   // Helper function to check work order status
   function getWorkOrderStatus(woNumber) {
@@ -402,28 +351,6 @@
     }
   }
 
-  function handleConfirmGroup() {
-    // Open dialog instead of confirming immediately
-    adjustedThickness = currentGroupThickness || 0.24;
-    showThicknessDialog = true;
-  }
-
-  function handleThicknessConfirm() {
-    if (adjustedThickness && adjustedThickness > 0) {
-      actor.send({
-        type: "CONFIRM_GROUP_WITH_THICKNESS",
-        thickness: Number(adjustedThickness),
-      });
-      showThicknessDialog = false;
-      setTimeout(() => barcodeInput?.focus(), 100);
-    }
-  }
-
-  function handleThicknessCancel() {
-    showThicknessDialog = false;
-    setTimeout(() => barcodeInput?.focus(), 100);
-  }
-
   function handleAddGroup() {
     // Select first N available work orders
     const selectedWorkOrders = availableWorkOrders.slice(0, numberOfRows);
@@ -540,7 +467,6 @@
       await downloadAsZip(queFile, difFiles, zipName);
 
       console.log(`Downloaded ${difFiles.length} DIF files + 1 QUE file`);
-
     } catch (error) {
       console.error("Error downloading queue files:", error);
 
@@ -1724,49 +1650,6 @@
       </div>
     </div>
   {/if}
-
-  <!-- Thickness Adjustment Dialog -->
-  <Dialog.Root bind:open={showThicknessDialog}>
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>Confirm Group Thickness</Dialog.Title>
-        <Dialog.Description>
-          Adjust the thickness for this group of {currentGroup.length} work order{currentGroup.length !==
-          1
-            ? "s"
-            : ""}
-        </Dialog.Description>
-      </Dialog.Header>
-
-      <div class="dialog-body">
-        <label
-          for="thickness-input"
-          style="display: block; margin-bottom: 0.5rem; font-weight: 500;"
-        >
-          Thickness (mm)
-        </label>
-        <Input
-          id="thickness-input"
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="Enter thickness"
-          bind:value={adjustedThickness}
-          onkeypress={(e) => e.key === "Enter" && handleThicknessConfirm()}
-        />
-      </div>
-
-      <Dialog.Footer>
-        <Button variant="outline" onclick={handleThicknessCancel}>Cancel</Button>
-        <Button
-          onclick={handleThicknessConfirm}
-          disabled={!adjustedThickness || adjustedThickness <= 0}
-        >
-          Confirm Group
-        </Button>
-      </Dialog.Footer>
-    </Dialog.Content>
-  </Dialog.Root>
 
   <!-- Print Area - Only visible when printing -->
   {#if printQueueData}
