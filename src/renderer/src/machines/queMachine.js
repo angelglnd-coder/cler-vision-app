@@ -83,6 +83,14 @@ export const queMachine = setup({
       error: null,
     }),
 
+    setBatchWorkOrders: assign({
+      batchWorkOrders: ({ event }) => event.output.batchWorkOrders || [],
+      currentBatchNo: ({ event }) => event.output.batchNo || null,
+      // DO NOT add work order to currentGroup - grouping handled separately
+      scannedBarcode: null,
+      error: null,
+    }),
+
     confirmCurrentGroup: assign({
       groups: ({ context }) => {
         if (context.currentGroup.length === 0) {
@@ -98,7 +106,12 @@ export const queMachine = setup({
 
         return [...context.groups, group];
       },
+      assignedWorkOrders: ({ context }) => [
+        ...context.assignedWorkOrders,
+        ...context.currentGroup.map((wo) => wo.woNumber),
+      ],
       currentGroup: () => [],
+      // Keep batchWorkOrders and currentBatchNo - don't clear them!
       error: null,
     }),
 
@@ -124,7 +137,12 @@ export const queMachine = setup({
 
         return [...context.groups, group];
       },
+      assignedWorkOrders: ({ context }) => [
+        ...context.assignedWorkOrders,
+        ...context.currentGroup.map((wo) => wo.woNumber),
+      ],
       currentGroup: () => [],
+      // Keep batchWorkOrders and currentBatchNo - don't clear them!
       error: null,
     }),
 
@@ -525,7 +543,7 @@ export const queMachine = setup({
         }),
         onDone: {
           target: "scanning",
-          actions: "addWorkOrderToCurrentGroup",
+          actions: "setBatchWorkOrders",
         },
         onError: {
           target: "scanning",
