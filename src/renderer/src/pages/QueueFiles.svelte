@@ -683,6 +683,36 @@
     margin-bottom: 0.5rem;
   }
 
+  .batch-display-section {
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #fef3c7;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+  }
+
+  .batch-display-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #92400e;
+  }
+
+  .batch-instruction {
+    color: #78350f;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .batch-table-container {
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    height: 300px;
+  }
+
   .barcode-input-group {
     display: flex;
     gap: 0.75rem;
@@ -1187,6 +1217,72 @@
     transition:
       background-color 0.15s,
       transform 0.15s !important;
+  }
+
+  /* Batch row status styling */
+  :global(.wx-grid .wx-row.batch-in-current) {
+    background-color: #dbeafe !important;
+    font-weight: 500;
+  }
+
+  :global(.wx-grid .wx-row.batch-assigned) {
+    background-color: #fef3c7 !important;
+    opacity: 0.8;
+  }
+
+  :global(.wx-grid .wx-row.batch-in-confirmed) {
+    background-color: #d1fae5 !important;
+    opacity: 0.7;
+  }
+
+  :global(.wx-grid .wx-row.batch-available) {
+    background-color: white;
+  }
+
+  :global(.wx-grid .wx-row.batch-available:hover) {
+    background-color: #f9fafb !important;
+  }
+
+  /* Grouping interface styling */
+  .grouping-interface {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f3f4f6;
+    border-radius: 8px;
+  }
+
+  .grouping-interface h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .grouping-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .form-field label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .completion-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 6px;
+    font-weight: 500;
+    text-align: center;
   }
 
   /* Hide print area on screen */
