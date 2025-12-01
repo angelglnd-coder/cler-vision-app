@@ -539,22 +539,6 @@
     overflow: hidden;
   }
 
-  .queue-header {
-    margin-bottom: 2rem;
-    flex-shrink: 0;
-  }
-
-  .queue-header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-
-  .subtitle {
-    color: #6b7280;
-    font-size: 1rem;
-  }
-
   .state-card {
     background: white;
     border-radius: 8px;
@@ -1266,6 +1250,40 @@
     text-align: center;
   }
 
+  /* Pending groups section */
+  .pending-groups-section {
+    margin-top: 1.5rem;
+  }
+
+  .pending-groups-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pending-groups-content .group-summary {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border: 2px solid #e5e7eb;
+    align-items: center;
+  }
+
+  .pending-groups-content .group-summary .group-number {
+    font-weight: 600;
+  }
+
+  .pending-groups-content .group-summary .group-thickness {
+    font-weight: 500;
+  }
+
+  .pending-groups-content .group-summary :global(button) {
+    margin-left: auto;
+  }
+
   /* Hide print area on screen */
   .print-area {
     display: none;
@@ -1381,11 +1399,6 @@
 </style>
 
 <div class="queue-container">
-  <header class="queue-header">
-    <h1>Queue File Builder</h1>
-    <p class="subtitle">Create queue files by scanning work order barcodes</p>
-  </header>
-
   <!-- Loading Queues State -->
   {#if isLoadingQueues}
     <div class="state-card">
@@ -1454,7 +1467,7 @@
   <!-- Scanning State -->
   {#if isScanning || isLoading}
     <div class="state-card">
-      <Splitpanes style="height: 600px;">
+      <Splitpanes style="height: 100%">
         <Pane>
           <!-- Queue Info -->
           <div class="queue-info">
@@ -1511,10 +1524,16 @@
                   />
                 </Willow>
               </div>
+            </div>
+          {/if}
+        </Pane>
 
+        {#if batchWorkOrders.length > 0}
+          <Pane maxSize={38} minSize={38}>
+            <div class="table-pane">
               <!-- Grouping Interface -->
               <div class="grouping-interface">
-                <h4>Create Thickness Group</h4>
+                <h4>Create Thickness Group ({availableWorkOrders.length} available)</h4>
 
                 <div class="grouping-controls">
                   <div class="form-field">
@@ -1559,59 +1578,34 @@
                   <p class="completion-message">All work orders have been assigned to groups!</p>
                 {/if}
               </div>
-            </div>
-          {/if}
 
-          <!-- Group Actions -->
-          {#if currentGroup.length > 0}
-            <div class="group-actions" style="margin-top: 1rem;">
-              <Button variant="outline" onclick={handleCancelGroup} disabled={isLoading}>
-                Cancel Group
-              </Button>
-              <Button onclick={handleConfirmGroup} disabled={isLoading}>
-                Confirm Group ({currentGroup.length} WOs)
-              </Button>
-            </div>
-          {/if}
-        </Pane>
-
-        {#if currentGroup.length > 0}
-          <Pane>
-            <div class="table-pane">
-              <div class="table-header">
-                <h3>Current Group (Thickness: {currentGroupThickness})</h3>
-                <p class="table-subtitle">
-                  {currentGroup.length} work order{currentGroup.length !== 1 ? "s" : ""} added
-                </p>
-              </div>
-              <div class="table-container">
-                <Willow>
-                  <Grid data={tableRows} {columns} rowStyle={() => "hover-highlight"} />
-                </Willow>
-              </div>
-            </div>
-          </Pane>
-        {/if}
-
-        <!-- Right Pane: Confirmed Groups Summary -->
-        {#if groups.length > 0}
-          <Pane>
-            <div class="confirmed-groups-pane">
-              <div class="table-header">
-                <h3>Confirmed Groups</h3>
-                <p class="table-subtitle">
-                  {groups.length} group{groups.length !== 1 ? "s" : ""} confirmed
-                </p>
-              </div>
-              <div class="confirmed-groups-content">
-                {#each groups as group, idx (idx)}
-                  <div class="group-summary">
-                    <span class="group-number">Group {idx + 1}</span>
-                    <span class="group-thickness">Thickness: {group.thickness}</span>
-                    <span class="group-count">{group.workOrders.length} work orders</span>
+              <!-- Thickness Groups Section -->
+              {#if groups.length > 0}
+                <div class="pending-groups-section">
+                  <div class="table-header" style="margin-top: 1.5rem;">
+                    <h3>Thickness Groups</h3>
+                    <p class="table-subtitle">
+                      {groups.length} group{groups.length !== 1 ? "s" : ""} created
+                    </p>
                   </div>
-                {/each}
-              </div>
+                  <div class="pending-groups-content">
+                    {#each groups as group, idx (idx)}
+                      {@const colors = getGroupColor(idx)}
+                      <div
+                        class="group-summary"
+                        style="background-color: {colors.bg}; border-color: {colors.border}; color: {colors.text};"
+                      >
+                        <span class="group-number">Group {idx + 1}</span>
+                        <span class="group-thickness">Thickness: {group.thickness} mm</span>
+                        <span class="group-count">{group.workOrders.length} WOs</span>
+                        <Button variant="outline" size="sm" onclick={() => handleRemoveGroup(idx)}>
+                          Delete
+                        </Button>
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
             </div>
           </Pane>
         {/if}
@@ -1620,7 +1614,9 @@
       <!-- Action Buttons -->
       <div class="main-actions">
         {#if groups.length > 0}
-          <Button size="lg" onclick={handleFinalize}>Finalize Queue File</Button>
+          <Button size="lg" onclick={handleFinalize} disabled={isLoading}>
+            Finalize Queue File ({groups.length} group{groups.length !== 1 ? "s" : ""})
+          </Button>
         {/if}
         <Button variant="outline" onclick={handleReset}>Cancel & Reset</Button>
       </div>
