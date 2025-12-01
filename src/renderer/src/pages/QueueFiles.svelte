@@ -361,16 +361,20 @@
       thickness: groupThickness,
     }));
 
-    // Send to state machine to add to currentGroup
-    actor.send({ type: "ADD_WORK_ORDERS_TO_GROUP", workOrders: workOrdersWithThickness });
+    // Send to state machine to add group directly
+    actor.send({
+      type: "ADD_GROUP_DIRECTLY",
+      workOrders: workOrdersWithThickness,
+      thickness: groupThickness,
+    });
 
-    // Reset number of rows for next group
-    numberOfRows = Math.min(1, availableWorkOrders.length - selectedWorkOrders.length);
+    // Reset number of rows: set to 1 if rows remain, otherwise 0
+    const remainingRows = availableWorkOrders.length - selectedWorkOrders.length;
+    numberOfRows = remainingRows > 0 ? 1 : 0;
   }
 
-  function handleCancelGroup() {
-    actor.send({ type: "CANCEL_GROUP" });
-    setTimeout(() => barcodeInput?.focus(), 100);
+  function handleRemoveGroup(groupIndex) {
+    actor.send({ type: "REMOVE_GROUP", groupIndex });
   }
 
   function handleAddAnotherGroup() {
@@ -1473,19 +1477,28 @@
                   </div>
 
                   <div class="form-field">
-                    <label>Number of Rows:</label>
+                    <label># Rows:</label>
                     <Input
                       type="number"
-                      min="1"
+                      min="0"
                       max={availableWorkOrders.length}
                       bind:value={numberOfRows}
                       disabled={allAssigned}
+                      oninput={(e) => {
+                        const val = parseInt(e.target.value);
+                        const minVal = availableWorkOrders.length > 0 ? 1 : 0;
+                        if (val < minVal) numberOfRows = minVal;
+                        if (val > availableWorkOrders.length)
+                          numberOfRows = availableWorkOrders.length;
+                      }}
                     />
                   </div>
 
                   <Button
                     onclick={handleAddGroup}
-                    disabled={allAssigned || numberOfRows < 1 || numberOfRows > availableWorkOrders.length}
+                    disabled={allAssigned ||
+                      numberOfRows < 1 ||
+                      numberOfRows > availableWorkOrders.length}
                   >
                     Add Group ({numberOfRows} WOs)
                   </Button>
