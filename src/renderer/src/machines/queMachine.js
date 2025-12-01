@@ -146,6 +146,46 @@ export const queMachine = setup({
       error: null,
     }),
 
+    addGroupDirectly: assign({
+      groups: ({ context, event }) => {
+        const { workOrders, thickness } = event;
+
+        if (!workOrders || workOrders.length === 0) {
+          throw new Error("Cannot add empty group");
+        }
+
+        const group = {
+          thickness: Number(thickness),
+          workOrders: workOrders,
+          confirmedAt: new Date().toISOString(),
+        };
+
+        return [...context.groups, group];
+      },
+      assignedWorkOrders: ({ context, event }) => [
+        ...context.assignedWorkOrders,
+        ...event.workOrders.map((wo) => wo.woNumber),
+      ],
+      error: null,
+    }),
+
+    removeGroup: assign({
+      groups: ({ context, event }) => {
+        const { groupIndex } = event;
+        const newGroups = context.groups.filter((_, idx) => idx !== groupIndex);
+        return newGroups;
+      },
+      assignedWorkOrders: ({ context, event }) => {
+        const { groupIndex } = event;
+        const groupToRemove = context.groups[groupIndex];
+        if (!groupToRemove) return context.assignedWorkOrders;
+
+        const woNumbersToRemove = groupToRemove.workOrders.map((wo) => wo.woNumber);
+        return context.assignedWorkOrders.filter((woNumber) => !woNumbersToRemove.includes(woNumber));
+      },
+      error: null,
+    }),
+
     cancelCurrentGroup: assign({
       currentGroup: () => [],
       error: null,
@@ -515,6 +555,12 @@ export const queMachine = setup({
             currentGroup: ({ context, event }) => [...context.currentGroup, ...event.workOrders],
           }),
         },
+        ADD_GROUP_DIRECTLY: {
+          actions: "addGroupDirectly",
+        },
+        REMOVE_GROUP: {
+          actions: "removeGroup",
+        },
         CONFIRM_GROUP: {
           target: "ready",
           actions: "confirmCurrentGroup",
@@ -528,6 +574,11 @@ export const queMachine = setup({
         CANCEL_GROUP: {
           target: "scanning",
           actions: "cancelCurrentGroup",
+        },
+        FINALIZE: {
+          target: "finalizing",
+          actions: "clearError",
+          guard: ({ context }) => context.groups.length > 0,
         },
         RESET: {
           target: "idle",
