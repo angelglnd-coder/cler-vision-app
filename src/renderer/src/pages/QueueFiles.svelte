@@ -53,6 +53,20 @@
   let groupThickness = $state(0.24);
   let numberOfRows = $state(1);
 
+  // Color palette for groups
+  const groupColors = [
+    { bg: "#d1fae5", border: "#10b981", text: "#065f46" }, // Green
+    { bg: "#dbeafe", border: "#3b82f6", text: "#1e40af" }, // Blue
+    { bg: "#f3f4f6", border: "#9ca3af", text: "#374151" }, // Light Gray
+    { bg: "#fee2e2", border: "#ef4444", text: "#991b1b" }, // Red
+    { bg: "#ede9fe", border: "#8b5cf6", text: "#5b21b6" }, // Violet
+  ];
+
+  // Function to get color for a group by index
+  function getGroupColor(index) {
+    return groupColors[index % groupColors.length];
+  }
+
   // Computed values for grouping
   let availableWorkOrders = $derived(
     batchWorkOrders.filter((wo) => !assignedWorkOrders.includes(wo.woNumber)),
@@ -125,6 +139,16 @@
     return "Available";
   }
 
+  // Helper function to find which group a work order belongs to
+  function getWorkOrderGroupIndex(woNumber) {
+    for (let i = 0; i < groups.length; i++) {
+      if (groups[i].workOrders.some((wo) => wo.woNumber === woNumber)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
   // Helper function for row styling
   function getRowStyle(row) {
     const woNumber = row.woNumber;
@@ -134,9 +158,10 @@
       return "batch-in-current";
     }
 
-    // Check if already assigned to a confirmed group
-    if (assignedWorkOrders.includes(woNumber)) {
-      return "batch-assigned";
+    // Check if already assigned to a confirmed group and return colored class
+    const groupIndex = getWorkOrderGroupIndex(woNumber);
+    if (groupIndex !== -1) {
+      return `batch-group-${groupIndex % groupColors.length}`;
     }
 
     return "batch-available";
@@ -1171,6 +1196,32 @@
 
   :global(.wx-grid .wx-row.batch-available:hover) {
     background-color: #f9fafb !important;
+  }
+
+  /* Batch group color coding */
+  :global(.wx-grid .wx-row.batch-group-0) {
+    background-color: #d1fae5 !important; /* Green */
+    border-left: 3px solid #10b981;
+  }
+
+  :global(.wx-grid .wx-row.batch-group-1) {
+    background-color: #dbeafe !important; /* Blue */
+    border-left: 3px solid #3b82f6;
+  }
+
+  :global(.wx-grid .wx-row.batch-group-2) {
+    background-color: #f3f4f6 !important; /* Light Gray */
+    border-left: 3px solid #9ca3af;
+  }
+
+  :global(.wx-grid .wx-row.batch-group-3) {
+    background-color: #fee2e2 !important; /* Red */
+    border-left: 3px solid #ef4444;
+  }
+
+  :global(.wx-grid .wx-row.batch-group-4) {
+    background-color: #ede9fe !important; /* Violet */
+    border-left: 3px solid #8b5cf6;
   }
 
   /* Grouping interface styling */
