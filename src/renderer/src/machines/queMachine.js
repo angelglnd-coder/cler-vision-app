@@ -270,7 +270,21 @@ export const queMachine = setup({
         throw new Error(`Work order ${woNumber} not found`);
       }
 
-      return workOrder;
+      // Get the batch number from the found work order
+      const batchNo = workOrder.batchNo;
+
+      // Filter all work orders with the same batch number
+      const batchWorkOrders = Object.values(workOrdersById).filter(
+        (wo) => wo.batchNo && wo.batchNo === batchNo
+      );
+
+      console.log(`Found ${batchWorkOrders.length} work orders in batch ${batchNo}`);
+
+      return {
+        workOrder,
+        batchNo,
+        batchWorkOrders,
+      };
     }),
 
     // Fetch work order by barcode/woNumber (kept for backward compatibility)
