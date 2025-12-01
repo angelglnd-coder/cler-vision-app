@@ -1478,51 +1478,99 @@
           <!-- Queue Info -->
           <div class="queue-info">
             <h2>{currentQueueFileName}</h2>
-            <div class="stats">
-              <span class="stat-item">
-                <strong>Groups:</strong>
-                {totalGroups}
-              </span>
-              <span class="stat-item">
-                <strong>Total WOs:</strong>
-                {totalWorkOrders}
-              </span>
-              {#if currentGroupThickness !== null}
-                <span class="stat-item thickness-badge">
-                  <strong>Default Thickness:</strong>
-                  {currentGroupThickness} (adjustable)
-                </span>
+          </div>
+
+          <!-- Barcode Scanner (hide when batch is loaded) -->
+          {#if batchWorkOrders.length === 0}
+            <div class="scanner-section">
+              <h3>Scan Work Order</h3>
+              <p class="instruction">
+                Scan a work order barcode to view all work orders in the same batch
+              </p>
+
+              <div class="barcode-input-group">
+                <Input
+                  type="text"
+                  placeholder="Scan or enter work order number"
+                  bind:value={scannedBarcode}
+                  bind:this={barcodeInput}
+                  onkeypress={handleKeyPress}
+                  disabled={isLoading}
+                />
+                <Button onclick={handleScanBarcode} disabled={!scannedBarcode.trim() || isLoading}>
+                  {isLoading ? "Loading..." : "Scan"}
+                </Button>
+              </div>
+
+              {#if hasError}
+                <div class="error-message">
+                  {error}
+                </div>
               {/if}
             </div>
-          </div>
+          {/if}
 
-          <!-- Barcode Scanner -->
-          <div class="scanner-section">
-            <h3>Scan Work Orders</h3>
-            <p class="instruction">
-              Scan work order barcodes to add them to the current thickness group
-            </p>
+          <!-- Batch Display Section -->
+          {#if batchWorkOrders.length > 0}
+            <div class="batch-display-section">
+              <h3>Batch {currentBatchNo}: {batchWorkOrders.length} work orders</h3>
 
-            <div class="barcode-input-group">
-              <Input
-                type="text"
-                placeholder="Scan or enter work order number"
-                bind:value={scannedBarcode}
-                bind:this={barcodeInput}
-                onkeypress={handleKeyPress}
-                disabled={isLoading}
-              />
-              <Button onclick={handleScanBarcode} disabled={!scannedBarcode.trim() || isLoading}>
-                {isLoading ? "Loading..." : "Add"}
-              </Button>
-            </div>
+              <!-- Progress Indicator -->
+              <p class="batch-instruction">
+                Progress: {assignedCount} of {totalBatchCount} work orders assigned to groups
+              </p>
 
-            {#if hasError}
-              <div class="error-message">
-                {error}
+              <!-- Batch Table -->
+              <div class="batch-table-container">
+                <Willow>
+                  <Grid
+                    data={batchTableRows}
+                    columns={batchColumns}
+                    rowStyle={(row) => getRowStyle(row)}
+                  />
+                </Willow>
               </div>
-            {/if}
-          </div>
+
+              <!-- Grouping Interface -->
+              <div class="grouping-interface">
+                <h4>Create Thickness Group</h4>
+
+                <div class="grouping-controls">
+                  <div class="form-field">
+                    <label>Thickness:</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      bind:value={groupThickness}
+                      disabled={allAssigned}
+                    />
+                  </div>
+
+                  <div class="form-field">
+                    <label>Number of Rows:</label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max={availableWorkOrders.length}
+                      bind:value={numberOfRows}
+                      disabled={allAssigned}
+                    />
+                  </div>
+
+                  <Button
+                    onclick={handleAddGroup}
+                    disabled={allAssigned || numberOfRows < 1 || numberOfRows > availableWorkOrders.length}
+                  >
+                    Add Group ({numberOfRows} WOs)
+                  </Button>
+                </div>
+
+                {#if allAssigned}
+                  <p class="completion-message">All work orders have been assigned to groups!</p>
+                {/if}
+              </div>
+            </div>
+          {/if}
 
           <!-- Group Actions -->
           {#if currentGroup.length > 0}
@@ -1597,16 +1645,6 @@
           <!-- Queue Info -->
           <div class="queue-info">
             <h2>{currentQueueFileName}</h2>
-            <div class="stats">
-              <span class="stat-item">
-                <strong>Groups:</strong>
-                {totalGroups}
-              </span>
-              <span class="stat-item">
-                <strong>Total WOs:</strong>
-                {totalWorkOrders}
-              </span>
-            </div>
           </div>
 
           <!-- Action Buttons -->
