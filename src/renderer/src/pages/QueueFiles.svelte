@@ -580,6 +580,7 @@
 
   .queue-info {
     margin-bottom: 2rem;
+    flex-shrink: 0;
   }
 
   .queue-info h2 {
@@ -611,6 +612,7 @@
     padding: 1.5rem;
     background: #f9fafb;
     border-radius: 8px;
+    flex-shrink: 0;
   }
 
   .scanner-section h3 {
@@ -626,6 +628,9 @@
     background: #fef3c7;
     border: 2px solid #fbbf24;
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
   .batch-display-section h3 {
@@ -642,11 +647,50 @@
   }
 
   .batch-table-container {
+    flex: 1;
+    min-height: 0;
+    height: 0;
+    overflow: hidden !important;
     background: white;
     border-radius: 6px;
-    overflow: hidden;
     border: 1px solid #e5e7eb;
-    height: 300px;
+  }
+
+  /* Willow component fills container */
+  .batch-table-container :global(.wx-willow) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+  }
+
+  /* Grid fills Willow */
+  .batch-table-container :global(.wx-grid) {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* Scroll container - the only scrollable element */
+  .batch-table-container :global(.wx-scroll) {
+    flex: 1 !important;
+    overflow: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Prevent other nested elements from scrolling */
+  .batch-table-container :global(.wx-grid > div:not(.wx-scroll)) {
+    overflow: visible !important;
+  }
+
+  /* Reset overflow on all elements, then re-enable on scroll container */
+  .batch-table-container :global(*) {
+    overflow: visible !important;
+  }
+
+  .batch-table-container :global(.wx-scroll) {
+    overflow: auto !important;
   }
 
   .barcode-input-group {
@@ -864,6 +908,13 @@
 
   :global(.splitpanes__pane) {
     overflow-y: auto;
+  }
+
+  /* Override pane overflow for scanning state to enable flex-based scrolling */
+  :global(.state-card .splitpanes__pane) {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .queue-list-container {
