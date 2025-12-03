@@ -1307,6 +1307,9 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
   }
 
   .pending-groups-content .group-summary {
