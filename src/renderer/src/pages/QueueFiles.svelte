@@ -1656,21 +1656,19 @@
                     {/each}
                   </div>
                 </div>
+
+                <!-- Action Buttons -->
+                <div class="main-actions">
+                  <Button size="lg" onclick={handleFinalize} disabled={isLoading}>
+                    Finalize Queue File ({groups.length} group{groups.length !== 1 ? "s" : ""})
+                  </Button>
+                  <Button variant="outline" onclick={handleReset}>Cancel & Reset</Button>
+                </div>
               {/if}
             </div>
           </Pane>
         {/if}
       </Splitpanes>
-
-      <!-- Action Buttons -->
-      <div class="main-actions">
-        {#if groups.length > 0}
-          <Button size="lg" onclick={handleFinalize} disabled={isLoading}>
-            Finalize Queue File ({groups.length} group{groups.length !== 1 ? "s" : ""})
-          </Button>
-        {/if}
-        <Button variant="outline" onclick={handleReset}>Cancel & Reset</Button>
-      </div>
     </div>
   {/if}
 
