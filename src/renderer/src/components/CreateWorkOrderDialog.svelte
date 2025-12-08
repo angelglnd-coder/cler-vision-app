@@ -56,27 +56,12 @@
   }
 
   // Transform Excel row data to API format (camelCase)
-  function transformRowForAPI(row) {
+  // Handles both Type 1 (HAI ORDERS) and Type 2 (GOV ORDERS)
+  function transformRowForAPI(row, fileType) {
+    // Common fields present in both Type 1 and Type 2
     const transformed = {
       woNumber: toStringOrEmpty(row.WO_Number),
-      patientName: toStringOrEmpty(row.Patient_Name),
-      po: toStringOrEmpty(row.PO),
-      poDate: toStringOrUndefined(row.PO_date), // Date field - omit if empty
-      no: toStringOrEmpty(row.number),
       odOs: toStringOrEmpty(row.od_os),
-      kCode: toStringOrEmpty(row.k_code),
-      pCode: toStringOrEmpty(row.p_code),
-      spec: toStringOrEmpty(row.SPEC),
-      cyl: toStringOrEmpty(row.Cyl),
-      diam: toStringOrEmpty(row.Diam),
-      color: toStringOrEmpty(row.Color),
-      laser: toStringOrEmpty(row.Laser),
-      design: toStringOrEmpty(row.Design),
-      vietLabel: toStringOrEmpty(row.Viet_Label),
-      labeling: toStringOrEmpty(row.Labeling),
-      shipCode: toStringOrEmpty(row.Ship_Code),
-      previousSO: toStringOrEmpty(row.previous_so),
-      note: toStringOrEmpty(row.Note),
       device: toStringOrEmpty(row.Device),
       mfg: toStringOrEmpty(row.Mfg),
       matCode: toStringOrEmpty(row.Mat_Code),
@@ -84,36 +69,76 @@
       gtin: toStringOrEmpty(row.GTIN),
       soldTo: toStringOrEmpty(row.Sold_To),
       billTo: toStringOrEmpty(row.Bill_To),
-      cldfile: toStringOrEmpty(row.cldfile),
       type: toStringOrEmpty(row.Type),
-      cylP: toStringOrEmpty(row.Cyl_p),
-      edgeThick: toStringOrEmpty(row.Edge_Thick),
-      centerThick: toStringOrEmpty(row.Center_Thick),
-      eValue: toStringOrEmpty(row.eValue),
-      containerCode: toStringOrEmpty(row.Container_Code),
-      // Calculated fields (already in correct format or need mapping)
-      bc1: toStringOrEmpty(row.BC1_BC2 || row.bc1),
-      bc2: toStringOrEmpty(row.BC1_BC2 || row.bc2),
-      pw1: toStringOrEmpty(row.PW1_PW2 || row.pw1),
-      pw2: toStringOrEmpty(row.PW1_PW2 || row.pw2),
-      oz1: toStringOrEmpty(row.OZ1_OZ2 || row.oz1),
-      oz2: toStringOrEmpty(row.OZ1_OZ2 || row.oz2),
-      rc1Radius: toStringOrEmpty(row.RC1_radius),
-      ac1Radius: toStringOrEmpty(row.AC1_radius),
-      ac2Radius: toStringOrEmpty(row.AC2_radius),
-      ac3Radius: toStringOrEmpty(row.AC3_radius),
-      rc1Tor: toStringOrEmpty(row.RC1_tor),
-      ac1Tor: toStringOrEmpty(row.AC1_tor),
-      ac2Tor: toStringOrEmpty(row.AC2_tor),
-      ac3Tor: toStringOrEmpty(row.AC3_tor),
-      rc1Width: toStringOrEmpty(row.RC1_width),
-      ac1Width: toStringOrEmpty(row.AC1_width),
-      ac2Width: toStringOrEmpty(row.AC2_width),
-      ac3Width: toStringOrEmpty(row.AC3_width),
-      pc1Radius: toStringOrEmpty(row.PC1_Radius || row.PC_radius),
-      pc2Radius: toStringOrEmpty(row.PC2_Radius),
-      pcwidth: toStringOrEmpty(row.PC_width),
     };
+
+    if (fileType === "type2") {
+      // Type 2 (GOV ORDERS) specific mappings
+      transformed.po = toStringOrEmpty(row.order_number); // ORDER_# → po
+      transformed.no = toStringOrEmpty(row.serial_number); // SERIAL_# → no
+      transformed.kCode = toStringOrEmpty(row.km_code); // KM-CODE → kCode
+      transformed.pCode = toStringOrEmpty(row.power_code); // POWER-CODE → pCode
+      transformed.poDate = toStringOrUndefined(row.PO_date); // PO date → poDate (omit if empty)
+
+      // Type 2 specific fields
+      transformed.brand = toStringOrEmpty(row.brand);
+      transformed.pcs = toStringOrEmpty(row.pcs);
+      transformed.material = toStringOrEmpty(row.material);
+      transformed.color = toStringOrEmpty(row.color);
+      transformed.baseCurveDry = toStringOrEmpty(row.base_curve_dry);
+      transformed.ctDry = toStringOrEmpty(row.ct_dry);
+      transformed.lensPower = toStringOrEmpty(row.lens_power);
+      transformed.shoppingNumber = toStringOrEmpty(row.shopping_number);
+      transformed.shipTo = toStringOrEmpty(row.Ship_To);
+    } else {
+      // Type 1 (HAI ORDERS) specific mappings
+      transformed.patientName = toStringOrEmpty(row.Patient_Name);
+      transformed.po = toStringOrEmpty(row.PO);
+      transformed.poDate = toStringOrUndefined(row.PO_date); // Date field - omit if empty
+      transformed.no = toStringOrEmpty(row.number);
+      transformed.kCode = toStringOrEmpty(row.k_code);
+      transformed.pCode = toStringOrEmpty(row.p_code);
+      transformed.spec = toStringOrEmpty(row.SPEC);
+      transformed.cyl = toStringOrEmpty(row.Cyl);
+      transformed.diam = toStringOrEmpty(row.Diam);
+      transformed.color = toStringOrEmpty(row.Color);
+      transformed.laser = toStringOrEmpty(row.Laser);
+      transformed.design = toStringOrEmpty(row.Design);
+      transformed.vietLabel = toStringOrEmpty(row.Viet_Label);
+      transformed.labeling = toStringOrEmpty(row.Labeling);
+      transformed.shipCode = toStringOrEmpty(row.Ship_Code);
+      transformed.previousSO = toStringOrEmpty(row.previous_so);
+      transformed.note = toStringOrEmpty(row.Note);
+      transformed.cldfile = toStringOrEmpty(row.cldfile);
+      transformed.cylP = toStringOrEmpty(row.Cyl_p);
+      transformed.edgeThick = toStringOrEmpty(row.Edge_Thick);
+      transformed.centerThick = toStringOrEmpty(row.Center_Thick);
+      transformed.eValue = toStringOrEmpty(row.eValue);
+      transformed.containerCode = toStringOrEmpty(row.Container_Code);
+
+      // Calculated fields (Type 1 only)
+      transformed.bc1 = toStringOrEmpty(row.BC1_BC2 || row.bc1);
+      transformed.bc2 = toStringOrEmpty(row.BC1_BC2 || row.bc2);
+      transformed.pw1 = toStringOrEmpty(row.PW1_PW2 || row.pw1);
+      transformed.pw2 = toStringOrEmpty(row.PW1_PW2 || row.pw2);
+      transformed.oz1 = toStringOrEmpty(row.OZ1_OZ2 || row.oz1);
+      transformed.oz2 = toStringOrEmpty(row.OZ1_OZ2 || row.oz2);
+      transformed.rc1Radius = toStringOrEmpty(row.RC1_radius);
+      transformed.ac1Radius = toStringOrEmpty(row.AC1_radius);
+      transformed.ac2Radius = toStringOrEmpty(row.AC2_radius);
+      transformed.ac3Radius = toStringOrEmpty(row.AC3_radius);
+      transformed.rc1Tor = toStringOrEmpty(row.RC1_tor);
+      transformed.ac1Tor = toStringOrEmpty(row.AC1_tor);
+      transformed.ac2Tor = toStringOrEmpty(row.AC2_tor);
+      transformed.ac3Tor = toStringOrEmpty(row.AC3_tor);
+      transformed.rc1Width = toStringOrEmpty(row.RC1_width);
+      transformed.ac1Width = toStringOrEmpty(row.AC1_width);
+      transformed.ac2Width = toStringOrEmpty(row.AC2_width);
+      transformed.ac3Width = toStringOrEmpty(row.AC3_width);
+      transformed.pc1Radius = toStringOrEmpty(row.PC1_Radius || row.PC_radius);
+      transformed.pc2Radius = toStringOrEmpty(row.PC2_Radius);
+      transformed.pcwidth = toStringOrEmpty(row.PC_width);
+    }
 
     // Filter out only undefined values
     // Keep empty strings for now to match .http file format
@@ -153,9 +178,12 @@
     submitSuccess = false;
 
     try {
+      // Get fileType from state context (defaults to "type1" for backward compatibility)
+      const fileType = state.context?.fileType || "type1";
+
       // Transform all rows to API format (camelCase, filter out error columns)
       const transformedRows = rows
-        .map(transformRowForAPI)
+        .map((row) => transformRowForAPI(row, fileType))
         .filter((row) => row.woNumber && row.woNumber.trim() !== ""); // Filter out rows without WO number
 
       console.log("Sending batch create request:", {
