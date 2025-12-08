@@ -121,49 +121,116 @@ function canonical(n) {
   return n;
 }
 
-/** Pick the header row by scanning top N rows for best match */
-function detectHeaderRow(aoa, maxScan = 5) {
+/**
+ * Pick the header row by scanning top N rows for best match across all schemas
+ * @param {Array} aoa - Array of Arrays from XLSX
+ * @param {Array} schemas - Array of schema objects to test against
+ * @param {number} maxScan - Maximum number of rows to scan
+ * @returns {object} - { idx, score, headers[], schema }
+ */
+function detectHeaderRow(aoa, schemas, maxScan = 5) {
   // aoa: Array of Arrays from XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true })
-  let best = { idx: -1, score: -1, headers: [] };
+  let best = { idx: -1, score: -1, headers: [], schema: null };
 
   for (let i = 0; i < Math.min(maxScan, aoa.length); i++) {
     const row = aoa[i] ?? [];
-    const foundNorm = row.map((c) => canonical(norm(c)));
+    const foundNorm = row.map((c) => norm(c));
     const set = new Set(foundNorm);
 
-    // score = how many required canonical names we see
-    let score = 0;
-    for (const r of CANON_REQUIRED) if (set.has(r)) score++;
+    // Try each schema
+    for (const schema of schemas) {
+      let score = 0;
 
-    // Bonus if optional present
-    for (const o of CANON_OPTIONAL) if (set.has(o)) score += 0.25;
+      // SIGNATURE MATCHING (highest priority - use scoring instead of strict matching)
+      const sigRequired = schema.signatures.required.map(norm);
+      const sigPreferred = schema.signatures.preferred.map(norm);
 
-    if (score > best.score) best = { idx: i, score, headers: row };
+      // Count how many required signatures are present
+      let foundSigCount = 0;
+      sigRequired.forEach((sig) => {
+        if (set.has(sig)) {
+          foundSigCount++;
+          score += 10; // 10 points per signature found
+        }
+      });
+
+      // Require at least ONE signature column to consider this schema
+      if (foundSigCount === 0) continue;
+
+      // Award bonus points for preferred signatures (5 points each)
+      sigPreferred.forEach((sig) => {
+        if (set.has(sig)) score += 5;
+      });
+
+      // COLUMN MATCHING (secondary validation)
+      const canonRequired = schema.columns.required.map(norm);
+      const canonOptional = schema.columns.optional.map(norm);
+
+      // Award points for matching required columns (1 point each)
+      canonRequired.forEach((col) => {
+        if (set.has(col)) score += 1;
+      });
+
+      // Award bonus for matching optional columns (0.25 points each)
+      canonOptional.forEach((col) => {
+        if (set.has(col)) score += 0.25;
+      });
+
+      // Update best if this schema scores higher
+      if (score > best.score) {
+        best = { idx: i, score, headers: row, schema };
+      }
+    }
   }
-  return best; // { idx, score, headers[] }
+
+  return best; // { idx, score, headers[], schema }
 }
 
-/** Validate headers against expected with tolerance + optional */
-function validateHeadersFlexible(foundRaw) {
-  const foundCanon = foundRaw.map((h) => canonical(norm(h)));
+/**
+ * Validate headers against expected schema with tolerance + optional
+ * @param {Array} foundRaw - Raw header values from Excel
+ * @param {object} schema - Schema object to validate against
+ * @returns {object} - { missing, extra, msgs, foundCanon }
+ */
+function validateHeadersFlexible(foundRaw, schema) {
+  const foundCanon = foundRaw.map((h) => norm(h));
   const msgs = [];
   const missing = [];
   const extra = [];
 
+  const canonRequired = schema.columns.required.map(norm);
+  const canonOptional = schema.columns.optional.map(norm);
+
+  console.log(`[Validation] Schema: ${schema.name} (${schema.id})`);
+  console.log(`[Validation] Found ${foundRaw.length} columns in file`);
+  console.log(`[Validation] Expected ${canonRequired.length} required + ${canonOptional.length} optional`);
+
   // missing = required not present
-  for (let i = 0; i < CANON_REQUIRED.length; i++) {
-    const need = CANON_REQUIRED[i];
-    if (!foundCanon.includes(need)) missing.push(EXPECTED_REQUIRED[i]);
+  for (let i = 0; i < canonRequired.length; i++) {
+    const need = canonRequired[i];
+    if (!foundCanon.includes(need)) missing.push(schema.columns.required[i]);
   }
 
   // extra = any header not in required or optional
-  const allAllowed = new Set([...CANON_REQUIRED, ...CANON_OPTIONAL]);
+  const allAllowed = new Set([...canonRequired, ...canonOptional]);
   foundCanon.forEach((h, i) => {
     if (h && !allAllowed.has(h)) extra.push(foundRaw[i] ?? String(foundRaw[i]));
   });
 
-  if (missing.length) msgs.push(`Missing columns (${missing.length}): ${missing.join(", ")}`);
-  if (extra.length) msgs.push(`Unexpected columns (${extra.length}): ${extra.join(", ")}`);
+  // Always inform user about column differences, but format as info rather than errors
+  const strictColumns = schema.validation?.strictColumns !== false;
+
+  if (missing.length) {
+    console.log(`[Validation] Missing:`, missing);
+    // Always show missing columns as informational message
+    msgs.push(`ℹ️ Missing ${missing.length} column${missing.length !== 1 ? 's' : ''}: ${missing.join(", ")}`);
+  }
+
+  if (extra.length) {
+    console.log(`[Validation] Unexpected:`, extra);
+    // Always show extra columns as informational message
+    msgs.push(`ℹ️ Found ${extra.length} additional column${extra.length !== 1 ? 's' : ''}: ${extra.join(", ")}`);
+  }
 
   return { missing, extra, msgs, foundCanon };
 }
@@ -203,15 +270,22 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function normalizeRows(rows) {
+/**
+ * Normalize rows based on schema
+ * @param {Array} rows - Raw rows from Excel
+ * @param {object} schema - Schema object defining columns and mappings
+ * @returns {Array} - Normalized row objects
+ */
+function normalizeRows(rows, schema) {
   return rows.map((r) => {
     const o = {};
-    for (const col of WO_COLUMNS_EXCEL) {
-      const key = safeKey(col);
+    for (const col of schema.columns.excel) {
+      // Use schema-specific field mappings
+      const key = schema.fieldMappings[col] || safeKey(col);
       let v = r[col] ?? null;
 
-      // Handle date columns
-      if (col === "PO date" && v !== null) {
+      // Handle date columns (schema-specific)
+      if (schema.dateFields.includes(col) && v !== null) {
         if (typeof v === "number") {
           // Excel serial date number
           v = formatDate(excelDateToJSDate(v));
@@ -221,7 +295,7 @@ function normalizeRows(rows) {
           v = v.trim();
         }
       } else {
-        // your numeric coercion here if needed…
+        // Trim string values
         v = typeof v === "string" ? v.trim() : v;
       }
 
@@ -242,13 +316,20 @@ const FIELD_OF = {
 function safeKey(col) {
   return FIELD_OF[col] || col.replace(/[^\w$]/g, "_"); // fallback: sanitize
 }
-function makeColumns() {
-  return WO_COLUMNS_EXCEL.map((col) => ({
+/**
+ * Make column definitions based on schema
+ * @param {object} schema - Schema object defining columns
+ * @returns {Array} - Column definition objects for grid
+ */
+function makeColumns(schema) {
+  const numericFields = schema.numericFields || NUMERIC_FIELDS;
+
+  return schema.columns.excel.map((col) => ({
     title: col,
-    field: safeKey(col),
+    field: schema.fieldMappings[col] || safeKey(col),
     headerFilter: "input",
     headerSort: true,
-    hozAlign: NUMERIC_FIELDS.has(col) ? "right" : "left",
+    hozAlign: numericFields.has(col) ? "right" : "left",
     frozen: ["WO_Number"].includes(col),
   }));
 }
@@ -268,6 +349,10 @@ export const woExcelLoaderMachine = setup({
       errors: ({ event }) => event.output.errors ?? [],
       data: ({ event }) => event.output.data ?? [],
       columns: ({ event }) => event.output.columns ?? [],
+      detectedSchema: ({ event }) => event.output.detectedSchema,
+      fileType: ({ event }) => event.output.fileType,
+      processingConfig: ({ event }) => event.output.processingConfig,
+      hasMissingColumns: ({ event }) => event.output.hasMissingColumns ?? false,
     }),
     setError: assign({
       errors: ({ event }) => [event.error?.message ?? String(event.error || "Unknown error")],
@@ -283,6 +368,10 @@ export const woExcelLoaderMachine = setup({
       difFiles: () => [],
       emitErrors: () => [],
       queFileName: "",
+      detectedSchema: null,
+      fileType: null,
+      processingConfig: null,
+      hasMissingColumns: false,
     }),
     setEmitResult: assign({
       queText: ({ event }) => event.output.queText,
@@ -412,46 +501,70 @@ export const woExcelLoaderMachine = setup({
       // defval:null keeps columns aligned even when cells are empty
       //   const raw = XLSX.utils.sheet_to_json(ws, { defval: null, raw: true });
       const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
-      // find the best header row among the first 5 rows
-      const best = detectHeaderRow(aoa, 5);
 
-      if (best.idx < 0 || best.score <= 0) {
+      // MULTI-SCHEMA DETECTION: find the best header row and matching schema
+      const best = detectHeaderRow(aoa, ALL_SCHEMAS, 5);
+
+      if (best.idx < 0 || best.score < 10) {
+        const schemaNames = ALL_SCHEMAS.map((s) => s.name).join(", ");
         return {
           fileName: file.name,
           sheetName,
           sheetNames: wb.SheetNames,
           errors: [
-            `Could not detect header row. First rows look like: ${JSON.stringify(aoa.slice(0, 3))}`,
+            `Could not detect file type. Tried schemas: ${schemaNames}`,
+            `Need at least one signature column. First rows: ${JSON.stringify(aoa.slice(0, 3))}`,
           ],
           raw: [],
+          detectedSchema: null,
+          fileType: null,
         };
       }
+
       // build rows from that header row
       const { headers, rows } = buildRowsFromAoA(aoa, best.idx);
 
-      // validate (tolerant of punctuation/case/spacing; Note is optional)
-      const { msgs } = validateHeadersFlexible(headers);
+      // validate against the detected schema
+      const { msgs, missing } = validateHeadersFlexible(headers, best.schema);
+
       return {
         fileName: file.name,
         sheetName,
         sheetNames: wb.SheetNames,
         errors: msgs, // e.g., ["Missing: …", "Unexpected: …"] or []
+        missingColumns: missing, // Array of missing column names
         raw: rows, // objects whose keys are EXACTLY the visible headers in Excel
+        detectedSchema: best.schema, // The matched schema object
+        fileType: best.schema.id, // "type1" or "type2"
       };
     }),
     // 3) transform raw rows → normalized data + Tabulator columns
     buildGrid: fromPromise(async ({ input }) => {
       const { parseOutput } = input; // from parseWorkbook
       console.log("parseOutput =>", parseOutput);
-      const normalized = normalizeRows(parseOutput.raw);
-      const errors = [];
-      if (parseOutput.errors?.length) errors.push(parseOutput.errors.join(" | "));
+
+      const schema = parseOutput.detectedSchema;
+      if (!schema) {
+        throw new Error("No schema detected - cannot build grid");
+      }
+
+      // Use schema-specific normalization and column generation
+      const normalized = normalizeRows(parseOutput.raw, schema);
+      const columns = makeColumns(schema);
+
+      // Pass through validation messages (missing/extra columns) as-is
+      const errors = parseOutput.errors || [];
+
       return {
         sheetName: parseOutput.sheetName,
         sheetNames: parseOutput.sheetNames,
         errors,
         data: normalized,
-        columns: makeColumns(),
+        columns: columns,
+        detectedSchema: schema,
+        fileType: schema.id,
+        processingConfig: schema.processing,
+        hasMissingColumns: parseOutput.missingColumns?.length > 0,
       };
     }),
 
@@ -498,7 +611,18 @@ export const woExcelLoaderMachine = setup({
       return { queFile: { name: queFileName || "batch.QUE", text: queText }, difFiles, errors };
     }),
     calculate: fromPromise(async ({ input }) => {
-      const { rows } = input;
+      const { rows, schema } = input;
+
+      // SKIP calculations if schema doesn't need them (e.g., Type 2)
+      if (schema && !schema.processing.needsCalculation) {
+        console.log(`Skipping calculations for ${schema.name} (not required)`);
+        return {
+          rows: rows, // Return rows unchanged
+          neededErr: [],
+        };
+      }
+
+      // Perform calculations for schemas that need them (e.g., Type 1)
       // const one = lensCalc.computeFirst(rows);
       const computed = lensCalc.computeAll(rows); // adds computed fields (value/_error or value/_why)
       const flattened = computed.map(flattenCalcRow); // create <field> and <field>_err
@@ -677,6 +801,11 @@ export const woExcelLoaderMachine = setup({
     sequenceCounters: {},
     apiSequenceData: {},
     woGenerationErrors: [],
+    // Multi-schema support
+    detectedSchema: null, // The matched schema object
+    fileType: null, // "type1" | "type2"
+    processingConfig: null, // Schema processing flags
+    hasMissingColumns: false, // Track if required columns are missing
   },
   states: {
     idle: {
