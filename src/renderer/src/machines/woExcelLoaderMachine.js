@@ -393,6 +393,12 @@ export const woExcelLoaderMachine = setup({
       columns: ({ context, event }) => {
         const base = (context.columns ?? []).filter(Boolean);
 
+        // Only add calculation columns if schema needs calculations
+        if (!context.processingConfig?.needsCalculation) {
+          console.log("Skipping calculation columns (not needed by schema)");
+          return base;
+        }
+
         // Determine which *_err columns are actually needed
         const neededErr = new Set();
         for (const r of event.output.rows ?? []) {
@@ -874,7 +880,10 @@ export const woExcelLoaderMachine = setup({
     applyingFormulas: {
       invoke: {
         src: "calculate",
-        input: ({ context }) => ({ rows: context.data }),
+        input: ({ context }) => ({
+          rows: context.data,
+          schema: context.detectedSchema,
+        }),
         onDone: {
           target: "readyCalculations",
           actions: "setCalculated",

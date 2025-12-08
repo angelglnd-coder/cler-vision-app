@@ -166,6 +166,46 @@
     cursor: pointer;
   }
 
+  /* File Type Badge Styling */
+  .file-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .file-type-badge.type1 {
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+  }
+
+  .file-type-badge.type2 {
+    background: #f3e8ff;
+    border: 1px solid #c084fc;
+    color: #6b21a8;
+  }
+
+  .badge-icon {
+    font-size: 1rem;
+  }
+
+  .badge-text {
+    white-space: nowrap;
+  }
+
+  .info-message {
+    color: #d97706;
+    background: #fef3c7;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    border: 1px solid #fcd34d;
+  }
+
   /* Print styles - hide everything except WorkOrderView */
   @media print {
     @page {
@@ -214,6 +254,18 @@
       <div
         style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;"
       >
+        <!-- File Type Badge -->
+        {#if state.context?.fileType}
+          <div class="file-type-badge {state.context.fileType}">
+            <span class="badge-icon">
+              {state.context.fileType === "type1" ? "📋" : "🏭"}
+            </span>
+            <span class="badge-text">
+              {state.context.detectedSchema?.name || "Unknown"}
+            </span>
+          </div>
+        {/if}
+
         <button
           class="pretty-btn"
           on:click={generateWorkOrders}
@@ -221,13 +273,18 @@
         >
           📝 Generate WO Numbers
         </button>
-        <button
-          class="pretty-btn"
-          on:click={calculate}
-          disabled={state?.matches("generatingWorkOrders") || state?.matches("applyingFormulas")}
-        >
-          🧮 Calculate
-        </button>
+
+        <!-- Conditional Calculate Button (only for Type 1) -->
+        {#if state.context?.processingConfig?.needsCalculation}
+          <button
+            class="pretty-btn"
+            on:click={calculate}
+            disabled={state?.matches("generatingWorkOrders") || state?.matches("applyingFormulas")}
+          >
+            🧮 Calculate
+          </button>
+        {/if}
+
         <button class="pretty-btn" on:click={onClick}>
           {visiblePane ? "◀ Hide" : "▶ Show"} Preview
         </button>
@@ -247,6 +304,17 @@
           <span style="color: #10b981; font-size: 0.875rem;"> ✓ WO Numbers generated </span>
         {/if}
       </div>
+
+      <!-- Display column validation messages -->
+      {#if state.context?.errors && state.context.errors.length > 0}
+        <div style="margin-bottom: 0.5rem;">
+          {#each state.context.errors as error, i (i)}
+            <div class="info-message" style="margin-bottom: 0.25rem;">
+              {error}
+            </div>
+          {/each}
+        </div>
+      {/if}
 
       <Willow>
         <!-- <div class="grid-wrap"> -->

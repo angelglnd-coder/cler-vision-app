@@ -323,6 +323,15 @@
     font-size: 0.875rem;
   }
 
+  .info-message {
+    color: #d97706;
+    background: #fef3c7;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+  }
+
   .data-preview {
     padding: 1rem;
   }
@@ -339,6 +348,37 @@
   .mt-4 {
     margin-top: 1rem;
   }
+
+  .file-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+
+  .file-type-badge.type1 {
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+  }
+
+  .file-type-badge.type2 {
+    background: #f3e8ff;
+    border: 1px solid #c084fc;
+    color: #6b21a8;
+  }
+
+  .badge-icon {
+    font-size: 0.875rem;
+  }
+
+  .badge-text {
+    font-size: 0.75rem;
+  }
 </style>
 
 <Dialog.Root bind:open>
@@ -348,7 +388,19 @@
       : "!max-w-[600px]"}
   >
     <Dialog.Header>
-      <Dialog.Title>Create Work Order</Dialog.Title>
+      <Dialog.Title>
+        Create Work Order
+        {#if state.context?.fileType}
+          <span class="file-type-badge {state.context.fileType}">
+            <span class="badge-icon">
+              {state.context.fileType === "type1" ? "📋" : "🏭"}
+            </span>
+            <span class="badge-text">
+              {state.context.detectedSchema?.name || "Unknown"}
+            </span>
+          </span>
+        {/if}
+      </Dialog.Title>
       <Dialog.Description>
         {#if rows.length === 0}
           Upload an Excel file (.xlsx) to create new work orders.
@@ -417,7 +469,9 @@
           {#if errors.length > 0}
             <div class="warning-container">
               {#each errors as error, i (i)}
-                <div class="warning-message">⚠️ {error}</div>
+                <div class={error.startsWith("ℹ️") ? "info-message" : "warning-message"}>
+                  {error}
+                </div>
               {/each}
             </div>
           {/if}
@@ -435,7 +489,10 @@
       {#if (state?.matches("ready") || state?.matches("readyCalculations")) && rows.length > 0}
         <Button variant="outline" onclick={handleCancel} disabled={isSubmitting}>Cancel</Button>
         {#if !rows[0]?.WO_Number}
-          <Button onclick={handleGenerateWorkOrders} disabled={isSubmitting}>
+          <Button
+            onclick={handleGenerateWorkOrders}
+            disabled={isSubmitting || state.context?.hasMissingColumns}
+          >
             Generate Work Orders
           </Button>
         {:else}
