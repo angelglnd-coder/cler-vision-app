@@ -1340,6 +1340,14 @@
     display: none;
   }
 
+  /* Tray layout - TEMPORARILY visible on screen for debugging */
+  .tray-layout-page {
+    display: block;
+    border: 2px solid red;
+    margin-top: 2rem;
+    padding: 1rem;
+  }
+
   /* Print-specific styles */
   @media print {
     /* Hide everything by default */
@@ -1763,54 +1771,78 @@
   <!-- Print Area - Only visible when printing -->
   {#if printQueueData}
     <div class="print-area">
-      <h1>Queue File: {printQueueData.name}</h1>
-      <p>Created: {formatDate(printQueueData.createdAt)}</p>
-      <p>Status: {printQueueData.status}</p>
-      <p>Total Groups: {printQueueData.groups?.length || 0}</p>
-      <p>
-        Total Work Orders: {printQueueData.groups?.reduce(
-          (sum, g) => sum + (g.workOrders?.length || 0),
-          0,
-        ) || 0}
-      </p>
+      <!-- Page 1: Work Orders (forced to full page height) -->
+      <div class="work-orders-section">
+        <h1>Queue File: {printQueueData.name}</h1>
+        <p>Created: {formatDate(printQueueData.createdAt)}</p>
+        <p>Status: {printQueueData.status}</p>
+        <p>Total Groups: {printQueueData.groups?.length || 0}</p>
+        <p>
+          Total Work Orders: {printQueueData.groups?.reduce(
+            (sum, g) => sum + (g.workOrders?.length || 0),
+            0,
+          ) || 0}
+        </p>
 
-      {#if printQueueData.groups && printQueueData.groups.length > 0}
-        {@const allWorkOrders = printQueueData.groups.flatMap((group) =>
-          (group.workOrders || []).map((woItem) => ({
-            ...woItem,
-            thickness: group.thickness,
-          })),
-        )}
-        <table class="print-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Thickness</th>
-              <th>WO Number</th>
-              <th>Patient Name</th>
-              <th>PO</th>
-              <th>Spec</th>
-              <th>Color</th>
-              <th>Design</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each allWorkOrders as woItem, index (woItem._id)}
-              {@const wo = woItem.workOrder || {}}
+        {#if printQueueData.groups && printQueueData.groups.length > 0}
+          {@const allWorkOrders = printQueueData.groups.flatMap((group) =>
+            (group.workOrders || []).map((woItem) => ({
+              ...woItem,
+              thickness: group.thickness,
+            })),
+          )}
+          <table class="print-table">
+            <thead>
               <tr>
-                <td>{index + 1}</td>
-                <td>{formatThickness(woItem.thickness)} mm</td>
-                <td>{woItem.woNumber || wo.woNumber || "N/A"}</td>
-                <td>{wo.patientName || "N/A"}</td>
-                <td>{wo.po || "N/A"}</td>
-                <td>{wo.spec || "N/A"}</td>
-                <td>{wo.color || "N/A"}</td>
-                <td>{wo.design || "N/A"}</td>
+                <th>#</th>
+                <th>Thickness</th>
+                <th>WO Number</th>
+                <th>Patient Name</th>
+                <th>PO</th>
+                <th>Spec</th>
+                <th>Color</th>
+                <th>Design</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each allWorkOrders as woItem, index (woItem._id)}
+                {@const wo = woItem.workOrder || {}}
+                <tr>
+                  <td>{index + 1}</td>
+                  <td>{formatThickness(woItem.thickness)} mm</td>
+                  <td>{woItem.woNumber || wo.woNumber || "N/A"}</td>
+                  <td>{wo.patientName || "N/A"}</td>
+                  <td>{wo.po || "N/A"}</td>
+                  <td>{wo.spec || "N/A"}</td>
+                  <td>{wo.color || "N/A"}</td>
+                  <td>{wo.design || "N/A"}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {/if}
+      </div>
+
+      <!-- Page 2: Tray Layout (naturally flows to next page) -->
+      <div class="tray-layout-page">
+        <h2>Tray Layout</h2>
+        <table class="tray-grid">
+          <tbody>
+            {#each Array(10) as _, rowIndex}
+              <tr>
+                {#each Array(10) as _, colIndex}
+                  {@const position = rowIndex * 10 + colIndex + 1}
+                  <td class="tray-cell">
+                    <div class="tray-circle">
+                      <span class="tray-number">{position}</span>
+                    </div>
+                  </td>
+                {/each}
               </tr>
             {/each}
           </tbody>
         </table>
-      {/if}
+      </div>
     </div>
   {/if}
 </div>
