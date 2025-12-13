@@ -450,7 +450,7 @@
     setTimeout(() => {
       window.print();
 
-      // Restore original state after printing
+      // Restore original state after print dialog
       setTimeout(() => {
         isPrinting = false;
         printQueueId = null;
