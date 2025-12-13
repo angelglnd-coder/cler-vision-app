@@ -1355,10 +1355,16 @@
       visibility: hidden;
     }
 
-    /* Show only print area */
+    /* Show only print areas */
     .print-area,
     .print-area * {
       visibility: visible !important;
+    }
+
+    /* Work orders section - force page break after */
+    .work-orders-section {
+      page-break-after: always !important;
+      break-after: page !important;
     }
 
     /* Hide the grid completely */
@@ -1384,9 +1390,7 @@
     /* Style the print area */
     .print-area {
       display: block !important;
-      position: absolute;
-      left: 0;
-      top: 0;
+      position: relative;
       width: 100%;
       padding: 1cm;
       background: white;
@@ -1440,7 +1444,77 @@
       print-color-adjust: exact;
     }
 
+    .print-table {
+      page-break-after: auto;
+    }
+
     .print-table tr {
+      page-break-inside: avoid;
+    }
+
+    /* Tray Layout Grid Styles */
+    .tray-layout-page {
+      display: block !important;
+      padding: 1cm;
+      background: white;
+      page-break-before: always !important;
+      break-before: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      border: none !important;
+    }
+
+    .tray-layout-page h2 {
+      font-size: 16pt;
+      margin-bottom: 0.5cm;
+      text-align: center;
+      color: black;
+      border-bottom: 2px solid #333;
+      padding-bottom: 0.2cm;
+    }
+
+    .tray-grid {
+      width: 100%;
+      max-width: 18cm;
+      margin: 0 auto;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    .tray-grid td {
+      width: 10%;
+      padding: 0.1cm;
+      border: none;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .tray-circle {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 2px solid #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      max-width: 1.6cm;
+      max-height: 1.6cm;
+      margin: 0 auto;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .tray-number {
+      font-size: 8pt;
+      font-weight: 600;
+      color: #333;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .tray-grid tr {
       page-break-inside: avoid;
     }
   }
