@@ -258,9 +258,17 @@
       console.error("Error response data:", error.response?.data);
       console.error("Error response status:", error.response?.status);
 
-      // Try to get a more specific error message from the backend
-      const backendMessage = error.response?.data?.message || error.response?.data?.error;
-      submitError = backendMessage || error.message || "Failed to create work orders";
+      // Parse validation errors if available
+      const errorData = error.response?.data;
+      if (errorData?.errors && Array.isArray(errorData.errors)) {
+        validationErrors = parseValidationErrors(errorData);
+        submitError = errorData.message || "Validation failed";
+      } else {
+        // Try to get a more specific error message from the backend
+        const backendMessage = errorData?.message || errorData?.error;
+        submitError = backendMessage || error.message || "Failed to create work orders";
+      }
+
       isSubmitting = false;
     }
   }
