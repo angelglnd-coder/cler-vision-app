@@ -5,6 +5,7 @@
   import { onMount } from "svelte";
   import { createWorkOrdersBatch } from "../api/workOrderApi.js";
   import { Grid, Willow } from "@svar-ui/svelte-grid";
+  import { Splitpanes, Pane } from "svelte-splitpanes";
 
   let { open = $bindable(false), onSuccess = () => {} } = $props();
 
@@ -507,7 +508,7 @@
             </div>
           {/if}
 
-          {#if submitError}
+          {#if submitError && validationErrors.length === 0}
             <div class="error-message">
               ❌ {submitError}
             </div>
