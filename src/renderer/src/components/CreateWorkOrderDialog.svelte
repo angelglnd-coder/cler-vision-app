@@ -20,6 +20,7 @@
   let isSubmitting = $state(false);
   let submitError = $state(null);
   let submitSuccess = $state(false);
+  let validationErrors = $state([]);
 
   // Transform columns to SVAR Grid format
   function toSvarColumns(tabCols = []) {
@@ -162,6 +163,43 @@
     open = false;
     submitError = null;
     submitSuccess = false;
+    validationErrors = [];
+  }
+
+  // Parse validation errors from backend response
+  function parseValidationErrors(errorData) {
+    if (!errorData?.errors || !Array.isArray(errorData.errors)) {
+      return [];
+    }
+
+    // Group errors by row index and field
+    const errorMap = {};
+
+    errorData.errors.forEach((error) => {
+      // Extract row index from path like "workOrders[0].poDate"
+      const match = error.path?.match(/workOrders\[(\d+)\]\.(.+)/);
+      if (match) {
+        const rowIndex = parseInt(match[1], 10);
+        const fieldName = match[2];
+        const key = `${rowIndex}`;
+
+        if (!errorMap[key]) {
+          errorMap[key] = {
+            rowIndex,
+            rowNumber: rowIndex + 1, // Display as 1-based
+            fields: [],
+          };
+        }
+
+        errorMap[key].fields.push({
+          field: fieldName,
+          message: error.msg,
+          value: error.value,
+        });
+      }
+    });
+
+    return Object.values(errorMap).sort((a, b) => a.rowIndex - b.rowIndex);
   }
 
   function handleGenerateWorkOrders() {
@@ -176,6 +214,7 @@
     isSubmitting = true;
     submitError = null;
     submitSuccess = false;
+    validationErrors = [];
 
     try {
       // Get fileType from state context (defaults to "type1" for backward compatibility)
