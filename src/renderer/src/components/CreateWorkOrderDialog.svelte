@@ -427,10 +427,90 @@
   .badge-text {
     font-size: 0.75rem;
   }
+
+  .splitpane-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .splitpane-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    flex-shrink: 0;
+  }
+
+  .splitpane-header.error-header {
+    background: #fef2f2;
+    border-bottom: 1px solid #fca5a5;
+    color: #dc2626;
+  }
+
+  .grid-wrapper-split {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid #e5e7eb;
+    border-top: none;
+  }
+
+  .validation-errors-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #fef2f2;
+  }
+
+  .validation-error-item {
+    background: white;
+    border: 1px solid #fecaca;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .validation-error-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .validation-error-row-header {
+    font-weight: 600;
+    color: #991b1b;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .validation-error-fields {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style-type: disc;
+  }
+
+  .validation-error-fields li {
+    font-size: 0.875rem;
+    color: #7f1d1d;
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+  }
+
+  .validation-error-fields strong {
+    color: #991b1b;
+  }
+
+  .validation-error-fields code {
+    background: #fee2e2;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+    font-family: monospace;
+    color: #7f1d1d;
+  }
 </style>
 
 <Dialog.Root bind:open>
   <Dialog.Content
+    interactOutsideBehavior="ignore"
     class={(state?.matches("ready") || state?.matches("readyCalculations")) && rows.length > 0
       ? "!w-[95vw] !max-w-[95vw]"
       : "!max-w-[600px]"}
@@ -524,11 +604,58 @@
             </div>
           {/if}
 
-          <div class="grid-wrapper">
-            <Willow>
-              <Grid data={rows} {columns} />
-            </Willow>
-          </div>
+          {#if validationErrors.length > 0}
+            <Splitpanes style="height: 60vh">
+              <Pane>
+                <div class="splitpane-content">
+                  <div class="splitpane-header">
+                    <strong>Data Preview</strong>
+                  </div>
+                  <div class="grid-wrapper-split">
+                    <Willow>
+                      <Grid data={rows} {columns} />
+                    </Willow>
+                  </div>
+                </div>
+              </Pane>
+              <Pane maxSize={45} minSize={35}>
+                <div class="splitpane-content">
+                  <div class="splitpane-header error-header">
+                    <strong
+                      >⚠️ Validation Errors ({validationErrors.length} row{validationErrors.length !==
+                      1
+                        ? "s"
+                        : ""})</strong
+                    >
+                  </div>
+                  <div class="validation-errors-pane">
+                    {#each validationErrors as rowError (rowError.rowIndex)}
+                      <div class="validation-error-item">
+                        <div class="validation-error-row-header">Row {rowError.rowNumber}</div>
+                        <ul class="validation-error-fields">
+                          {#each rowError.fields as fieldError (fieldError.field)}
+                            <li>
+                              <strong>{fieldError.field}:</strong>
+                              {fieldError.message}
+                              {#if fieldError.value}
+                                (value: <code>{fieldError.value}</code>)
+                              {/if}
+                            </li>
+                          {/each}
+                        </ul>
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+              </Pane>
+            </Splitpanes>
+          {:else}
+            <div class="grid-wrapper">
+              <Willow>
+                <Grid data={rows} {columns} />
+              </Willow>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
