@@ -11,6 +11,8 @@
     Briefcase,
   } from "@lucide/svelte";
   import { p, isActive } from "../router/router";
+
+  const appVersion = window.api.app.version;
 </script>
 
 <Sidebar.Root collapsible="icon" variant="sidebar">
@@ -90,6 +92,11 @@
         </Sidebar.MenuButton>
       </Sidebar.MenuItem>
     </Sidebar.Menu>
+    <div
+      class="text-muted-foreground mt-2 px-3 py-2 text-xs group-data-[collapsible=icon]:rotate-180 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:text-center group-data-[collapsible=icon]:[writing-mode:vertical-rl]"
+    >
+      <span>v{appVersion}</span>
+    </div>
   </Sidebar.Footer>
 
   <Sidebar.Rail />

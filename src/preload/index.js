@@ -12,6 +12,10 @@ const api = {
       // Return cleanup function
       return () => ipcRenderer.removeListener('settings:changed', subscription);
     }
+  },
+  app: {
+    version: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0',
+    platform: process.platform
   }
 };
 

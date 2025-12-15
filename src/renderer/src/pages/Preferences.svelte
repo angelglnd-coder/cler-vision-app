@@ -10,6 +10,8 @@
   let isSaving = $state(false);
   let saveSuccess = $state(false);
 
+  const appVersion = window.api.app.version;
+
   onMount(async () => {
     try {
       const settings = await window.api.settings.get();
@@ -141,7 +143,7 @@
         {/if}
       </div>
 
-      {#if process.platform !== 'win32'}
+      {#if window.api.app.platform !== 'win32'}
         <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
           <p class="text-sm text-yellow-800 dark:text-yellow-200">
             <strong>Note:</strong> System tray functionality is only available on Windows.
@@ -149,6 +151,12 @@
           </p>
         </div>
       {/if}
+
+      <Separator />
+
+      <div class="text-center text-sm text-muted-foreground">
+        <p>clerVisionApp v{appVersion}</p>
+      </div>
     </div>
   </div>
 </div>
