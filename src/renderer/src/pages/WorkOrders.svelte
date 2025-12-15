@@ -4,12 +4,13 @@
   import { onMount } from "svelte";
   import WorkOrderView from "../components/WorkOrderView.svelte";
   import CreateWorkOrderDialog from "../components/CreateWorkOrderDialog.svelte";
+  import CheckboxCell from "../components/CheckboxCell.svelte";
+  import SelectAllHeader from "../components/SelectAllHeader.svelte";
   import { PackagePlus } from "@lucide/svelte";
 
   import { Grid, Willow } from "@svar-ui/svelte-grid";
   import { Splitpanes, Pane } from "svelte-splitpanes";
 
-  // Create actor instance
   const actor = createActor(woMachine);
 
   // Reactive state
@@ -26,6 +27,7 @@
   let dialogOpen = $state(false);
   let batchPrintData = $state([]);
   let isBatchPrinting = $state(false);
+  let selectedRowIds = $state([]); // Track selected row IDs for checkboxes
 
   // same safeKey you already use elsewhere
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
@@ -45,32 +47,77 @@
     actor.send({ type: "RESET" });
     selected = null;
     selectedBatchNo = null;
+    selectedRowIds = [];
     visiblePane = false;
+  }
+
+  // Handle checkbox toggle
+  function handleToggle(rowId, shouldSelect) {
+    if (shouldSelect) {
+      selectedRowIds = [...selectedRowIds, rowId];
+    } else {
+      selectedRowIds = selectedRowIds.filter(id => id !== rowId);
+    }
+  }
+
+  // Handle select all toggle
+  function handleToggleAll(shouldSelectAll) {
+    if (shouldSelectAll) {
+      selectedRowIds = rows.map(r => r.id);
+    } else {
+      selectedRowIds = [];
+    }
   }
 
   // Derived computed columns
   let svarColumns = $derived(
-    (state.context?.columns || []).map((c) => {
-      const id = c.field || c.title || Math.random().toString(36).slice(2);
-      return {
-        id, // Grid uses this as the field key
-        header: c.title || id, // what you see in the header
-        width: 150,
-        sortable: true,
-        filter: true,
-        align: c.hozAlign === "right" ? "right" : "left",
-        pinned: PIN_LEFT.has(id) ? "left" : undefined,
-      };
-    }),
+    [
+      // Checkbox column (first, pinned left)
+      {
+        id: "selected",
+        header: SelectAllHeader,
+        cell: CheckboxCell,
+        width: 50,
+        sortable: false,
+        filter: false,
+        align: "center",
+        pinned: "left",
+        // Pass data and callbacks to custom components
+        selectedRowIds,
+        rows,
+        onToggle: handleToggle,
+        onToggleAll: handleToggleAll,
+      },
+      // Existing columns (spread)
+      ...(state.context?.columns || []).map((c) => {
+        const id = c.field || c.title || Math.random().toString(36).slice(2);
+        return {
+          id, // Grid uses this as the field key
+          header: c.title || id, // what you see in the header
+          width: 150,
+          sortable: true,
+          filter: true,
+          align: c.hozAlign === "right" ? "right" : "left",
+          pinned: PIN_LEFT.has(id) ? "left" : undefined,
+        };
+      }),
+    ],
   );
 
   function getRowStyle(row) {
     const baseClass = "hover-highlight";
+
+    // Highlight selected rows (via checkbox)
+    if (selectedRowIds.includes(row.id)) {
+      return `${baseClass} checkbox-selected`;
+    }
+
     // Highlight rows with the same batch number as the selected row
     if (selectedBatchNo && row.batchNo && row.batchNo === selectedBatchNo) {
       console.log(`Highlighting row with batchNo: ${row.batchNo}`);
       return `${baseClass} batch-highlight`;
     }
+
     return baseClass;
   }
 
@@ -132,6 +179,40 @@
     setTimeout(() => {
       window.print();
       // Clear batch print data after printing
+      setTimeout(() => {
+        batchPrintData = [];
+        isBatchPrinting = false;
+      }, 500);
+    }, 300);
+  }
+
+  function printSelected() {
+    if (selectedRowIds.length === 0) return;
+
+    // Get selected work orders by ID
+    const selectedWorkOrders = rows.filter((row) => selectedRowIds.includes(row.id));
+
+    if (selectedWorkOrders.length === 0) {
+      alert("No work orders selected.");
+      return;
+    }
+
+    console.log(`Printing ${selectedWorkOrders.length} selected work orders`);
+    console.log(
+      "Selected work orders:",
+      selectedWorkOrders.map((wo) => ({
+        woNumber: wo.woNumber,
+        patient: wo.patientName,
+        id: wo.id,
+      })),
+    );
+
+    // Reuse batch printing infrastructure
+    isBatchPrinting = true;
+    batchPrintData = selectedWorkOrders;
+
+    setTimeout(() => {
+      window.print();
       setTimeout(() => {
         batchPrintData = [];
         isBatchPrinting = false;
@@ -319,6 +400,14 @@
     background-color: rgba(204, 251, 241, 0.3) !important;
   }
 
+  :global(.checkbox-selected) {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    border-left: 3px solid #3b82f6 !important;
+  }
+  :global(.checkbox-selected:hover) {
+    background-color: rgba(59, 130, 246, 0.25) !important;
+  }
+
   /* Hide batch print area on screen, show only when printing */
   :global(.batch-print-area) {
     position: absolute;
@@ -404,14 +493,20 @@
         <div
           style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;"
         >
-          <button class="pretty-btn" on:click={openCreateDialog}>➕ Create</button>
-          <button class="pretty-btn" on:click={onClick}>
+          <button class="pretty-btn" onclick={openCreateDialog}>➕ Create</button>
+          <button class="pretty-btn" onclick={onClick}>
             {visiblePane ? "◀ Hide" : "▶ Show"} Preview
           </button>
 
           {#if selectedBatchNo}
-            <button class="pretty-btn teal" on:click={printBatch}>
+            <button class="pretty-btn teal" onclick={printBatch}>
               🖨️ Print Batch {selectedBatchNo}
+            </button>
+          {/if}
+
+          {#if selectedRowIds.length > 0}
+            <button class="pretty-btn teal" onclick={printSelected}>
+              🖨️ Print Selected ({selectedRowIds.length})
             </button>
           {/if}
         </div>
@@ -437,7 +532,7 @@
           >
             <strong>WO Preview</strong>
             <div style="display:flex; gap:.5rem;">
-              <button class="pretty-btn teal" on:click={printWO}>Print</button>
+              <button class="pretty-btn teal" onclick={printWO}>Print</button>
             </div>
           </div>
           {#key selected?.row?.id ?? selected?.index}
@@ -458,8 +553,8 @@
     <div style="color: #ef4444; margin-bottom: 1rem;">
       ❌ Error: {state.context.error}
     </div>
-    <button class="pretty-btn" on:click={loadWorkOrders}>🔄 Retry</button>
-    <button class="pretty-btn" on:click={reset}>↩️ Reset</button>
+    <button class="pretty-btn" onclick={loadWorkOrders}>🔄 Retry</button>
+    <button class="pretty-btn" onclick={reset}>↩️ Reset</button>
   </div>
 {/if}
 {#if dialogOpen}
