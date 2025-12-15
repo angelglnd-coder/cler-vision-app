@@ -7,7 +7,7 @@ const baseURL = import.meta.env.RENDERER_VITE_API_BASE || "http://127.0.0.1:4000
 
 const api = axios.create({
   baseURL,
-  timeout: 15000,
+  timeout: 3000,
 });
 
 export default api;
