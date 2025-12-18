@@ -1,23 +1,39 @@
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
+import type { AppSettings } from '../shared/types';
 
 const SETTINGS_FILE = 'settings.json';
 
 /**
  * Get the path to the settings file
- * @returns {string} Full path to settings.json
+ * @returns Full path to settings.json
  */
-function getSettingsPath() {
+function getSettingsPath(): string {
   return path.join(app.getPath('userData'), SETTINGS_FILE);
 }
 
 /**
  * Get default settings
- * @returns {object} Default settings object
+ * @returns Default settings object
  */
-export function getDefaultSettings() {
+export function getDefaultSettings(): AppSettings {
   return {
+    apiBaseUrl: 'http://localhost:4000/api',
+    theme: 'auto',
+    autoSave: true,
+    printSettings: {
+      paperSize: 'A4',
+      orientation: 'portrait',
+      includeLogo: true,
+      includeBarcode: true
+    },
+    notifications: {
+      enabled: true,
+      soundEnabled: true,
+      showOnComplete: true,
+      showOnError: true
+    },
     tray: {
       minimizeToTray: false,
       closeToTray: false,
@@ -29,19 +45,29 @@ export function getDefaultSettings() {
 
 /**
  * Load settings from disk
- * @returns {object} Settings object (falls back to defaults if file doesn't exist or is corrupted)
+ * @returns Settings object (falls back to defaults if file doesn't exist or is corrupted)
  */
-export function loadSettings() {
+export function loadSettings(): AppSettings {
   const settingsPath = getSettingsPath();
 
   try {
     if (fs.existsSync(settingsPath)) {
       const data = fs.readFileSync(settingsPath, 'utf8');
-      const settings = JSON.parse(data);
+      const settings = JSON.parse(data) as Partial<AppSettings>;
 
       // Merge with defaults to ensure all keys exist
       const defaults = getDefaultSettings();
       return {
+        ...defaults,
+        ...settings,
+        printSettings: {
+          ...defaults.printSettings,
+          ...settings.printSettings
+        },
+        notifications: {
+          ...defaults.notifications,
+          ...settings.notifications
+        },
         tray: {
           ...defaults.tray,
           ...settings.tray
@@ -49,7 +75,8 @@ export function loadSettings() {
       };
     }
   } catch (error) {
-    console.warn('Failed to load settings, using defaults:', error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.warn('Failed to load settings, using defaults:', errorMessage);
   }
 
   // Return defaults if file doesn't exist or parsing failed
@@ -58,10 +85,10 @@ export function loadSettings() {
 
 /**
  * Save settings to disk
- * @param {object} settings - Settings object to save
- * @returns {boolean} True if successful, false otherwise
+ * @param settings - Settings object to save
+ * @returns True if successful, false otherwise
  */
-export function saveSettings(settings) {
+export function saveSettings(settings: AppSettings): boolean {
   const settingsPath = getSettingsPath();
 
   try {
