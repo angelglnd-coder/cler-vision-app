@@ -56,53 +56,51 @@
     if (shouldSelect) {
       selectedRowIds = [...selectedRowIds, rowId];
     } else {
-      selectedRowIds = selectedRowIds.filter(id => id !== rowId);
+      selectedRowIds = selectedRowIds.filter((id) => id !== rowId);
     }
   }
 
   // Handle select all toggle
   function handleToggleAll(shouldSelectAll) {
     if (shouldSelectAll) {
-      selectedRowIds = rows.map(r => r.id);
+      selectedRowIds = rows.map((r) => r.id);
     } else {
       selectedRowIds = [];
     }
   }
 
   // Derived computed columns
-  let svarColumns = $derived(
-    [
-      // Checkbox column (first, pinned left)
-      {
-        id: "selected",
-        header: SelectAllHeader,
-        cell: CheckboxCell,
-        width: 50,
-        sortable: false,
-        filter: false,
-        align: "center",
-        pinned: "left",
-        // Pass data and callbacks to custom components
-        selectedRowIds,
-        rows,
-        onToggle: handleToggle,
-        onToggleAll: handleToggleAll,
-      },
-      // Existing columns (spread)
-      ...(state.context?.columns || []).map((c) => {
-        const id = c.field || c.title || Math.random().toString(36).slice(2);
-        return {
-          id, // Grid uses this as the field key
-          header: c.title || id, // what you see in the header
-          width: 150,
-          sortable: true,
-          filter: true,
-          align: c.hozAlign === "right" ? "right" : "left",
-          pinned: PIN_LEFT.has(id) ? "left" : undefined,
-        };
-      }),
-    ],
-  );
+  let svarColumns = $derived([
+    // Checkbox column (first, pinned left)
+    {
+      id: "selected",
+      header: SelectAllHeader,
+      cell: CheckboxCell,
+      width: 50,
+      sortable: false,
+      filter: false,
+      align: "center",
+      pinned: "left",
+      // Pass data and callbacks to custom components
+      selectedRowIds,
+      rows,
+      onToggle: handleToggle,
+      onToggleAll: handleToggleAll,
+    },
+    // Existing columns (spread)
+    ...(state.context?.columns || []).map((c) => {
+      const id = c.field || c.title || Math.random().toString(36).slice(2);
+      return {
+        id, // Grid uses this as the field key
+        header: c.title || id, // what you see in the header
+        width: 150,
+        sortable: true,
+        filter: true,
+        align: c.hozAlign === "right" ? "right" : "left",
+        pinned: PIN_LEFT.has(id) ? "left" : undefined,
+      };
+    }),
+  ]);
 
   function getRowStyle(row) {
     const baseClass = "hover-highlight";
