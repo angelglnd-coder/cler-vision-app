@@ -1,13 +1,18 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
+import type { AppSettings } from "../renderer/src/lib/types";
+
+// Declare global __APP_VERSION__
+declare const __APP_VERSION__: string;
 
 // Custom APIs for renderer
 const api = {
   settings: {
-    get: () => ipcRenderer.invoke('settings:get'),
-    update: (settings) => ipcRenderer.invoke('settings:update', settings),
-    onChange: (callback) => {
-      const subscription = (event, settings) => callback(settings);
+    get: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
+    update: (settings: Partial<AppSettings>): Promise<void> =>
+      ipcRenderer.invoke('settings:update', settings),
+    onChange: (callback: (settings: AppSettings) => void): (() => void) => {
+      const subscription = (_event: IpcRendererEvent, settings: AppSettings) => callback(settings);
       ipcRenderer.on('settings:changed', subscription);
       // Return cleanup function
       return () => ipcRenderer.removeListener('settings:changed', subscription);
@@ -30,6 +35,8 @@ if (process.contextIsolated) {
     console.error(error);
   }
 } else {
+  // @ts-ignore - Adding to window in non-isolated context
   window.electron = electronAPI;
+  // @ts-ignore - Adding to window in non-isolated context
   window.api = api;
 }
