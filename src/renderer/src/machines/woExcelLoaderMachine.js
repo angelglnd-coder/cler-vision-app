@@ -696,7 +696,7 @@ export const woExcelLoaderMachine = setup({
 
       // Step 3: Initialize sequence counters from API data
       for (const soldTo of uniqueSoldTos) {
-        const apiData = apiSequenceData[soldTo].data;
+        const apiData = apiSequenceData[soldTo];
 
         console.log("INSIDE =>", apiData);
         if (apiData && apiData.error) {
