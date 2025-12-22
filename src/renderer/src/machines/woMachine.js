@@ -25,9 +25,8 @@ import { WO_COLUMNS, COLUMN_DISPLAY_NAMES } from "../utils/woColumns.js";
 
 // Define numeric fields for proper alignment in UI
 const NUMERIC_FIELDS = new Set([
-  "cyl",
   "diam",
-  "cylP",
+  "cylValue",
   "edgeThick",
   "centerThick",
   "eValue",

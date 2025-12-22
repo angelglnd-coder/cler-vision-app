@@ -31,8 +31,9 @@ export type WorkOrder = {
   odOs: 'OD' | 'OS';
   kCode: string;
   pCode: string;
+  priceCode: string;
   spec: string;
-  cyl: string;
+  cylToric: string;
   diam: string;
   color: string;
   laser: string;
@@ -51,7 +52,7 @@ export type WorkOrder = {
   billTo: string;
   cldfile: string;
   type: string;
-  cylP: string;
+  cylValue: string;
   edgeThick: string;
   centerThick: string;
   eValue: string;
