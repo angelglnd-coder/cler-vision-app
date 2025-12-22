@@ -61,11 +61,21 @@
     odOs: g("odOs"),
     brand: g("brand", g("labeling")),
     containerCode: g("containerCode"),
+    mfg: g("mfg"),
+    cylToric: g("cylToric"),
+    priceCode: g("priceCode"),
   };
 
   // computed helpers
-  const pick = (v) => (v && typeof v === "object" ? (v.value ?? null) : v);
+  const pick = (v) => {
+    const val = v && typeof v === "object" ? (v.value ?? null) : v;
+    // Only treat null, undefined, and empty string as empty (keep zero values)
+    if (val === null || val === undefined || val === "") return "";
+    return val;
+  };
   const fmt = (v, digits = 2) => {
+    // Return empty string if value is null, undefined, or empty string
+    if (v === null || v === undefined || v === "") return "";
     const n = Number(v);
     return Number.isFinite(n) ? n.toFixed(digits) : (v ?? "") || "";
   };
@@ -85,9 +95,9 @@
     { desc: "DIAM", param: pick(row.diam) },
     { desc: "PC Width", param: pick(row.pcwidth) },
     { desc: "OZ 1", param: pick(row.oz1) },
-    { desc: "PC 1", param: pick(row.pc1Radius) },
+    { desc: "PC 1 Radius", param: pick(row.pc1Radius) },
     { desc: "OZ 2", param: pick(row.oz2) },
-    { desc: "PC 2", param: pick(row.pc2Radius) },
+    { desc: "PC 2 Radius", param: pick(row.pc2Radius) },
     { desc: "Center Thick", param: pick(row.centerThick) },
     { desc: "Edge Thick", param: pick(row.edgeThick) },
     // Remaining parameters
@@ -99,6 +109,10 @@
     { desc: "AC 2 Tor", param: pick(row.ac2Tor) },
     { desc: "AC 3 Radius", param: pick(row.ac3Radius) },
     { desc: "AC 3 Tor", param: pick(row.ac3Tor) },
+    { desc: "SAG HEIGH", param: pick("") },
+    { desc: "ADD", param: pick("") },
+    { desc: "AXIS", param: pick("") },
+    { desc: "CD/CN", param: pick("") },
   ];
 
   function openDeviceLink() {
@@ -465,9 +479,9 @@
 
 <div class="sheet {enableResponsive ? 'responsive' : ''}">
   <!-- Top title -->
-  <div class="titlebar">
+  <!-- <div class="titlebar">
     <div class="badge">PRGM: {data.prgm || "—"}</div>
-  </div>
+  </div> -->
 
   <!-- Barcode Section -->
   {#if data.woNumber}
@@ -486,11 +500,14 @@
       <div class="label">Sold To:</div>
       <div class="value">{data.soldTo || "—"}</div>
 
-      <div class="label">Ship To:</div>
+      <div class="label">Addr To:</div>
       <div class="value">{data.shipTo || "—"}</div>
 
       <div class="label">Bill To:</div>
       <div class="value">{data.billTo || "—"}</div>
+
+      <div class="label">Price Code:</div>
+      <div class="value">{data.priceCode || "—"}</div>
     </div>
 
     <!-- Column 2 -->
@@ -506,6 +523,9 @@
 
       <div class="label">Doctor's Name</div>
       <div class="value">{data.doctor || "—"}</div>
+
+      <div class="label">Blank THKN:</div>
+      <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
     </div>
 
     <!-- Column 3 -->
@@ -518,14 +538,14 @@
         <span class="link" on:click={openDeviceLink}>{data.deviceText || "—"}</span>
       </div>
 
-      <div class="label">Laser Mark:</div>
-      <div class="value code">{data.laserMark || "—"}</div>
-
       <div class="label">Device Type:</div>
       <div class="value">{data.deviceType || "—"}</div>
 
-      <div class="label">Blank THKN:</div>
-      <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
+      <div class="label">Laser Mark:</div>
+      <div class="value code">{data.laserMark || "—"}</div>
+
+      <div class="label">PRG:</div>
+      <div class="value code">{data.prgm || "—"}</div>
     </div>
   </div>
 
@@ -535,38 +555,56 @@
   <div class="grid-3">
     <div class="card">
       <div class="head">
-        <div class="h">CONT</div>
+        <div class="h">{data.mfg || "—"}</div>
       </div>
       <div class="code">{data.cont1 || "—"}</div>
       <div class="code">{data.cont2 || "—"}</div>
+      {#if data.odOs && data.odOs !== "—"}
+        <div class="code" style="font-size: 1.1rem; font-weight: 700;">OD/OS {data.odOs}</div>
+      {/if}
     </div>
 
     <div class="card">
-      <div class="head">
+      <!-- <div class="head">
         <div class="h">GTIN / Color</div>
-      </div>
+      </div> -->
       {#if data.cont3 && data.cont3 !== "—"}
-        <SmallBarcode value={data.cont3} width={1} height={enableResponsive ? 16 : 20} margin={1} />
+        <div class="head" style="display: flex; justify-content: center; align-items: center;">
+          <div class="h" style="margin-right: 0.5rem;">GTIN</div>
+          <div class="code" style="text-align:right;">
+            <SmallBarcode
+              value={data.cont3}
+              width={1}
+              height={enableResponsive ? 16 : 20}
+              margin={1}
+            />
+          </div>
+        </div>
       {:else}
         <div class="code">—</div>
       {/if}
-      <div class="code">{data.color || "—"}</div>
-      {#if data.odOs && data.odOs !== "—"}
-        <div class="code" style="font-size: 1.1rem; font-weight: 700;">{data.odOs}</div>
-      {/if}
+
+      <div class="head" style="display: flex; justify-content: center; align-items: center;">
+        <div class="h" style="margin-right: 0.5rem;">COLOR</div>
+        <div class="code" style="text-align:right;">
+          {data.color || "—"}
+        </div>
+      </div>
     </div>
 
     <div class="card">
-      <div class="head">
-        <div class="h" style="margin-left:auto;">Brand</div>
+      <div class="head" style="display: flex; justify-content: flex-end; align-items: center;">
+        <div class="h" style="margin-right: 0.5rem;">TORIC</div>
+        <div class="code" style="text-align:right;">{data.cylToric || "—"}</div>
       </div>
-      <div class="code" style="text-align:right;">{data.brand || "—"}</div>
+      <div class="head" style="display: flex; justify-content: flex-end; align-items: center;">
+        <div class="h" style="margin-right: 0.5rem;">Brand</div>
+        <div class="code" style="text-align:right;">{data.brand || "—"}</div>
+      </div>
       {#if data.containerCode && data.containerCode !== "—"}
-        <div
-          class="code"
-          style="text-align:right; margin-top: 4px; font-size: 0.85rem; color: var(--muted);"
-        >
-          {data.containerCode}
+        <div class="head" style="display: flex; justify-content: flex-end; align-items: center;">
+          <div class="h" style="margin-right: 0.5rem;">CNTR Code</div>
+          <div class="code" style="text-align:right;">{data.containerCode || "—"}</div>
         </div>
       {/if}
     </div>
