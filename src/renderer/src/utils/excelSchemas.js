@@ -20,22 +20,23 @@ import {
 // Type 1 field mappings (Excel display name → internal field name)
 const TYPE1_FIELD_MAPPINGS = {
   "Patient Name": "Patient_Name",
-  "PO": "PO",
-  "PO date": "PO_date",
+  "Customer PO#": "PO",
+  "PO Date": "PO_date",
   "No.": "No",
   "OD/OS": "od_os",
   "K-Code": "K_Code",
-  "P-Code": "P_Code",
+  "Sphr Pwr/P-Code": "P_Code",
+  "Price Code": "Price_Code",
   "SPEC": "SPEC",
-  "Cyl": "Cyl",
+  "Cyl/TORIC": "Cyl",
   "Diam": "Diam",
   "Color": "Color",
   "Qty": "Qty",
-  "Laser": "Laser",
+  "Laser Mark": "Laser",
   "Design": "Design",
   "Viet Label": "Viet_Label",
-  "Labeling": "Labeling",
-  "Ship Code": "Ship_Code",
+  "Brand": "Labeling",
+  "Addr To": "Ship_Code",
   "Previous S.O#": "Previous_SO",
   "Note": "Note",
   "Device": "Device",
@@ -43,15 +44,12 @@ const TYPE1_FIELD_MAPPINGS = {
   "Mat_Code": "Mat_Code",
   "Mat_Lot": "Mat_Lot",
   "GTIN": "GTIN",
-  "Sold_To": "Sold_To",
-  "Bill_To": "Bill_To",
+  "Sold To": "Sold_To",
+  "Bill To": "Bill_To",
   "cldfile": "cldfile",
-  "Type": "Type",
-  "Cyl_p": "Cyl_p",
-  "PC1_Radius": "PC1_Radius",
-  "PC2_Radius": "PC2_Radius",
-  "Edge_Thick": "Edge_Thick",
-  "Center_Thick": "Center_Thick",
+  "Device Type": "Type",
+  "Edge Thick": "Edge_Thick",
+  "Center Thick": "Center_Thick",
   "eValue": "eValue",
   "Container Code": "Container_Code"
 };
@@ -93,7 +91,7 @@ export const SCHEMA_TYPE1 = {
   // Signature columns for deterministic detection
   signatures: {
     required: ["cldfile", "Container Code"], // Must have ALL these columns
-    preferred: ["Patient Name", "Type", "P-Code"] // Bonus points if present
+    preferred: ["Patient Name", "Type", "Sphr Pwr/P-Code"] // Bonus points if present
   },
 
   // Column definitions
@@ -110,7 +108,7 @@ export const SCHEMA_TYPE1 = {
   numericFields: TYPE1_NUMERIC_FIELDS,
 
   // Date fields (need special handling)
-  dateFields: ["PO date"],
+  dateFields: ["PO Date"],
 
   // Processing configuration
   processing: {
