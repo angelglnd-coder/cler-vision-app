@@ -97,11 +97,12 @@
       transformed.patientName = toStringOrEmpty(row.Patient_Name);
       transformed.po = toStringOrEmpty(row.PO);
       transformed.poDate = toStringOrUndefined(row.PO_date); // Date field - omit if empty
-      transformed.no = toStringOrEmpty(row.number);
-      transformed.kCode = toStringOrEmpty(row.k_code);
-      transformed.pCode = toStringOrEmpty(row.p_code);
+      transformed.no = toStringOrEmpty(row.No);
+      transformed.kCode = toStringOrEmpty(row.K_Code);
+      transformed.pCode = toStringOrEmpty(row.P_Code);
+      transformed.priceCode = toStringOrEmpty(row.Price_Code);
       transformed.spec = toStringOrEmpty(row.SPEC);
-      transformed.cyl = toStringOrEmpty(row.Cyl);
+      transformed.cylToric = toStringOrEmpty(row.Cyl); // Backend expects cylToric
       transformed.diam = toStringOrEmpty(row.Diam);
       transformed.color = toStringOrEmpty(row.Color);
       transformed.laser = toStringOrEmpty(row.Laser);
@@ -112,7 +113,7 @@
       transformed.previousSO = toStringOrEmpty(row.previous_so);
       transformed.note = toStringOrEmpty(row.Note);
       transformed.cldfile = toStringOrEmpty(row.cldfile);
-      transformed.cylP = toStringOrEmpty(row.Cyl_p);
+      transformed.cylValue = toStringOrEmpty(row.Cyl_v); // Backend expects cylValue
       transformed.edgeThick = toStringOrEmpty(row.Edge_Thick);
       transformed.centerThick = toStringOrEmpty(row.Center_Thick);
       transformed.eValue = toStringOrEmpty(row.eValue);
@@ -137,8 +138,8 @@
       transformed.ac1Width = toStringOrEmpty(row.AC1_width);
       transformed.ac2Width = toStringOrEmpty(row.AC2_width);
       transformed.ac3Width = toStringOrEmpty(row.AC3_width);
-      transformed.pc1Radius = toStringOrEmpty(row.PC1_Radius || row.PC_radius);
-      transformed.pc2Radius = toStringOrEmpty(row.PC2_Radius);
+      transformed.pc1Radius = toStringOrEmpty(row.PC1_radius);
+      transformed.pc2Radius = toStringOrEmpty(row.PC2_radius);
       transformed.pcwidth = toStringOrEmpty(row.PC_width);
     }
 
