@@ -233,17 +233,39 @@
       });
 
       const result = await createWorkOrdersBatch(transformedRows);
-      const createdCount = result.data.count || 0;
+      const createdCount = result.created || 0;
 
       submitSuccess = true;
       console.log(`Successfully created ${createdCount} work orders`);
+      console.log("Batch create result:", result);
+
+      // Log validation errors if any
+      if (result.errors && result.errors.length > 0) {
+        console.error("Validation errors from backend:", result.errors);
+        result.errors.forEach((err, idx) => {
+          console.error(`Error ${idx + 1}:`, err.error, "Data:", err.data);
+        });
+      }
 
       // Warn if fewer work orders were created than expected
       if (createdCount < transformedRows.length) {
         console.warn(
           `Warning: Only ${createdCount} of ${transformedRows.length} work orders were created`,
         );
-        submitError = `Warning: Only ${createdCount} of ${transformedRows.length} work orders were created. Check backend logs for validation errors.`;
+
+        // Show specific error messages if available
+        let errorMsg = `Warning: Only ${createdCount} of ${transformedRows.length} work orders were created.`;
+        if (result.errors && result.errors.length > 0) {
+          const firstErrors = result.errors
+            .slice(0, 3)
+            .map((e) => e.error)
+            .join("; ");
+          errorMsg += ` Errors: ${firstErrors}`;
+          if (result.errors.length > 3) {
+            errorMsg += ` (and ${result.errors.length - 3} more...)`;
+          }
+        }
+        submitError = errorMsg;
       }
 
       // Call success callback to refresh parent component
