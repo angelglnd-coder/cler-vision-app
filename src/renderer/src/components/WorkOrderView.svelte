@@ -564,7 +564,7 @@
       {/if}
     </div>
 
-    <div class="card">
+    <div class="card" style="display: flex; flex-direction: column; justify-content: center;">
       <!-- <div class="head">
         <div class="h">GTIN / Color</div>
       </div> -->
