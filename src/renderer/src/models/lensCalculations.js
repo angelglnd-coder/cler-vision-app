@@ -296,12 +296,12 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
     const ref1Rec = code ? getRecordByCode(code) : null;
     const flds = pickFields(ref1Rec); // {JESSEN, OZ, FX}
 
-    // toricity from row (code/value/offset) or Cyl_p/Cyl
+    // toricity from row (code/value/offset) or Cyl
     let toricity_code = row.toricity_code ?? null;
     let toricity_value = row.toricity_value ?? null;
     let toricity_offset = row.toricity_offset ?? null;
     if (toricity_code == null && toricity_value == null) {
-      const cylRaw = row.Cyl_p ?? row.Cyl ?? null;
+      const cylRaw = row.Cyl ?? null;  // Read from Cyl/TORIC column only
       const n = toNum(cylRaw);
       if (n != null) toricity_value = n;
       else if (typeof cylRaw === "string") toricity_code = cylRaw.trim();
@@ -331,6 +331,7 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
       _ref1: { JESSEN: flds.JESSEN, OZ: flds.OZ, FX: flds.FX },
       _ref2: ref2Vals,
 
+      Cyl_v: toricity.value,  // Calculated toricity value from lookup
       BC1_BC2,
       PW1_PW2,
       OZ1_OZ2,
@@ -344,6 +345,8 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
       AC3_tor: AC3.tor,
 
       ...widths,
+      PC1_radius: ok(PC_radius),  // Constant 12.0
+      PC2_radius: ok(PC_radius),  // Constant 12.0
       PC_radius,
       LensPower,
     };

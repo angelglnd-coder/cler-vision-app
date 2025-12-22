@@ -57,6 +57,8 @@ const CALC_FIELDS = [
   "AC2_width",
   "AC3_width",
   "PC_width",
+  "PC1_radius",
+  "PC2_radius",
   "PC_radius",
   "LensPower",
 ];
