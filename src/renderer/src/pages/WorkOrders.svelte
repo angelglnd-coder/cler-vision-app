@@ -90,10 +90,12 @@
     // Existing columns (spread)
     ...(state.context?.columns || []).map((c) => {
       const id = c.field || c.title || Math.random().toString(36).slice(2);
+      // Custom width for Patient Name column
+      const customWidth = id === "patientName" ? 250 : 150;
       return {
         id, // Grid uses this as the field key
         header: c.title || id, // what you see in the header
-        width: 150,
+        width: customWidth,
         sortable: true,
         filter: true,
         align: c.hozAlign === "right" ? "right" : "left",
@@ -331,6 +333,34 @@
     border-color: #d1d5db;
     color: #9ca3af;
   }
+  /* Empty state styles */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 3rem;
+    text-align: center;
+    color: #6b7280;
+  }
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+  .empty-state-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+  }
+  .empty-state-description {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0 0 1.5rem 0;
+    max-width: 400px;
+  }
   /* Grid container for proper scrolling within Splitpanes */
   .pane-content {
     display: flex;
@@ -381,6 +411,13 @@
 
   .grid-container :global(.wx-scroll) {
     overflow: auto !important;
+  }
+
+  /* Grid cell text overflow handling */
+  :global(.wx-grid .wx-cell) {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 
   :global(.hover-highlight:hover) {
@@ -491,7 +528,7 @@
         <div
           style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;"
         >
-          <button class="pretty-btn" onclick={openCreateDialog}>➕ Create</button>
+          <button class="pretty-btn teal" onclick={openCreateDialog}>➕ Create</button>
           <button class="pretty-btn" onclick={onClick}>
             {visiblePane ? "◀ Hide" : "▶ Show"} Preview
           </button>
@@ -510,15 +547,25 @@
         </div>
 
         <div class="grid-container">
-          <Willow>
-            <Grid
-              data={rows}
-              columns={svarColumns}
-              rowStyle={getRowStyle}
-              onselectrow={onRowClick}
-              autoHeight={false}
-            />
-          </Willow>
+          {#if rows.length === 0}
+            <div class="empty-state">
+              <div class="empty-state-icon">📦</div>
+              <h3 class="empty-state-title">No Work Orders Yet</h3>
+              <p class="empty-state-description">
+                Get started by creating your first work order using the Create button above.
+              </p>
+            </div>
+          {:else}
+            <Willow>
+              <Grid
+                data={rows}
+                columns={svarColumns}
+                rowStyle={getRowStyle}
+                onselectrow={onRowClick}
+                autoHeight={false}
+              />
+            </Willow>
+          {/if}
         </div>
       </div>
     </Pane>
