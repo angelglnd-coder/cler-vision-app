@@ -515,13 +515,13 @@
       <div class="label">Customer PO#:</div>
       <div class="value">{data.customerPO || "—"}</div>
 
-      <div class="label">Shopping Cart#</div>
+      <div class="label">Shopping Cart#:</div>
       <div class="value">{data.cart || "—"}</div>
 
-      <div class="label">Patient Name</div>
+      <div class="label">Patient Name:</div>
       <div class="value">{data.patient || "—"}</div>
 
-      <div class="label">Doctor's Name</div>
+      <div class="label">Doctor's Name:</div>
       <div class="value">{data.doctor || "—"}</div>
 
       <div class="label">Blank THKN:</div>
@@ -546,6 +546,9 @@
 
       <div class="label">PRG:</div>
       <div class="value code">{data.prgm || "—"}</div>
+
+      <div class="label">TORIC:</div>
+      <div class="value code">{data.cylToric || "—"}</div>
     </div>
   </div>
 
@@ -593,10 +596,6 @@
     </div>
 
     <div class="card">
-      <div class="head" style="display: flex; justify-content: flex-end; align-items: center;">
-        <div class="h" style="margin-right: 0.5rem;">TORIC</div>
-        <div class="code" style="text-align:right;">{data.cylToric || "—"}</div>
-      </div>
       <div class="head" style="display: flex; justify-content: flex-end; align-items: center;">
         <div class="h" style="margin-right: 0.5rem;">Brand</div>
         <div class="code" style="text-align:right;">{data.brand || "—"}</div>

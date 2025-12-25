@@ -76,22 +76,36 @@
 
     if (fileType === "type2") {
       // Type 2 (GOV ORDERS) specific mappings
-      transformed.po = toStringOrEmpty(row.order_number); // ORDER_# → po
-      transformed.no = toStringOrEmpty(row.serial_number); // SERIAL_# → no
-      transformed.kCode = toStringOrEmpty(row.km_code); // KM-CODE → kCode
-      transformed.pCode = toStringOrEmpty(row.power_code); // POWER-CODE → pCode
-      transformed.poDate = toStringOrUndefined(row.PO_date); // PO date → poDate (omit if empty)
+      transformed.po = toStringOrEmpty(row.po);
+      transformed.no = toStringOrEmpty(row.no);
+      transformed.kCode = toStringOrEmpty(row.kCode);
+      transformed.pCode = toStringOrEmpty(row.pCode);
+      transformed.poDate = toStringOrUndefined(row.PO_date);
 
       // Type 2 specific fields
       transformed.brand = toStringOrEmpty(row.brand);
       transformed.pcs = toStringOrEmpty(row.pcs);
       transformed.material = toStringOrEmpty(row.material);
       transformed.color = toStringOrEmpty(row.color);
-      transformed.baseCurveDry = toStringOrEmpty(row.base_curve_dry);
-      transformed.ctDry = toStringOrEmpty(row.ct_dry);
-      transformed.lensPower = toStringOrEmpty(row.lens_power);
-      transformed.shoppingNumber = toStringOrEmpty(row.shopping_number);
+      transformed.bc1 = toStringOrEmpty(row.bc1);
+      transformed.ctDry = toStringOrEmpty(row.ctDry);
+      transformed.pw1 = toStringOrEmpty(row.pw1);
+      transformed.add = toStringOrEmpty(row.add);
+      transformed.sagHeight = toStringOrEmpty(row.sagHeight);
+      transformed.defocus = toStringOrEmpty(row.defocus);
+      transformed.direction = toStringOrEmpty(row.direction);
+      transformed.ballast = toStringOrEmpty(row.ballast);
+      transformed.diam = toStringOrEmpty(row.diam);
+      transformed.oz1 = toStringOrEmpty(row.oz1);
+      transformed.toric = toStringOrEmpty(row.toric);
+      transformed.shoppingCart = toStringOrEmpty(row.shoppingNumber);
+      transformed.patientName = toStringOrEmpty(row.Patient_Name);
       transformed.shipTo = toStringOrEmpty(row.Ship_To);
+      transformed.priceCode = toStringOrEmpty(row.Price_Code);
+      transformed.shipCode = toStringOrEmpty(row.Ship_Code);
+      transformed.centerThick = toStringOrEmpty(row.Center_Thick);
+      transformed.edgeThick = toStringOrEmpty(row.Edge_Thick);
+      transformed.containerCode = toStringOrEmpty(row.Container_Code);
     } else {
       // Type 1 (HAI ORDERS) specific mappings
       transformed.patientName = toStringOrEmpty(row.Patient_Name);
@@ -108,7 +122,7 @@
       transformed.laser = toStringOrEmpty(row.Laser);
       transformed.design = toStringOrEmpty(row.Design);
       transformed.vietLabel = toStringOrEmpty(row.Viet_Label);
-      transformed.labeling = toStringOrEmpty(row.Labeling);
+      transformed.brand = toStringOrEmpty(row.Brand);
       transformed.shipCode = toStringOrEmpty(row.Ship_Code);
       transformed.previousSO = toStringOrEmpty(row.previous_so);
       transformed.note = toStringOrEmpty(row.Note);

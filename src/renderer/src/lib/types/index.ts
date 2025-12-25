@@ -39,7 +39,7 @@ export type WorkOrder = {
   laser: string;
   design: string;
   vietLabel: string;
-  labeling: string;
+  brand: string;
   shipCode: string;
   previousSO?: string;
   note?: string;

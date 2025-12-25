@@ -4,68 +4,143 @@
  */
 
 export const TYPE2_COLUMNS_EXCEL = [
-  "ORDER_#",
-  "SERIAL_#",
+  "Customer PO#",
+  "No.",
   "BRAND",
   "PCS",
   "MATERIAL",
   "COLOR",
-  "LENS_TYPE",
+  "LENS_TYPE/ Device Type",
   "EYES",
-  "KM-CODE",
+  "KM-CODE/K-Code",
   "POWER-CODE",
-  "Base curve (dry)",
-  "C.T. (dry)",
-  "Lens Power",
-  "shopping #",
-  "DEVICE",
-  "MFG",
+  "Base curve/BC1",
+  "C.T. (dry)/Center Thick",
+  "Lens Power/PW1",
+  "ADD",
+  "Sag/SAG HEIGHT",
+  "Defocus",
+  "Direction",
+  "Ballast",
+  "OAD (dry)/DIAM",
+  "OZ (dry)/OZ 1",
+  "Toric",
+  "shopping Cart #",
+  "PO Date",
+  "Device",
+  "Mfg",
   "Mat_Code",
-  "Mat_Lot",
+  "Mat _Lot",
   "GTIN",
-  "Sold_To",
-  "Bill_To",
-  "Ship_To",
-  "PO date"
+  "Addr To",
+  "Price Code",
+  "Ship To",
+  "Sold To",
+  "Bill To",
+  "Patient name",
+  "Center Thick",
+  "Edge Thick",
+  "CNTR Code"
 ];
 
-// All columns are required for Type 2
-export const TYPE2_EXPECTED_REQUIRED = TYPE2_COLUMNS_EXCEL;
+// Required columns for Type 2 (GOV orders)
+export const TYPE2_EXPECTED_REQUIRED = [
+  "Customer PO#",
+  "No.",
+  "BRAND",
+  "PCS",
+  "MATERIAL",
+  "COLOR",
+  "LENS_TYPE/ Device Type",
+  "EYES",
+  "KM-CODE/K-Code",
+  "POWER-CODE",
+  "Base curve/BC1",
+  "C.T. (dry)/Center Thick",
+  "Lens Power/PW1",
+  "OAD (dry)/DIAM",
+  "OZ (dry)/OZ 1",
+  "PO Date",
+  "Device",
+  "Mfg",
+  "Mat_Code",
+  "Mat _Lot",
+  "GTIN",
+  "Addr To",
+  "Ship To",
+  "Sold To",
+  "Bill To",
+  "Center Thick",
+  "Edge Thick"
+];
 
-// No optional columns for Type 2
-export const TYPE2_EXPECTED_OPTIONAL = [];
+// Optional columns for Type 2 (lens-type dependent or metadata)
+export const TYPE2_EXPECTED_OPTIONAL = [
+  "ADD",
+  "Sag/SAG HEIGHT",
+  "Defocus",
+  "Direction",
+  "Ballast",
+  "Toric",
+  "shopping Cart #",
+  "Price Code",
+  "Patient name",
+  "CNTR Code"
+];
 
 // Field mappings for normalizing Type 2 columns to internal schema
 export const TYPE2_FIELD_MAPPINGS = {
-  "ORDER_#": "order_number",
-  "SERIAL_#": "serial_number",
+  "Customer PO#": "po",
+  "No.": "no",
   "BRAND": "brand",
   "PCS": "pcs",
   "MATERIAL": "material",
   "COLOR": "color",
-  "LENS_TYPE": "Type", // Maps to same field as Type 1
-  "EYES": "od_os", // Maps to same field as Type 1 "OD/OS"
-  "KM-CODE": "km_code",
-  "POWER-CODE": "power_code",
-  "Base curve (dry)": "base_curve_dry",
-  "C.T. (dry)": "ct_dry",
-  "Lens Power": "lens_power",
-  "shopping #": "shopping_number",
-  "DEVICE": "Device", // Maps to same field as Type 1
-  "MFG": "Mfg", // Maps to same field as Type 1
-  "Mat_Code": "Mat_Code", // Maps to same field as Type 1
-  "Mat_Lot": "Mat_Lot", // Maps to same field as Type 1
-  "GTIN": "GTIN", // Maps to same field as Type 1
-  "Sold_To": "Sold_To", // Maps to same field as Type 1
-  "Bill_To": "Bill_To", // Maps to same field as Type 1
-  "Ship_To": "Ship_To",
-  "PO date": "PO_date" // Maps to same field as Type 1
+  "LENS_TYPE/ Device Type": "Type",
+  "EYES": "od_os",
+  "KM-CODE/K-Code": "kCode",
+  "POWER-CODE": "pCode",
+  "Base curve/BC1": "bc1",
+  "C.T. (dry)/Center Thick": "ctDry",
+  "Lens Power/PW1": "pw1",
+  "ADD": "add",
+  "Sag/SAG HEIGHT": "sagHeight",
+  "Defocus": "defocus",
+  "Direction": "direction",
+  "Ballast": "ballast",
+  "OAD (dry)/DIAM": "diam",
+  "OZ (dry)/OZ 1": "oz1",
+  "Toric": "toric",
+  "shopping Cart #": "shoppingNumber",
+  "PO Date": "PO_date",
+  "Device": "Device",
+  "Mfg": "Mfg",
+  "Mat_Code": "Mat_Code",
+  "Mat _Lot": "Mat_Lot",
+  "GTIN": "GTIN",
+  "Addr To": "Ship_Code",
+  "Price Code": "Price_Code",
+  "Ship To": "Ship_To",
+  "Sold To": "Sold_To",
+  "Bill To": "Bill_To",
+  "Patient name": "Patient_Name",
+  "shopping Cart #": "shoppingNumber",
+  "Center Thick": "Center_Thick",
+  "Edge Thick": "Edge_Thick",
+  "CNTR Code": "Container_Code"
 };
 
 // Numeric fields for Type 2 (for column alignment)
 export const TYPE2_NUMERIC_FIELDS = new Set([
   "PCS",
-  "Base curve (dry)",
-  "C.T. (dry)",
-  "Lens Power"
+  "Base curve/BC1",
+  "C.T. (dry)/Center Thick",
+  "Lens Power/PW1",
+  "ADD",
+  "Sag/SAG HEIGHT",
+  "Defocus",
+  "OAD (dry)/DIAM",
+  "OZ (dry)/OZ 1",
+  "Center Thick",
+  "Edge Thick"
 ]);

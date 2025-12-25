@@ -35,7 +35,7 @@ const TYPE1_FIELD_MAPPINGS = {
   "Laser Mark": "Laser",
   "Design": "Design",
   "Viet Label": "Viet_Label",
-  "Brand": "Labeling",
+  "Brand": "Brand",
   "Addr To": "Ship_Code",
   "Previous S.O#": "Previous_SO",
   "Note": "Note",
@@ -128,13 +128,13 @@ export const SCHEMA_TYPE1 = {
  */
 export const SCHEMA_TYPE2 = {
   id: "type2",
-  name: "GOB ORDERS",
+  name: "GOV ORDERS",
   version: "1.0",
 
   // Signature columns for deterministic detection
   signatures: {
-    required: ["ORDER_#", "SERIAL_#", "LENS_TYPE"], // Must have ALL these columns
-    preferred: ["EYES", "KM-CODE", "POWER-CODE", "Sold_To"] // Bonus points if present
+    required: ["Customer PO#", "No.", "LENS_TYPE/ Device Type"], // Must have ALL these columns
+    preferred: ["EYES", "KM-CODE/K-Code", "POWER-CODE", "Device"] // Bonus points if present
   },
 
   // Column definitions
@@ -151,7 +151,7 @@ export const SCHEMA_TYPE2 = {
   numericFields: TYPE2_NUMERIC_FIELDS,
 
   // Date fields (need special handling)
-  dateFields: ["PO date"],
+  dateFields: ["PO Date"],
 
   // Processing configuration
   processing: {
