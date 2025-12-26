@@ -29,6 +29,16 @@
   let isBatchPrinting = $state(false);
   let selectedRowIds = $state([]); // Track selected row IDs for checkboxes
 
+  // Responsive pane sizing based on window width
+  let windowWidth = $state(0);
+  const HD_WIDTH = 1920;
+
+  // Compute pane sizes based on window width
+  let paneConfig = $derived({
+    maxSize: windowWidth > HD_WIDTH ? 45 : 55,
+    minSize: windowWidth > HD_WIDTH ? 45 : 45,
+  });
+
   // same safeKey you already use elsewhere
   const safeKey = (col) => col.replace(/[^\w$]/g, "_");
 
@@ -504,6 +514,9 @@
   }
 </style>
 
+<!-- Window width binding for responsive pane sizing -->
+<svelte:window bind:innerWidth={windowWidth} />
+
 {#if state?.matches("loading") || state?.matches("refreshing")}
   <div style="padding: 2rem;">
     <span style="color: #3b82f6; font-size: 1rem;">
@@ -570,7 +583,7 @@
       </div>
     </Pane>
     {#if visiblePane}
-      <Pane maxSize={45} minSize={45}>
+      <Pane maxSize={paneConfig.maxSize} minSize={paneConfig.minSize}>
         {#if selected}
           <div
             style="display:flex; justify-content: space-between; align-items:center; padding:.5rem 1rem; border-bottom:1px solid #eee;"
@@ -581,7 +594,10 @@
             </div>
           </div>
           {#key selected?.row?.id ?? selected?.index}
-            <div bind:this={woRef} class="print-area {isBatchPrinting ? 'hide-for-batch' : ''}">
+            <div
+              bind:this={woRef}
+              class="print-area {isBatchPrinting ? 'hide-for-batch' : ''}"
+            >
               <WorkOrderView row={selected.row}></WorkOrderView>
             </div>
           {/key}
