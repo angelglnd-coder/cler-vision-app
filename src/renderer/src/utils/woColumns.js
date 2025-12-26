@@ -136,7 +136,7 @@ export const EXPECTED_OPTIONAL = [
 
 // export const SHEET_NAME = "WorkOrders"; // <— your single tab
 
-export const SHEET_NAME_TAB = "clo"; // <— your single tab
+export const SHEET_NAME_TAB = "entry"; // <— your single tab
 
 // Column display names for grid headers
 export const COLUMN_DISPLAY_NAMES = {
