@@ -3,8 +3,42 @@
   import Barcode from "./Barcode.svelte";
   import SmallBarcode from "./SmallBarcode.svelte";
 
-  export let row = {};
-  export let enableResponsive = true;
+  let { row = {}, enableResponsive = true } = $props();
+
+  let flexTableElement = $state(null);
+  let isOverflowing = $state(false);
+
+  // Detect if flex-table is overflowing (only in responsive mode)
+  $effect(() => {
+    if (!flexTableElement || !enableResponsive) {
+      isOverflowing = false;
+      return;
+    }
+
+    const checkOverflow = () => {
+      const hasOverflow = flexTableElement.scrollHeight > flexTableElement.clientHeight;
+      isOverflowing = hasOverflow;
+
+      if (hasOverflow) {
+        console.log('Flex-table overflow detected:', {
+          scrollHeight: flexTableElement.scrollHeight,
+          clientHeight: flexTableElement.clientHeight,
+          overflow: flexTableElement.scrollHeight - flexTableElement.clientHeight,
+        });
+      }
+    };
+
+    // Initial check
+    checkOverflow();
+
+    // Watch for size changes
+    const resizeObserver = new ResizeObserver(checkOverflow);
+    resizeObserver.observe(flexTableElement);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  });
 
   // safe getters
   const g = (k, fb = "") => row?.[k] ?? fb;
@@ -140,6 +174,14 @@
     box-shadow:
       0 1px 0 rgba(0, 0, 0, 0.02),
       0 8px 24px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Make sheet a flex container in responsive mode to enable height-based layout */
+  .sheet.responsive {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
   }
 
   .titlebar {
@@ -404,6 +446,51 @@
         grid-template-columns: 40px 1fr 70px 1fr 70px;
       }
     }
+
+    /* Make flex-table a flex container to properly contain header + body */
+    .sheet.responsive .flex-table {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Table body wrapper for scrolling */
+    .table-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollable table-body in responsive mode - fills remaining space */
+    .sheet.responsive .table-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Custom scrollbar for table-body */
+    .sheet.responsive .table-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    .sheet.responsive .table-body::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 0 10px 10px 0;
+    }
+    .sheet.responsive .table-body::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 4px;
+    }
+    .sheet.responsive .table-body::-webkit-scrollbar-thumb:hover {
+      background: #a0aec0;
+    }
+
+    /* Firefox scrollbar */
+    .sheet.responsive .table-body {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e0 transparent;
+    }
   }
 
   /* Height-based responsive using viewport height (not container query) */
@@ -618,7 +705,8 @@
       <div class="cell">Desc.</div>
       <div class="cell">Param.</div>
     </div>
-    {#each Array(Math.ceil(specRows.length / 2)) as _, i}
+    <div class="table-body" bind:this={flexTableElement}>
+      {#each Array(Math.ceil(specRows.length / 2)) as _, i}
       {#if i < 8}
         <!-- First 8 rows with QC column -->
         <div class="t-row-with-qc">
@@ -639,5 +727,6 @@
         </div>
       {/if}
     {/each}
+    </div>
   </div>
 </div>
