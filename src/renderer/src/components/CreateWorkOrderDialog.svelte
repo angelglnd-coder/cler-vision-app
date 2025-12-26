@@ -97,7 +97,7 @@
       transformed.ballast = toStringOrEmpty(row.ballast);
       transformed.diam = toStringOrEmpty(row.diam);
       transformed.oz1 = toStringOrEmpty(row.oz1);
-      transformed.toric = toStringOrEmpty(row.toric);
+      transformed.cylToric = toStringOrEmpty(row.toric);
       transformed.shoppingCart = toStringOrEmpty(row.shoppingNumber);
       transformed.patientName = toStringOrEmpty(row.Patient_Name);
       transformed.shipTo = toStringOrEmpty(row.Ship_To);
@@ -247,7 +247,7 @@
       });
 
       const result = await createWorkOrdersBatch(transformedRows);
-      const createdCount = result.created || 0;
+      const createdCount = result.count || 0;
 
       submitSuccess = true;
       console.log(`Successfully created ${createdCount} work orders`);
