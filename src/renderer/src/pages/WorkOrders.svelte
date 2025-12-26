@@ -379,6 +379,12 @@
     overflow: hidden;
   }
 
+  .pane-content .print-area {
+    flex: 1;
+    overflow: visible;
+    min-height: 0;
+  }
+
   .grid-container {
     flex: 1;
     min-height: 0;
@@ -584,26 +590,28 @@
     </Pane>
     {#if visiblePane}
       <Pane maxSize={paneConfig.maxSize} minSize={paneConfig.minSize}>
-        {#if selected}
-          <div
-            style="display:flex; justify-content: space-between; align-items:center; padding:.5rem 1rem; border-bottom:1px solid #eee;"
-          >
-            <strong>WO Preview</strong>
-            <div style="display:flex; gap:.5rem;">
-              <button class="pretty-btn teal" onclick={printWO}>Print</button>
-            </div>
-          </div>
-          {#key selected?.row?.id ?? selected?.index}
+        <div class="pane-content">
+          {#if selected}
             <div
-              bind:this={woRef}
-              class="print-area {isBatchPrinting ? 'hide-for-batch' : ''}"
+              style="display:flex; justify-content: space-between; align-items:center; padding:.5rem 1rem; border-bottom:1px solid #eee;"
             >
-              <WorkOrderView row={selected.row}></WorkOrderView>
+              <strong>WO Preview</strong>
+              <div style="display:flex; gap:.5rem;">
+                <button class="pretty-btn teal" onclick={printWO}>Print</button>
+              </div>
             </div>
-          {/key}
-        {:else}
-          <div style="padding:1rem; color:#6b7280;">Select a row to preview the Work Order.</div>
-        {/if}
+            {#key selected?.row?.id ?? selected?.index}
+              <div
+                bind:this={woRef}
+                class="print-area {isBatchPrinting ? 'hide-for-batch' : ''}"
+              >
+                <WorkOrderView row={selected.row}></WorkOrderView>
+              </div>
+            {/key}
+          {:else}
+            <div style="padding:1rem; color:#6b7280;">Select a row to preview the Work Order.</div>
+          {/if}
+        </div>
       </Pane>
     {/if}
   </Splitpanes>
