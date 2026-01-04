@@ -1,0 +1,146 @@
+/**
+ * Type 2 Excel Schema - Production Order Format
+ * Column definitions for the new production order file type
+ */
+
+export const TYPE2_COLUMNS_EXCEL = [
+  "Customer PO#",
+  "No.",
+  "BRAND",
+  "PCS",
+  "MATERIAL",
+  "COLOR",
+  "LENS_TYPE/ Device Type",
+  "EYES",
+  "KM-CODE/K-Code",
+  "POWER-CODE",
+  "Base curve/BC1",
+  "C.T. (dry)/Center Thick",
+  "Lens Power/PW1",
+  "ADD",
+  "Sag/SAG HEIGHT",
+  "Defocus",
+  "Direction",
+  "Ballast",
+  "OAD (dry)/DIAM",
+  "OZ (dry)/OZ 1",
+  "Toric",
+  "shopping Cart #",
+  "PO Date",
+  "Device",
+  "Mfg",
+  "Mat_Code",
+  "Mat _Lot",
+  "GTIN",
+  "Addr To",
+  "Price Code",
+  "Ship To",
+  "Sold To",
+  "Bill To",
+  "Patient name",
+  "Center Thick",
+  "Edge Thick",
+  "CNTR Code"
+];
+
+// Required columns for Type 2 (GOV orders)
+export const TYPE2_EXPECTED_REQUIRED = [
+  "Customer PO#",
+  "No.",
+  "BRAND",
+  "PCS",
+  "MATERIAL",
+  "COLOR",
+  "LENS_TYPE/ Device Type",
+  "EYES",
+  "KM-CODE/K-Code",
+  "POWER-CODE",
+  "Base curve/BC1",
+  "C.T. (dry)/Center Thick",
+  "Lens Power/PW1",
+  "OAD (dry)/DIAM",
+  "OZ (dry)/OZ 1",
+  "PO Date",
+  "Device",
+  "Mfg",
+  "Mat_Code",
+  "Mat _Lot",
+  "GTIN",
+  "Addr To",
+  "Ship To",
+  "Sold To",
+  "Bill To",
+  "Center Thick",
+  "Edge Thick"
+];
+
+// Optional columns for Type 2 (lens-type dependent or metadata)
+export const TYPE2_EXPECTED_OPTIONAL = [
+  "ADD",
+  "Sag/SAG HEIGHT",
+  "Defocus",
+  "Direction",
+  "Ballast",
+  "Toric",
+  "shopping Cart #",
+  "Price Code",
+  "Patient name",
+  "CNTR Code"
+];
+
+// Field mappings for normalizing Type 2 columns to internal schema
+export const TYPE2_FIELD_MAPPINGS = {
+  "Customer PO#": "po",
+  "No.": "no",
+  "BRAND": "brand",
+  "PCS": "pcs",
+  "MATERIAL": "material",
+  "COLOR": "color",
+  "LENS_TYPE/ Device Type": "Type",
+  "EYES": "od_os",
+  "KM-CODE/K-Code": "kCode",
+  "POWER-CODE": "pCode",
+  "Base curve/BC1": "bc1",
+  "C.T. (dry)/Center Thick": "ctDry",
+  "Lens Power/PW1": "pw1",
+  "ADD": "add",
+  "Sag/SAG HEIGHT": "sagHeight",
+  "Defocus": "defocus",
+  "Direction": "direction",
+  "Ballast": "ballast",
+  "OAD (dry)/DIAM": "diam",
+  "OZ (dry)/OZ 1": "oz1",
+  "Toric": "toric",
+  "shopping Cart #": "shoppingNumber",
+  "PO Date": "PO_date",
+  "Device": "Device",
+  "Mfg": "Mfg",
+  "Mat_Code": "Mat_Code",
+  "Mat _Lot": "Mat_Lot",
+  "GTIN": "GTIN",
+  "Addr To": "Ship_Code",
+  "Price Code": "Price_Code",
+  "Ship To": "Ship_To",
+  "Sold To": "Sold_To",
+  "Bill To": "Bill_To",
+  "Patient name": "Patient_Name",
+  "shopping Cart #": "shoppingNumber",
+  "Center Thick": "Center_Thick",
+  "Edge Thick": "Edge_Thick",
+  "CNTR Code": "Container_Code"
+};
+
+// Numeric fields for Type 2 (for column alignment)
+export const TYPE2_NUMERIC_FIELDS = new Set([
+  "PCS",
+  "Base curve/BC1",
+  "C.T. (dry)/Center Thick",
+  "Lens Power/PW1",
+  "ADD",
+  "Sag/SAG HEIGHT",
+  "Defocus",
+  "OAD (dry)/DIAM",
+  "OZ (dry)/OZ 1",
+  "Center Thick",
+  "Edge Thick"
+]);
