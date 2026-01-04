@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
-import type { AppSettings } from "../renderer/src/lib/types";
+import type { AppSettings } from "../shared/types";
 
 // Declare global __APP_VERSION__
 declare const __APP_VERSION__: string;

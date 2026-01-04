@@ -7,7 +7,6 @@
       "@/*": ["./src/*"],
       "$lib/*": ["./src/renderer/src/lib/*"]
     },
-    "types": ["electron-vite/client"],
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
@@ -31,6 +30,7 @@
     "src/renderer/src/**/*.tsx",
     "src/renderer/src/**/*.svelte",
     "src/renderer/src/**/*.js",
-    "src/preload/*.d.ts"
+    "src/preload/*.d.ts",
+    "src/shared/**/*.ts"
   ]
 }

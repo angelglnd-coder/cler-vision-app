@@ -6,12 +6,19 @@
 // ============================================================================
 // Re-export shared types
 // ============================================================================
-export type {
+import type {
   AppSettings,
   TraySettings,
   PrintSettings,
   NotificationSettings
 } from '../../../../shared/types';
+
+export type {
+  AppSettings,
+  TraySettings,
+  PrintSettings,
+  NotificationSettings
+};
 
 // ============================================================================
 // Work Order Domain Types

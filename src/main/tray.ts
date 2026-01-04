@@ -1,7 +1,7 @@
 import { Tray, Menu, app, BrowserWindow } from 'electron';
 import path from 'path';
 
-let tray = null;
+let tray: Tray | null = null;
 
 /**
  * Get the path to the tray icon
@@ -60,7 +60,7 @@ function toggleWindow(mainWindow) {
  * @param {object} settings - Current application settings
  * @returns {Tray} The created tray instance
  */
-export function createTray(mainWindow, settings) {
+export function createTray(mainWindow: BrowserWindow, _settings?: any): Tray | null {
   // Only create tray on Windows
   if (process.platform !== 'win32') {
     console.log('Tray icon is only supported on Windows');
@@ -123,7 +123,7 @@ export function createTray(mainWindow, settings) {
  * @param {BrowserWindow} mainWindow - The main application window
  * @param {object} settings - Updated application settings
  */
-export function updateTrayMenu(mainWindow, settings) {
+export function updateTrayMenu(mainWindow: BrowserWindow, _settings?: any): void {
   if (!tray) return;
 
   // Recreate context menu with updated settings if needed

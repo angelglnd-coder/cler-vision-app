@@ -1,9 +1,12 @@
 <script>
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import AppSidebar from "../src/components/AppSidebar.svelte";
+  import EnvironmentBadge from "../src/components/EnvironmentBadge.svelte";
   import { Router } from "sv-router";
   import "../src/router/router";
 </script>
+
+<EnvironmentBadge />
 
 <Sidebar.Provider>
   <AppSidebar />

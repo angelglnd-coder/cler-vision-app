@@ -44,10 +44,10 @@ function createWindow() {
       event.preventDefault();
       mainWindow.hide();
 
-      // Show notification if enabled
-      if (settings.tray.showNotifications) {
+      // Show notification if enabled (Windows only)
+      if (settings.tray.showNotifications && process.platform === 'win32') {
         const tray = getTray();
-        if (tray) {
+        if (tray && 'displayBalloon' in tray) {
           tray.displayBalloon({
             title: "clerVisionApp",
             content: "Application minimized to tray"
