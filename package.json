@@ -1,6 +1,6 @@
 {
   "name": "cler-vision-app5",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "An Electron application with Svelte",
   "main": "./out/main/index.js",
   "author": "example.com",
