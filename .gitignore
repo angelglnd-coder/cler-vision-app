@@ -9,5 +9,10 @@ private
 # Environment files
 .env
 .env.local
+.env.*.local
 .env.production
+.env.staging
 .env.development
+
+# Keep .env.example in git for documentation
+!.env.example
