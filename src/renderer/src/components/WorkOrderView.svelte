@@ -208,13 +208,20 @@
     border: 1px solid rgba(14, 165, 233, 0.3);
   }
 
+  .barcode-label {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--label);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    opacity: 0.9;
+  }
+
   .barcode-container {
     display: flex;
-    justify-content: center;
-    margin: -17px 0 10px 0;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    justify-content: flex-start;
+    margin-bottom: 10px;
   }
 
   /* header grid (3 columns of key/value) */
@@ -572,6 +579,7 @@
 
   <!-- Barcode Section -->
   {#if data.woNumber}
+    <div class="barcode-label">Work Order</div>
     <div class="barcode-container">
       <Barcode value={data.woNumber} height={35} width={1.5} fontSize={11} margin={8} />
     </div>
