@@ -4,6 +4,7 @@ import icon from "../../resources/icon.png?asset";
 import { loadSettings } from "./settings.js";
 import { initializeSettingsHandlers, getCurrentSettings } from "./settings-handlers.js";
 import { createTray, getTray } from "./tray.js";
+import { initializeAutoUpdater } from "./updater.js";
 
 let mainWindow;
 let isQuitting = false;
@@ -99,6 +100,9 @@ app.whenReady().then(() => {
   if (process.platform === "win32") {
     createTray(mainWindow, settings);
   }
+
+  // Initialize auto-updater
+  initializeAutoUpdater(mainWindow);
 
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
