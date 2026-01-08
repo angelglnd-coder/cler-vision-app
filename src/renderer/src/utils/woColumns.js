@@ -1,6 +1,7 @@
 export const WO_COLUMNS = [
   "woNumber",
   "patientName",
+  "doctorName",
   "po",
   "poDate",
   "batchNo",
@@ -60,6 +61,7 @@ export const WO_COLUMNS = [
 
 export const WO_COLUMNS_EXCEL = [
   "Patient Name",
+  "Doctor Name",
   "Customer PO#",
   "PO Date",
   "No.",
@@ -132,6 +134,7 @@ export const EXPECTED_REQUIRED = [
 
 export const EXPECTED_OPTIONAL = [
   "Note", // new optional column
+  "Doctor Name", // optional field for HAI orders
 ];
 
 // export const SHEET_NAME = "WorkOrders"; // <— your single tab
@@ -142,6 +145,7 @@ export const SHEET_NAME_TAB = "entry"; // <— your single tab
 export const COLUMN_DISPLAY_NAMES = {
   woNumber: "WO Number",
   patientName: "Patient Name",
+  doctorName: "Doctor Name",
   po: "Customer PO#",
   poDate: "PO Date",
   batchNo: "Batch No",

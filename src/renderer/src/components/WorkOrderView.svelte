@@ -253,6 +253,14 @@
     overflow-wrap: break-word;
     word-break: break-word;
   }
+  .kv .value.highlight {
+    background-color: #fef08a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    width: fit-content;
+    border: 1px solid #ca8a04;
+  }
   .input-field {
     width: 100%;
     padding: 4px 8px;
@@ -637,7 +645,7 @@
       <div class="value">{data.deviceType || "—"}</div>
 
       <div class="label">Laser Mark:</div>
-      <div class="value code">{data.laserMark || "—"}</div>
+      <div class="value code highlight">{data.laserMark || "—"}</div>
 
       <div class="label">PRG:</div>
       <div class="value code">{data.prgm || "—"}</div>

@@ -38,6 +38,7 @@ export const TYPE2_COLUMNS_EXCEL = [
   "Sold To",
   "Bill To",
   "Patient name",
+  "Doctor Name",
   "Center Thick",
   "Edge Thick",
   "CNTR Code"
@@ -85,6 +86,7 @@ export const TYPE2_EXPECTED_OPTIONAL = [
   "shopping Cart #",
   "Price Code",
   "Patient name",
+  "Doctor Name",
   "CNTR Code"
 ];
 
@@ -124,6 +126,7 @@ export const TYPE2_FIELD_MAPPINGS = {
   "Sold To": "Sold_To",
   "Bill To": "Bill_To",
   "Patient name": "Patient_Name",
+  "Doctor Name": "Doctor_Name",
   "shopping Cart #": "shoppingNumber",
   "Center Thick": "Center_Thick",
   "Edge Thick": "Edge_Thick",
