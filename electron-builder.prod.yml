@@ -16,12 +16,16 @@ win:
   icon: build/icon.png
   target:
     - nsis
-  sign: false # Disable code signing temp
+  sign: false # Code signing disabled for v1.0.0
+  publisherName: CLER Vision Team
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  createStartMenuShortcut: true
+  oneClick: false
+  allowToChangeInstallationDirectory: true
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:

@@ -5,6 +5,7 @@ import { loadSettings } from "./settings.js";
 import { initializeSettingsHandlers, getCurrentSettings } from "./settings-handlers.js";
 import { createTray, getTray } from "./tray.js";
 import { initializeAutoUpdater } from "./updater.js";
+import { getCSP } from "./csp.js";
 
 let mainWindow;
 let isQuitting = false;
@@ -66,6 +67,20 @@ function createWindow() {
       event.preventDefault();
       mainWindow.hide();
     }
+  });
+
+  // Inject dynamic CSP after page loads
+  mainWindow.webContents.on("did-finish-load", () => {
+    const csp = getCSP();
+    mainWindow.webContents.executeJavaScript(`
+      (function() {
+        const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        if (meta) {
+          meta.setAttribute('content', ${JSON.stringify(csp)});
+          console.log('[CSP] Dynamic CSP injected');
+        }
+      })();
+    `).catch(err => console.error('[CSP] Failed to inject CSP:', err));
   });
 
   // HMR for renderer base on electron-vite cli.
