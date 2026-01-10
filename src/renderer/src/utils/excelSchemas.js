@@ -20,6 +20,7 @@ import {
 // Type 1 field mappings (Excel display name → internal field name)
 const TYPE1_FIELD_MAPPINGS = {
   "Patient Name": "Patient_Name",
+  "Doctor Name": "Doctor_Name",
   "Customer PO#": "PO",
   "PO Date": "PO_date",
   "No.": "No",

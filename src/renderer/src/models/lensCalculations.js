@@ -19,7 +19,12 @@ export const toNum = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 // unified output helper
-const cap2 = (v) => (v != null && Number.isFinite(v) ? Math.floor(v * 100) / 100 : v);
+// Fixed: Use Math.round to match Excel ROUND() function behavior
+const cap2 = (v) => {
+  if (v == null || !Number.isFinite(v)) return v;
+  // Use Math.round to round to 2 decimal places (matches Excel ROUND function)
+  return Math.round(v * 100) / 100;
+};
 const ok = (value) => ({ value: cap2(value) });
 const err = (_error) => ({ value: null, _error });
 
@@ -94,6 +99,7 @@ const computeOZ1OZ2 = (OZ) => {
 };
 
 // RC1_radius = 337.5 / ( K - P*FX + JESSEN - TORICITY_offset )
+// Returns both rounded value for display and raw value for chained calculations
 function computeRC1Radius(K, P, FX, JESSEN, TORICITY_offset = 0) {
   const k = toNum(K),
     p = toNum(P),
@@ -103,14 +109,27 @@ function computeRC1Radius(K, P, FX, JESSEN, TORICITY_offset = 0) {
   if (k == null || p == null || fx == null || j == null) return err("missing input");
   const denom = k - p * fx + j - t;
   if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
-  return ok(337.5 / denom);
+  const rawValue = 337.5 / denom;
+  return { value: cap2(rawValue), _raw: rawValue }; // Preserve raw value for precision
 }
 
-// RC1_tor = 337.5 / ( 337.5 / RC1_radius + TORICITY_value )
-function computeRC1Tor(RC1_radius, TORICITY_value) {
-  const r = toNum(RC1_radius),
-    t = toNum(TORICITY_value);
-  if (r == null || t == null) return err("missing RC1_radius or TORICITY_value");
+// RC1_tor = 337.5 / ( 337.5 / RC1_radius_raw + TORICITY_value )
+// Uses raw RC1_radius for precision, rounds only final result
+// Expects RC1_radius_result to be the full result object from computeRC1Radius
+function computeRC1Tor(RC1_radius_result, TORICITY_value) {
+  // Propagate errors from RC1_radius calculation
+  if (RC1_radius_result?._error) {
+    return err(RC1_radius_result._error);
+  }
+
+  // Use raw value for precision, fallback to rounded value for backward compatibility
+  const r = RC1_radius_result?._raw ?? toNum(RC1_radius_result?.value ?? RC1_radius_result);
+  const t = toNum(TORICITY_value);
+
+  if (r == null) return err("missing RC1_radius");
+  if (t == null) return err("missing TORICITY_value");
+  if (t < 0) return err("TORICITY_value must be non-negative");
+
   const denom = 337.5 / r + t;
   if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
   return ok(337.5 / denom);
@@ -138,13 +157,20 @@ function computeAC1Tor(K, TORICITY_value, TORICITY_offset = 0) {
 }
 
 // AC2 offsets added on top of AC1 → return { radius:{value,_error}, tor:{value,_error} }
-function computeAC2RadiusTor(AC1_radius, eValue) {
+// Fixed: AC2_radius uses AC1_radius, AC2_tor uses AC1_tor
+function computeAC2RadiusTor(AC1_radius, AC1_tor, eValue) {
   const r1 = toNum(AC1_radius),
+    t1 = toNum(AC1_tor),
     e = toNum(eValue);
   if (r1 == null || e == null)
     return {
       radius: err("missing AC1_radius or eValue"),
       tor: err("missing AC1_radius or eValue"),
+    };
+  if (t1 == null)
+    return {
+      radius: ok(r1 + 0), // fallback if no tor
+      tor: err("missing AC1_tor"),
     };
 
   let add = null;
@@ -181,16 +207,22 @@ function computeAC2RadiusTor(AC1_radius, eValue) {
       tor: err("eValue out of range (0.30–1.55)"),
     };
 
-  const v = r1 + add;
-  return { radius: ok(v), tor: ok(v) };
+  return { radius: ok(r1 + add), tor: ok(t1 + add) };
 }
-function computeAC3RadiusTor(AC1_radius, eValue) {
+// Fixed: AC3_radius uses AC1_radius, AC3_tor uses AC1_tor
+function computeAC3RadiusTor(AC1_radius, AC1_tor, eValue) {
   const r1 = toNum(AC1_radius),
+    t1 = toNum(AC1_tor),
     e = toNum(eValue);
   if (r1 == null || e == null)
     return {
       radius: err("missing AC1_radius or eValue"),
       tor: err("missing AC1_radius or eValue"),
+    };
+  if (t1 == null)
+    return {
+      radius: ok(r1 + 0), // fallback if no tor
+      tor: err("missing AC1_tor"),
     };
 
   let add = null;
@@ -213,8 +245,7 @@ function computeAC3RadiusTor(AC1_radius, eValue) {
       tor: err("eValue out of range (0.30–0.85)"),
     };
 
-  const v = r1 + add;
-  return { radius: ok(v), tor: ok(v) };
+  return { radius: ok(r1 + add), tor: ok(t1 + add) };
 }
 
 // widths (also normalized to {value,_error})
@@ -314,13 +345,13 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
     const OZ1_OZ2 = computeOZ1OZ2(flds.OZ);
 
     const rc1Radius = computeRC1Radius(kEff, pEff, flds.FX, flds.JESSEN, toricity.offset);
-    const rc1Tor = computeRC1Tor(rc1Radius.value, toricity.value);
+    const rc1Tor = computeRC1Tor(rc1Radius, toricity.value); // Pass full result object for precision
 
     const ac1Radius = computeAC1Radius(kEff, toricity.offset);
     const ac1Tor = computeAC1Tor(kEff, toricity.value, toricity.offset);
 
-    const AC2 = computeAC2RadiusTor(ac1Radius.value, e);
-    const AC3 = computeAC3RadiusTor(ac1Radius.value, e);
+    const AC2 = computeAC2RadiusTor(ac1Radius.value, ac1Tor.value, e);
+    const AC3 = computeAC3RadiusTor(ac1Radius.value, ac1Tor.value, e);
 
     // widths via REF2
     const ref2Vals = flds.OZ != null ? getRef2ByDiamOz(ref2Lookup, DIAM, flds.OZ) : null;

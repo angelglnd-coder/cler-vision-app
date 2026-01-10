@@ -768,7 +768,7 @@ export const woExcelLoaderMachine = setup({
                 ...row,
                 WO_Number: woNumber,
                 Account_ID: soldTo,
-                print_count: 0,
+                print_count: 1,
               };
             } catch (error) {
               errors.push(`Row ${idx + 1}: ${error.message}`);

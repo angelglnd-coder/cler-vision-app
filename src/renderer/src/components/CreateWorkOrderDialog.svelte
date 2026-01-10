@@ -100,6 +100,7 @@
       transformed.cylToric = toStringOrEmpty(row.toric);
       transformed.shoppingCart = toStringOrEmpty(row.shoppingNumber);
       transformed.patientName = toStringOrEmpty(row.Patient_Name);
+      transformed.doctorName = toStringOrUndefined(row.Doctor_Name);
       transformed.shipTo = toStringOrEmpty(row.Ship_To);
       transformed.priceCode = toStringOrEmpty(row.Price_Code);
       transformed.shipCode = toStringOrEmpty(row.Ship_Code);
@@ -109,6 +110,7 @@
     } else {
       // Type 1 (HAI ORDERS) specific mappings
       transformed.patientName = toStringOrEmpty(row.Patient_Name);
+      transformed.doctorName = toStringOrEmpty(row.Doctor_Name);
       transformed.po = toStringOrEmpty(row.PO);
       transformed.poDate = toStringOrUndefined(row.PO_date); // Date field - omit if empty
       transformed.no = toStringOrEmpty(row.No);

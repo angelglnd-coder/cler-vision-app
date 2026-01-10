@@ -31,6 +31,7 @@ export type WorkOrder = {
   id: number;
   woNumber: string;
   patientName: string;
+  doctorName?: string;
   po: string;
   poDate: string;
   batchNo?: string;
