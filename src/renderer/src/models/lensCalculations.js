@@ -99,6 +99,7 @@ const computeOZ1OZ2 = (OZ) => {
 };
 
 // RC1_radius = 337.5 / ( K - P*FX + JESSEN - TORICITY_offset )
+// Returns both rounded value for display and raw value for chained calculations
 function computeRC1Radius(K, P, FX, JESSEN, TORICITY_offset = 0) {
   const k = toNum(K),
     p = toNum(P),
@@ -108,14 +109,27 @@ function computeRC1Radius(K, P, FX, JESSEN, TORICITY_offset = 0) {
   if (k == null || p == null || fx == null || j == null) return err("missing input");
   const denom = k - p * fx + j - t;
   if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
-  return ok(337.5 / denom);
+  const rawValue = 337.5 / denom;
+  return { value: cap2(rawValue), _raw: rawValue }; // Preserve raw value for precision
 }
 
-// RC1_tor = 337.5 / ( 337.5 / RC1_radius + TORICITY_value )
-function computeRC1Tor(RC1_radius, TORICITY_value) {
-  const r = toNum(RC1_radius),
-    t = toNum(TORICITY_value);
-  if (r == null || t == null) return err("missing RC1_radius or TORICITY_value");
+// RC1_tor = 337.5 / ( 337.5 / RC1_radius_raw + TORICITY_value )
+// Uses raw RC1_radius for precision, rounds only final result
+// Expects RC1_radius_result to be the full result object from computeRC1Radius
+function computeRC1Tor(RC1_radius_result, TORICITY_value) {
+  // Propagate errors from RC1_radius calculation
+  if (RC1_radius_result?._error) {
+    return err(RC1_radius_result._error);
+  }
+
+  // Use raw value for precision, fallback to rounded value for backward compatibility
+  const r = RC1_radius_result?._raw ?? toNum(RC1_radius_result?.value ?? RC1_radius_result);
+  const t = toNum(TORICITY_value);
+
+  if (r == null) return err("missing RC1_radius");
+  if (t == null) return err("missing TORICITY_value");
+  if (t < 0) return err("TORICITY_value must be non-negative");
+
   const denom = 337.5 / r + t;
   if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) return err("division by zero");
   return ok(337.5 / denom);
@@ -331,7 +345,7 @@ export function createLensCalculator({ typeLookup, refLookup, ref2Lookup = null,
     const OZ1_OZ2 = computeOZ1OZ2(flds.OZ);
 
     const rc1Radius = computeRC1Radius(kEff, pEff, flds.FX, flds.JESSEN, toricity.offset);
-    const rc1Tor = computeRC1Tor(rc1Radius.value, toricity.value);
+    const rc1Tor = computeRC1Tor(rc1Radius, toricity.value); // Pass full result object for precision
 
     const ac1Radius = computeAC1Radius(kEff, toricity.offset);
     const ac1Tor = computeAC1Tor(kEff, toricity.value, toricity.offset);
