@@ -3,8 +3,6 @@
  * Automatically suppresses debug/info logs in production builds
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
 class Logger {
   private isDev: boolean;
   private isStaging: boolean;
