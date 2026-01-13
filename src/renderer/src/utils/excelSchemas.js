@@ -52,7 +52,8 @@ const TYPE1_FIELD_MAPPINGS = {
   "Edge Thick": "Edge_Thick",
   "Center Thick": "Center_Thick",
   "eValue": "eValue",
-  "Container Code": "Container_Code"
+  "Container Code": "Container_Code",
+  "Blank Thickness": "Blank_Thick"
 };
 
 // Type 1 numeric fields (for column alignment)

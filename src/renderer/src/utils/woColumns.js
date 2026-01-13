@@ -36,6 +36,7 @@ export const WO_COLUMNS = [
   "centerThick",
   "eValue",
   "containerCode",
+  "blankThickness",
   "bc1",
   "bc2",
   "pw1",
@@ -94,6 +95,7 @@ export const WO_COLUMNS_EXCEL = [
   "Center Thick",
   "eValue",
   "Container Code",
+  "Blank Thickness",
 ];
 // 2) Expected columns (display names for messages)
 export const EXPECTED_REQUIRED = [
@@ -135,6 +137,7 @@ export const EXPECTED_REQUIRED = [
 export const EXPECTED_OPTIONAL = [
   "Note", // new optional column
   "Doctor Name", // optional field for HAI orders
+  "Blank Thickness", // optional thickness field
 ];
 
 // export const SHEET_NAME = "WorkOrders"; // <— your single tab
@@ -180,6 +183,7 @@ export const COLUMN_DISPLAY_NAMES = {
   centerThick: "Center Thick",
   eValue: "E-Value",
   containerCode: "Container Code",
+  blankThickness: "Blank Thickness",
   bc1: "BC1",
   bc2: "BC2",
   pw1: "PW1",
