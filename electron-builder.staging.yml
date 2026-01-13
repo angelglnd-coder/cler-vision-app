@@ -13,16 +13,22 @@ asarUnpack:
   - resources/**
 win:
   executableName: ClerVision-Staging
-  icon: build/icon.png
+  icon: build/icon-staging.ico
   target:
     - nsis
-  sign: null  # Disable code signing for staging builds
+  sign: null # Disable code signing for staging builds
 nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  runAfterFinish: false
+  guid: "f6e5d4c3-b2a1-4c5b-9d8e-1f2a3b4c5d6e"
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 mac:
+  icon: build/icon-staging.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -33,6 +39,7 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
+  icon: build/icon-staging.png
   target:
     - AppImage
     - snap
@@ -44,4 +51,4 @@ appImage:
 npmRebuild: false
 publish:
   provider: generic
-  url: http://192.168.167.77:4000/updates/staging
+  url: http://192.168.167.77:4000/updates/clervision/staging
