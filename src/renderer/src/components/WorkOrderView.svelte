@@ -20,7 +20,7 @@
       isOverflowing = hasOverflow;
 
       if (hasOverflow) {
-        console.log('Flex-table overflow detected:', {
+        console.log("Flex-table overflow detected:", {
           scrollHeight: flexTableElement.scrollHeight,
           clientHeight: flexTableElement.clientHeight,
           overflow: flexTableElement.scrollHeight - flexTableElement.clientHeight,
@@ -725,26 +725,26 @@
     </div>
     <div class="table-body" bind:this={flexTableElement}>
       {#each Array(Math.ceil(specRows.length / 2)) as _, i}
-      {#if i < 8}
-        <!-- First 8 rows with QC column -->
-        <div class="t-row-with-qc">
-          <div class="cell"></div>
-          <div class="cell">{specRows[i * 2]?.desc || ""}</div>
-          <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
-          <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
-          <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
-        </div>
-      {:else}
-        <!-- Remaining rows without QC column (hidden QC cell for alignment) -->
-        <div class="t-row">
-          <div class="cell qc-hidden"></div>
-          <div class="cell">{specRows[i * 2]?.desc || ""}</div>
-          <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
-          <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
-          <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
-        </div>
-      {/if}
-    {/each}
+        {#if i < 8}
+          <!-- First 8 rows with QC column -->
+          <div class="t-row-with-qc">
+            <div class="cell"></div>
+            <div class="cell">{specRows[i * 2]?.desc || ""}</div>
+            <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
+            <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
+            <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
+          </div>
+        {:else}
+          <!-- Remaining rows without QC column (hidden QC cell for alignment) -->
+          <div class="t-row">
+            <div class="cell qc-hidden"></div>
+            <div class="cell">{specRows[i * 2]?.desc || ""}</div>
+            <div class="cell num">{specRows[i * 2] ? fmt(specRows[i * 2].param) : ""}</div>
+            <div class="cell">{specRows[i * 2 + 1]?.desc || ""}</div>
+            <div class="cell num">{specRows[i * 2 + 1] ? fmt(specRows[i * 2 + 1].param) : ""}</div>
+          </div>
+        {/if}
+      {/each}
     </div>
   </div>
 </div>
