@@ -98,6 +98,7 @@
     mfg: g("mfg"),
     cylToric: g("cylToric"),
     priceCode: g("priceCode"),
+    blankThickness: g("blankThickness"),
   };
 
   // computed helpers
@@ -628,7 +629,8 @@
       <div class="value">{data.doctor || "—"}</div>
 
       <div class="label">Blank THKN:</div>
-      <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div>
+      <div class="value">{data.blankThickness || "—"}</div>
+      <!-- <div class="value"><input type="text" class="input-field" value="" placeholder="—" /></div> -->
     </div>
 
     <!-- Column 3 -->
