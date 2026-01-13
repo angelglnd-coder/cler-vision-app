@@ -107,6 +107,7 @@
       transformed.centerThick = toStringOrEmpty(row.Center_Thick);
       transformed.edgeThick = toStringOrEmpty(row.Edge_Thick);
       transformed.containerCode = toStringOrEmpty(row.Container_Code);
+      transformed.blankThickness = toStringOrEmpty(row.Blank_Thick);
     } else {
       // Type 1 (HAI ORDERS) specific mappings
       transformed.patientName = toStringOrEmpty(row.Patient_Name);
@@ -134,6 +135,7 @@
       transformed.centerThick = toStringOrEmpty(row.Center_Thick);
       transformed.eValue = toStringOrEmpty(row.eValue);
       transformed.containerCode = toStringOrEmpty(row.Container_Code);
+      transformed.blankThickness = toStringOrEmpty(row.Blank_Thick);
 
       // Calculated fields (Type 1 only)
       transformed.bc1 = toStringOrEmpty(row.BC1_BC2 || row.bc1);
