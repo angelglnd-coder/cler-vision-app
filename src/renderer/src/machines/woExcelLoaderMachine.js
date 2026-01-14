@@ -355,6 +355,8 @@ export const woExcelLoaderMachine = setup({
       fileType: ({ event }) => event.output.fileType,
       processingConfig: ({ event }) => event.output.processingConfig,
       hasMissingColumns: ({ event }) => event.output.hasMissingColumns ?? false,
+      hasMissingEValue: ({ event }) => event.output.hasMissingEValue ?? false,
+      eValueValidationErrors: ({ event }) => event.output.eValueValidationErrors ?? [],
     }),
     setError: assign({
       errors: ({ event }) => [event.error?.message ?? String(event.error || "Unknown error")],
@@ -374,6 +376,8 @@ export const woExcelLoaderMachine = setup({
       fileType: null,
       processingConfig: null,
       hasMissingColumns: false,
+      hasMissingEValue: false,
+      eValueValidationErrors: () => [],
     }),
     setEmitResult: assign({
       queText: ({ event }) => event.output.queText,
@@ -563,16 +567,41 @@ export const woExcelLoaderMachine = setup({
       // Pass through validation messages (missing/extra columns) as-is
       const errors = parseOutput.errors || [];
 
+      // Row-level eValue validation for HAI orders (type1)
+      let eValueErrors = [];
+      if (schema.id === "type1") {
+        // HAI orders require eValue
+        normalized.forEach((row, idx) => {
+          const eValue = row.eValue ?? row.EValue ?? null;
+          if (!eValue || String(eValue).trim() === "") {
+            eValueErrors.push(idx + 1); // 1-based row numbers
+          }
+        });
+      }
+
+      const hasMissingEValue = eValueErrors.length > 0;
+      const eValueErrorMessage = hasMissingEValue
+        ? `❌ Missing eValue: ${eValueErrors.length} HAI order(s) require eValue field (rows: ${eValueErrors.slice(0, 10).join(", ")}${eValueErrors.length > 10 ? "..." : ""})`
+        : null;
+
+      // Add to errors array if present
+      const allErrors = [...errors];
+      if (eValueErrorMessage) {
+        allErrors.push(eValueErrorMessage);
+      }
+
       return {
         sheetName: parseOutput.sheetName,
         sheetNames: parseOutput.sheetNames,
-        errors,
+        errors: allErrors,
         data: normalized,
         columns: columns,
         detectedSchema: schema,
         fileType: schema.id,
         processingConfig: schema.processing,
         hasMissingColumns: parseOutput.missingColumns?.length > 0,
+        hasMissingEValue,
+        eValueValidationErrors: eValueErrors,
       };
     }),
 
@@ -814,6 +843,8 @@ export const woExcelLoaderMachine = setup({
     fileType: null, // "type1" | "type2"
     processingConfig: null, // Schema processing flags
     hasMissingColumns: false, // Track if required columns are missing
+    hasMissingEValue: false, // Track if HAI orders are missing eValue
+    eValueValidationErrors: [], // Array of row numbers with missing eValue
   },
   states: {
     idle: {

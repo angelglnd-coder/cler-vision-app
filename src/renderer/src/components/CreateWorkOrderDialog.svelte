@@ -107,6 +107,7 @@
       transformed.centerThick = toStringOrEmpty(row.Center_Thick);
       transformed.edgeThick = toStringOrEmpty(row.Edge_Thick);
       transformed.containerCode = toStringOrEmpty(row.Container_Code);
+      transformed.blankThickness = toStringOrEmpty(row.Blank_Thick);
     } else {
       // Type 1 (HAI ORDERS) specific mappings
       transformed.patientName = toStringOrEmpty(row.Patient_Name);
@@ -134,6 +135,7 @@
       transformed.centerThick = toStringOrEmpty(row.Center_Thick);
       transformed.eValue = toStringOrEmpty(row.eValue);
       transformed.containerCode = toStringOrEmpty(row.Container_Code);
+      transformed.blankThickness = toStringOrEmpty(row.Blank_Thick);
 
       // Calculated fields (Type 1 only)
       transformed.bc1 = toStringOrEmpty(row.BC1_BC2 || row.bc1);
@@ -421,15 +423,26 @@
 
   .data-preview {
     padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: calc(70vh - 2rem);
+    overflow: hidden;
+  }
+
+  .messages-container {
+    flex-shrink: 0;
+    margin-bottom: 1rem;
+    max-height: 30%;
+    overflow-y: auto;
   }
 
   .grid-wrapper {
-    height: 60vh;
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    overflow-x: auto;
+    overflow: auto;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
-    overflow: hidden;
   }
 
   .mt-4 {
@@ -621,30 +634,34 @@
         </div>
       {:else if (state?.matches("ready") || state?.matches("readyCalculations")) && rows.length > 0}
         <div class="data-preview">
-          {#if submitSuccess}
-            <div class="success-message">
-              ✅ Successfully created {rows.length} work order{rows.length !== 1 ? "s" : ""}!
-            </div>
-          {/if}
-
-          {#if submitError && validationErrors.length === 0}
-            <div class="error-message">
-              ❌ {submitError}
-            </div>
-          {/if}
-
-          {#if errors.length > 0}
-            <div class="warning-container">
-              {#each errors as error, i (i)}
-                <div class={error.startsWith("ℹ️") ? "info-message" : "warning-message"}>
-                  {error}
+          {#if submitSuccess || submitError || errors.length > 0}
+            <div class="messages-container">
+              {#if submitSuccess}
+                <div class="success-message">
+                  ✅ Successfully created {rows.length} work order{rows.length !== 1 ? "s" : ""}!
                 </div>
-              {/each}
+              {/if}
+
+              {#if submitError && validationErrors.length === 0}
+                <div class="error-message">
+                  ❌ {submitError}
+                </div>
+              {/if}
+
+              {#if errors.length > 0}
+                <div class="warning-container">
+                  {#each errors as error, i (i)}
+                    <div class={error.startsWith("ℹ️") ? "info-message" : error.startsWith("❌") ? "error-message" : "warning-message"}>
+                      {error}
+                    </div>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {/if}
 
           {#if validationErrors.length > 0}
-            <Splitpanes style="height: 60vh">
+            <Splitpanes style="height: 100%">
               <Pane>
                 <div class="splitpane-content">
                   <div class="splitpane-header">
@@ -705,7 +722,7 @@
         {#if !rows[0]?.WO_Number}
           <Button
             onclick={handleGenerateWorkOrders}
-            disabled={isSubmitting || state.context?.hasMissingColumns}
+            disabled={isSubmitting || state.context?.hasMissingColumns || state.context?.hasMissingEValue}
           >
             Generate Work Orders
           </Button>

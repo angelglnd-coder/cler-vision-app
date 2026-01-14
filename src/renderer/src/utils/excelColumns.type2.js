@@ -41,7 +41,8 @@ export const TYPE2_COLUMNS_EXCEL = [
   "Doctor Name",
   "Center Thick",
   "Edge Thick",
-  "CNTR Code"
+  "CNTR Code",
+  "Blank Thickness"
 ];
 
 // Required columns for Type 2 (GOV orders)
@@ -87,7 +88,8 @@ export const TYPE2_EXPECTED_OPTIONAL = [
   "Price Code",
   "Patient name",
   "Doctor Name",
-  "CNTR Code"
+  "CNTR Code",
+  "Blank Thickness"
 ];
 
 // Field mappings for normalizing Type 2 columns to internal schema
@@ -130,7 +132,8 @@ export const TYPE2_FIELD_MAPPINGS = {
   "shopping Cart #": "shoppingNumber",
   "Center Thick": "Center_Thick",
   "Edge Thick": "Edge_Thick",
-  "CNTR Code": "Container_Code"
+  "CNTR Code": "Container_Code",
+  "Blank Thickness": "Blank_Thick"
 };
 
 // Numeric fields for Type 2 (for column alignment)
@@ -145,5 +148,6 @@ export const TYPE2_NUMERIC_FIELDS = new Set([
   "OAD (dry)/DIAM",
   "OZ (dry)/OZ 1",
   "Center Thick",
-  "Edge Thick"
+  "Edge Thick",
+  "Blank Thickness"
 ]);

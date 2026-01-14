@@ -30,6 +30,7 @@ const NUMERIC_FIELDS = new Set([
   "edgeThick",
   "centerThick",
   "eValue",
+  "blankThickness",
   "bc1",
   "bc2",
   "pw1",
