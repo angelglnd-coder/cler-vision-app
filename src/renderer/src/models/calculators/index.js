@@ -13,6 +13,12 @@ import {
   CALCULATOR_ID as EXPO1AC_ID,
   CALCULATOR_NAME as EXPO1AC_NAME,
 } from "./expo1ac/index.js";
+import {
+  scleralCalc,
+  createScleralCalculator,
+  CALCULATOR_ID as SCLERAL_ID,
+  CALCULATOR_NAME as SCLERAL_NAME,
+} from "./scleral/index.js";
 import { REQUIRED_OUTPUT_FIELDS, validateOutputShape } from "./baseCalculator.js";
 
 // Registry of all available calculators
@@ -31,6 +37,13 @@ const CALCULATOR_REGISTRY = {
     instance: expo1acCalc,
     factory: createExpo1acCalculator,
     deviceValues: ["expo1ac"], // Case-insensitive (normalized to lowercase in lookup)
+  },
+  [SCLERAL_ID]: {
+    id: SCLERAL_ID,
+    name: SCLERAL_NAME,
+    instance: scleralCalc,
+    factory: createScleralCalculator,
+    deviceValues: ["scleral", "scl"], // Case-insensitive
   },
 };
 
@@ -110,10 +123,13 @@ export function listCalculators() {
 export {
   orthoKCalc,
   expo1acCalc,
+  scleralCalc,
   createOrthoKCalculator,
   createExpo1acCalculator,
+  createScleralCalculator,
   REQUIRED_OUTPUT_FIELDS,
   validateOutputShape,
   ORTHO_K_ID,
   EXPO1AC_ID,
+  SCLERAL_ID,
 };
