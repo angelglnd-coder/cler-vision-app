@@ -19,13 +19,13 @@ const PC_BASE = 13.0;
 
 /**
  * Design constants for computing zone radii
- * Each design has increments for zone1 (from BC), zone2 (from zone1), zone3 (from zone2), and pcOffset (from PC_BASE)
+ * Each design has increments for RC1 (from BC), AC1 (from RC1), AC2 (from AC1), and pcOffset (from PC_BASE)
  *
  * From Excel columns M, N, O, P (rows 2-4) and row 6:
- * - z1: offset added to BC to get Zone 1 (M2/N2/O2/P2)
- * - z2: offset added to Zone 1 to get Zone 2 (M3/N3/O3/P3)
- * - z3: offset added to Zone 2 to get Zone 3 (M4/N4/O4/P4)
- * - pcOffset: offset added to PC_BASE (13) to get P.C.1 (M6/N6/O6/P6)
+ * - z1: offset added to BC to get RC 1 (M2/N2/O2/P2)
+ * - z2: offset added to RC 1 to get AC 1 (M3/N3/O3/P3)
+ * - z3: offset added to AC 1 to get AC 2 (M4/N4/O4/P4)
+ * - pcOffset: offset added to PC_BASE (13) to get PC1 (M6/N6/O6/P6)
  */
 const DESIGN_CONSTANTS = {
   1: { name: "RHC", z1: 1.5, z2: 1.25, z3: 1.0, pcOffset: 1.0 },   // RHC
@@ -170,20 +170,20 @@ export function calculateToricRadius(radius, toricity) {
  *
  * @param {number} baseCurve - B.C. value
  * @param {number} designType - 1=RHC, 2=RHCA, 3=RHCB, 4=CLER
- * @returns {Object} { zone1, zone2, zone3, pc1 }
+ * @returns {Object} { RC1, AC1, AC2, PC1 }
  */
 export function computeZoneRadii(baseCurve, designType) {
   const d = DESIGN_CONSTANTS[designType];
   if (!d) {
-    return { zone1: null, zone2: null, zone3: null, pc1: null };
+    return { RC1: null, AC1: null, AC2: null, PC1: null };
   }
 
-  const zone1 = baseCurve + d.z1; // C11
-  const zone2 = zone1 + d.z2; // C13
-  const zone3 = zone2 + d.z3; // C15
-  const pc1 = PC_BASE + d.pcOffset; // C17
+  const RC1 = baseCurve + d.z1; // C11 - Reverse Curve 1
+  const AC1 = RC1 + d.z2; // C13 - Alignment Curve 1
+  const AC2 = AC1 + d.z3; // C15 - Alignment Curve 2
+  const PC1 = PC_BASE + d.pcOffset; // C17 - Peripheral Curve 1
 
-  return { zone1, zone2, zone3, pc1 };
+  return { RC1, AC1, AC2, PC1 };
 }
 
 /**
@@ -267,63 +267,63 @@ export function computeScleralLens(input) {
 
   // Calculate zone radii from design constants (C11, C13, C15, C17)
   const zoneRadii = computeZoneRadii(baseCurve, designType);
-  const zone1Radius = zoneRadii.zone1;
-  const z2Radius = zoneRadii.zone2;
-  const z3Radius = zoneRadii.zone3;
-  const pcRad = zoneRadii.pc1;
+  const RC1_rad = zoneRadii.RC1;
+  const AC1_rad = zoneRadii.AC1;
+  const AC2_rad = zoneRadii.AC2;
+  const PC1_rad = zoneRadii.PC1;
 
   // Calculate toric versions (B11, B13, B15, B17 for OD; F11, F13, F15, F17 for OS)
   // Formula: 337.5 / ((337.5 / radius) + toricity)
-  const zone1Toric = calculateToricRadius(zone1Radius, zone1Toricity);
-  const zone2Toric = calculateToricRadius(z2Radius, zone2Toricity);
-  const zone3Toric = calculateToricRadius(z3Radius, zone3Toricity);
-  const pcToric = calculateToricRadius(pcRad, pcToricity);
+  const RC1_toric = calculateToricRadius(RC1_rad, zone1Toricity);
+  const AC1_toric = calculateToricRadius(AC1_rad, zone2Toricity);
+  const AC2_toric = calculateToricRadius(AC2_rad, zone3Toricity);
+  const PC1_toric = calculateToricRadius(PC1_rad, pcToricity);
 
   // Calculate sagittas for spherical radii (rows 25-26, 31-32)
   // Row 25: Using C radii (spherical)
   const sag_BC_oz = calculateSagitta(baseCurve, oz); // B25: BC with OZ diameter
-  const sag_Z1_W1 = calculateSagitta(zone1Radius, widths.W1); // C25: Zone1 with W1
-  const sag_Z2_W2 = calculateSagitta(z2Radius, widths.W2); // D25: Zone2 with W2
-  const sag_Z3_W3 = calculateSagitta(z3Radius, widths.W3); // E25: Zone3 with W3
-  const sag_PC_W4 = calculateSagitta(pcRad, widths.W4); // F25: PC with W4
+  const sag_RC1_W1 = calculateSagitta(RC1_rad, widths.W1); // C25: RC1 with W1
+  const sag_AC1_W2 = calculateSagitta(AC1_rad, widths.W2); // D25: AC1 with W2
+  const sag_AC2_W3 = calculateSagitta(AC2_rad, widths.W3); // E25: AC2 with W3
+  const sag_PC1_W4 = calculateSagitta(PC1_rad, widths.W4); // F25: PC1 with W4
 
   // G25 = sum of row 25
   const sagSum25 =
-    (sag_BC_oz || 0) + (sag_Z1_W1 || 0) + (sag_Z2_W2 || 0) + (sag_Z3_W3 || 0) + (sag_PC_W4 || 0);
+    (sag_BC_oz || 0) + (sag_RC1_W1 || 0) + (sag_AC1_W2 || 0) + (sag_AC2_W3 || 0) + (sag_PC1_W4 || 0);
 
   // Row 26: Different diameter combinations
-  const sag_Z1_oz = calculateSagitta(zone1Radius, oz); // B26: Zone1 with OZ
-  const sag_Z2_W1 = calculateSagitta(z2Radius, widths.W1); // C26: Zone2 with W1
-  const sag_Z3_W2 = calculateSagitta(z3Radius, widths.W2); // D26: Zone3 with W2
-  const sag_PC_W3 = calculateSagitta(pcRad, widths.W3); // E26: PC with W3
+  const sag_RC1_oz = calculateSagitta(RC1_rad, oz); // B26: RC1 with OZ
+  const sag_AC1_W1 = calculateSagitta(AC1_rad, widths.W1); // C26: AC1 with W1
+  const sag_AC2_W2 = calculateSagitta(AC2_rad, widths.W2); // D26: AC2 with W2
+  const sag_PC1_W3 = calculateSagitta(PC1_rad, widths.W3); // E26: PC1 with W3
 
   // G26 = sum of row 26
-  const sagSum26 = (sag_Z1_oz || 0) + (sag_Z2_W1 || 0) + (sag_Z3_W2 || 0) + (sag_PC_W3 || 0);
+  const sagSum26 = (sag_RC1_oz || 0) + (sag_AC1_W1 || 0) + (sag_AC2_W2 || 0) + (sag_PC1_W3 || 0);
 
   // Calculate sagittas for toric radii (rows 28-29, 34-35)
   // Row 28: Using B radii (toric) with C diameters
   const sagT_BC_oz = calculateSagitta(baseCurve, oz); // B28
-  const sagT_Z1_W1 = calculateSagitta(zone1Toric, widths.W1); // C28
-  const sagT_Z2_W2 = calculateSagitta(zone2Toric, widths.W2); // D28
-  const sagT_Z3_W3 = calculateSagitta(zone3Toric, widths.W3); // E28
-  const sagT_PC_W4 = calculateSagitta(pcToric, widths.W4); // F28
+  const sagT_RC1_W1 = calculateSagitta(RC1_toric, widths.W1); // C28
+  const sagT_AC1_W2 = calculateSagitta(AC1_toric, widths.W2); // D28
+  const sagT_AC2_W3 = calculateSagitta(AC2_toric, widths.W3); // E28
+  const sagT_PC1_W4 = calculateSagitta(PC1_toric, widths.W4); // F28
 
   // G28 = sum of row 28
   const sagSum28 =
     (sagT_BC_oz || 0) +
-    (sagT_Z1_W1 || 0) +
-    (sagT_Z2_W2 || 0) +
-    (sagT_Z3_W3 || 0) +
-    (sagT_PC_W4 || 0);
+    (sagT_RC1_W1 || 0) +
+    (sagT_AC1_W2 || 0) +
+    (sagT_AC2_W3 || 0) +
+    (sagT_PC1_W4 || 0);
 
   // Row 29: Toric radii with different diameters
-  const sagT_Z1_oz = calculateSagitta(zone1Toric, oz); // B29
-  const sagT_Z2_W1 = calculateSagitta(zone2Toric, widths.W1); // C29
-  const sagT_Z3_W2 = calculateSagitta(zone3Toric, widths.W2); // D29
-  const sagT_PC_W3 = calculateSagitta(pcToric, widths.W3); // E29
+  const sagT_RC1_oz = calculateSagitta(RC1_toric, oz); // B29
+  const sagT_AC1_W1 = calculateSagitta(AC1_toric, widths.W1); // C29
+  const sagT_AC2_W2 = calculateSagitta(AC2_toric, widths.W2); // D29
+  const sagT_PC1_W3 = calculateSagitta(PC1_toric, widths.W3); // E29
 
   // G29 = sum of row 29
-  const sagSum29 = (sagT_Z1_oz || 0) + (sagT_Z2_W1 || 0) + (sagT_Z3_W2 || 0) + (sagT_PC_W3 || 0);
+  const sagSum29 = (sagT_RC1_oz || 0) + (sagT_AC1_W1 || 0) + (sagT_AC2_W2 || 0) + (sagT_PC1_W3 || 0);
 
   // Calculate sag differences
   // C21 = ((G25-G26))/100-0.07 (spherical sag diff)
