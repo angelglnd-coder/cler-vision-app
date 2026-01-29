@@ -1,6 +1,8 @@
 // src/renderer/src/models/calculators/scleral/formulas.js
 // Scleral lens calculation formulas
 
+import { ok, err, cap2, toNum } from "../baseCalculator.js";
+
 /**
  * Design type offsets - maps design selection (1-4) to offset values
  * K=1: RHC, K=2: RHCA, K=3: RHCB, K=4: CLER
@@ -362,38 +364,54 @@ export function computeScleralLens(input) {
       designName: DESIGN_TYPES[designType] || "Unknown",
     },
 
-    // Zone radii (spherical) - C column
-    zone1_radius: zone1Radius, // C11
-    zone2_radius: z2Radius, // C13 (input)
-    zone3_radius: z3Radius, // C15 (input)
-    pc_radius: pcRad, // C17 (input)
+    // Base values (required for work orders)
+    BC1_BC2: ok(baseCurve),
+    PW1_PW2: ok(sphere),
+    OZ1_OZ2: ok(oz),
 
-    // Zone radii (toric) - B column for OD, F column for OS
-    zone1_toric: zone1Toric, // B11 / F11
-    zone2_toric: zone2Toric, // B13 / F13
-    zone3_toric: zone3Toric, // B15 / F15
-    pc_toric: pcToric, // B17 / F17
+    // RC1 (Reverse Curve 1)
+    RC1_radius: ok(RC1_rad),
+    RC1_tor: ok(RC1_toric),
+    RC1_width: ok(widths.W1),
 
-    // Zone widths/diameters - C12, C14, C16, C18
-    W1: widths.W1, // C12 = V6
-    W2: widths.W2, // C14 = V7
-    W3: widths.W3, // C16 = V8
-    W4: widths.W4, // C18 = V9
+    // AC1 (Alignment Curve 1)
+    AC1_radius: ok(AC1_rad),
+    AC1_tor: ok(AC1_toric),
+    AC1_width: ok(widths.W2),
 
-    // Sagitta sums
-    sagSum_spherical: sagSum25, // G25
-    sagSum_spherical2: sagSum26, // G26
-    sagSum_toric: sagSum28, // G28
-    sagSum_toric2: sagSum29, // G29
+    // AC2 (Alignment Curve 2)
+    AC2_radius: ok(AC2_rad),
+    AC2_tor: ok(AC2_toric),
+    AC2_width: ok(widths.W3),
 
-    // Sag differences
-    sagDiff_spherical: sagDiffSpherical, // C21
-    sagDiff_toric: sagDiffToric, // B19
+    // AC3 (not used in scleral - set to null)
+    AC3_radius: ok(null),
+    AC3_tor: ok(null),
+    AC3_width: ok(null),
 
-    // Center thickness - C19
+    // PC (Peripheral Curve)
+    PC_width: ok(widths.W4),
+    PC1_radius: ok(PC1_rad),
+    PC2_radius: ok(PC1_rad),
+    PC_radius: PC1_rad,
+
+    // Power (constant for scleral)
+    LensPower: 1,
+
+    // Sagitta sums (scleral-specific)
+    sagSum_spherical: sagSum25,
+    sagSum_spherical2: sagSum26,
+    sagSum_toric: sagSum28,
+    sagSum_toric2: sagSum29,
+
+    // Sag differences (scleral-specific)
+    sagDiff_spherical: sagDiffSpherical,
+    sagDiff_toric: sagDiffToric,
+
+    // Center thickness (scleral-specific)
     centerThickness,
 
-    // Output CYL/AXIS (pass through) - C22, C23
+    // Output CYL/AXIS (pass through)
     outputCyl: cylinder,
     outputAxis: axis,
   };
@@ -407,15 +425,27 @@ export function createScleralCalculatorCore({ defaults = {} } = {}) {
 
   function computeRow(row) {
     return computeScleralLens({
-      eye: row.eye ?? row.Eye ?? "OD",
-      baseCurve: row.baseCurve ?? row["B.C."] ?? row.BC ?? row.bc,
-      sphere: row.sphere ?? row.Sphere ?? row.SPH ?? row.sph,
-      cylinder: row.cylinder ?? row.Cyl ?? row.CYL ?? row.cyl ?? 0,
-      axis: row.axis ?? row.Axis ?? row.AXIS,
-      diam: row.diam ?? row.DIAM ?? row.Diam,
-      oz: row.oz ?? row.OZ ?? row["O.Z."],
-      designType: row.designType ?? row.DESIGN ?? row.design ?? 1,
+      // Excel column: Eye
+      eye: row.Eye ?? row.eye ?? "OD",
+      // Excel column: B.C.
+      baseCurve: row["B.C."] ?? row.BC ?? row.baseCurve ?? row.bc,
+      // Excel column: Sphere
+      sphere: row.Sphere ?? row.sphere ?? row.SPH ?? row.sph,
+      // Excel column: Cyl
+      cylinder: row.Cyl ?? row.cylinder ?? row.CYL ?? row.cyl ?? 0,
+      // Excel column: Axis
+      axis: row.Axis ?? row.axis ?? row.AXIS,
+      // Excel column: DIAM
+      diam: row.DIAM ?? row.Diam ?? row.diam,
+      // Excel column: OZ
+      oz: row.OZ ?? row.oz ?? row["O.Z."],
+      // Excel column: DESIGN (accepts 1-4 or RHC/RHCA/RHCB/CLER)
+      designType: resolveDesignType(row.DESIGN ?? row.design ?? row.designType),
       baseCT: row.baseCT ?? defaultBaseCT,
+      // Additional scleral fields (pass through)
+      add: row.ADD ?? row.add,
+      cnCd: row["CN/CD"] ?? row.cnCd,
+      foz: row["F.O.Z."] ?? row.FOZ ?? row.foz,
       // Toricity values
       zone1Toricity: row.zone1Toricity ?? row.toricity ?? 0,
       zone2Toricity: row.zone2Toricity ?? row.toricity ?? 0,
