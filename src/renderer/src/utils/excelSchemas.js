@@ -17,6 +17,14 @@ import {
   TYPE2_NUMERIC_FIELDS
 } from "./excelColumns.type2.js";
 
+import {
+  TYPE3_COLUMNS_EXCEL,
+  TYPE3_EXPECTED_REQUIRED,
+  TYPE3_EXPECTED_OPTIONAL,
+  TYPE3_FIELD_MAPPINGS,
+  TYPE3_NUMERIC_FIELDS
+} from "./excelColumns.type3.js";
+
 // Type 1 field mappings (Excel display name → internal field name)
 const TYPE1_FIELD_MAPPINGS = {
   "Patient Name": "Patient_Name",
@@ -169,9 +177,52 @@ export const SCHEMA_TYPE2 = {
 };
 
 /**
+ * SCHEMA TYPE 3 - Scleral Orders Format
+ */
+export const SCHEMA_TYPE3 = {
+  id: "type3",
+  name: "SCLERAL ORDERS",
+  version: "1.0",
+
+  // Signature columns for deterministic detection
+  signatures: {
+    required: ["B.C.", "DIAM", "OZ", "DESIGN"], // Must have ALL these columns
+    preferred: ["Eye", "Sphere", "Device"] // Bonus points if present
+  },
+
+  // Column definitions
+  columns: {
+    excel: TYPE3_COLUMNS_EXCEL, // Display names in Excel
+    required: TYPE3_EXPECTED_REQUIRED, // Required columns
+    optional: TYPE3_EXPECTED_OPTIONAL // Optional columns
+  },
+
+  // Field name mappings (Excel → internal)
+  fieldMappings: TYPE3_FIELD_MAPPINGS,
+
+  // Numeric fields (for right-alignment in table)
+  numericFields: TYPE3_NUMERIC_FIELDS,
+
+  // Date fields (need special handling)
+  dateFields: ["PO Date"],
+
+  // Processing configuration
+  processing: {
+    needsCalculation: true, // Apply scleral calculations
+    needsWOGeneration: true, // Generate work order numbers
+    skipSteps: [] // No steps to skip
+  },
+
+  // Validation configuration
+  validation: {
+    strictColumns: false // Don't show warnings for missing/extra columns
+  }
+};
+
+/**
  * Registry of all supported schemas
  */
-export const ALL_SCHEMAS = [SCHEMA_TYPE1, SCHEMA_TYPE2];
+export const ALL_SCHEMAS = [SCHEMA_TYPE1, SCHEMA_TYPE2, SCHEMA_TYPE3];
 
 /**
  * Get schema by ID
