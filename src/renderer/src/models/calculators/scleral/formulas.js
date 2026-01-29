@@ -35,6 +35,19 @@ const DESIGN_CONSTANTS = {
 };
 
 /**
+ * Resolve design type from name or number
+ * Accepts: 1-4 (numeric) or "RHC", "RHCA", "RHCB", "CLER" (string)
+ */
+export function resolveDesignType(value) {
+  if (value == null) return 1;
+  const n = Number(value);
+  if (Number.isFinite(n) && n >= 1 && n <= 4) return n;
+  const name = String(value).toUpperCase().trim();
+  const nameMap = { RHC: 1, RHCA: 2, RHCB: 3, CLER: 4 };
+  return nameMap[name] ?? 1;
+}
+
+/**
  * Default zone width multipliers (S5-S8 from spreadsheet "3 ZONAS RADIALES")
  */
 const DEFAULT_ZONE_MULTIPLIERS = {
