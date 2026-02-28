@@ -304,7 +304,11 @@ export function computeScleralLens(input) {
 
   // G25 = sum of row 25
   const sagSum25 =
-    (sag_BC_oz || 0) + (sag_RC1_W1 || 0) + (sag_AC1_W2 || 0) + (sag_AC2_W3 || 0) + (sag_PC1_W4 || 0);
+    (sag_BC_oz || 0) +
+    (sag_RC1_W1 || 0) +
+    (sag_AC1_W2 || 0) +
+    (sag_AC2_W3 || 0) +
+    (sag_PC1_W4 || 0);
 
   // Row 26: Different diameter combinations
   const sag_RC1_oz = calculateSagitta(RC1_rad, oz); // B26: RC1 with OZ
@@ -338,7 +342,8 @@ export function computeScleralLens(input) {
   const sagT_PC1_W3 = calculateSagitta(PC1_toric, widths.W3); // E29
 
   // G29 = sum of row 29
-  const sagSum29 = (sagT_RC1_oz || 0) + (sagT_AC1_W1 || 0) + (sagT_AC2_W2 || 0) + (sagT_PC1_W3 || 0);
+  const sagSum29 =
+    (sagT_RC1_oz || 0) + (sagT_AC1_W1 || 0) + (sagT_AC2_W2 || 0) + (sagT_PC1_W3 || 0);
 
   // Calculate sag differences
   // C21 = ((G25-G26))/100-0.07 (spherical sag diff)
