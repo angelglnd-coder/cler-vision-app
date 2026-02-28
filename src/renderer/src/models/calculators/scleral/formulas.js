@@ -30,10 +30,10 @@ const PC_BASE = 13.0;
  * - pcOffset: offset added to PC_BASE (13) to get PC1 (M6/N6/O6/P6)
  */
 const DESIGN_CONSTANTS = {
-  1: { name: "RHC", z1: 1.5, z2: 1.25, z3: 1.0, pcOffset: 1.0 },   // RHC
+  1: { name: "RHC", z1: 1.5, z2: 1.25, z3: 1.0, pcOffset: 1.0 }, // RHC
   2: { name: "RHCA", z1: 1.5, z2: 1.25, z3: 0.75, pcOffset: 1.67 }, // RHCA
-  3: { name: "RHCB", z1: 1.25, z2: 1.0, z3: 0.25, pcOffset: 2.0 },  // RHCB
-  4: { name: "CLER", z1: 1.0, z2: 0.8, z3: 0.4, pcOffset: 1.0 },    // CLER
+  3: { name: "RHCB", z1: 1.25, z2: 1.0, z3: 0.25, pcOffset: 2.0 }, // RHCB
+  4: { name: "CLER", z1: 1.0, z2: 0.8, z3: 0.4, pcOffset: 1.0 }, // CLER
 };
 
 /**
