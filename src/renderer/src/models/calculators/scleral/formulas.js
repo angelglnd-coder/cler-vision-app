@@ -1,68 +1,59 @@
 // src/renderer/src/models/calculators/scleral/formulas.js
 // Scleral lens calculation formulas
 
-import { ok, err, cap2, toNum } from "../baseCalculator.js";
+import { ok } from "../baseCalculator.js";
+import zonesCtTable from "./lookups/zones-ct.lookup.json";
+import widthsTable from "./lookups/widths.lookup.json";
 
 /**
- * Design type offsets - maps design selection (1-4) to offset values
- * K=1: RHC, K=2: RHCA, K=3: RHCB, K=4: CLER
+ * Design type names for 3-zone (8 designs) and 4-zone (9 designs).
+ * Keyed by zone count.
  */
 export const DESIGN_TYPES = {
-  1: "RHC",
-  2: "RHCA",
-  3: "RHCB",
-  4: "CLER",
+  3: Object.fromEntries(
+    Object.entries(zonesCtTable["3zone"].designs).map(([k, v]) => [k, v.name])
+  ),
+  4: Object.fromEntries(
+    Object.entries(zonesCtTable["4zone"].designs).map(([k, v]) => [k, v.name])
+  ),
 };
 
 /**
- * P.C. base radius (constant)
+ * Resolve design type from name or number.
+ * Accepts 1–9 numeric or known design name strings.
  */
-const PC_BASE = 13.0;
-
-/**
- * Design constants for computing zone radii
- * Each design has increments for RC1 (from BC), AC1 (from RC1), AC2 (from AC1), and pcOffset (from PC_BASE)
- *
- * From Excel columns M, N, O, P (rows 2-4) and row 6:
- * - z1: offset added to BC to get RC 1 (M2/N2/O2/P2)
- * - z2: offset added to RC 1 to get AC 1 (M3/N3/O3/P3)
- * - z3: offset added to AC 1 to get AC 2 (M4/N4/O4/P4)
- * - pcOffset: offset added to PC_BASE (13) to get PC1 (M6/N6/O6/P6)
- */
-const DESIGN_CONSTANTS = {
-  1: { name: "RHC", z1: 1.5, z2: 1.25, z3: 1.0, pcOffset: 1.0 }, // RHC
-  2: { name: "RHCA", z1: 1.5, z2: 1.25, z3: 0.75, pcOffset: 1.67 }, // RHCA
-  3: { name: "RHCB", z1: 1.25, z2: 1.0, z3: 0.25, pcOffset: 2.0 }, // RHCB
-  4: { name: "CLER", z1: 1.0, z2: 0.8, z3: 0.4, pcOffset: 1.0 }, // CLER
-};
-
-/**
- * Resolve design type from name or number
- * Accepts: 1-4 (numeric) or "RHC", "RHCA", "RHCB", "CLER" (string)
- */
-export function resolveDesignType(value) {
+export function resolveDesignType(value, zones = 3) {
   if (value == null) return 1;
   const n = Number(value);
-  if (Number.isFinite(n) && n >= 1 && n <= 4) return n;
+  if (Number.isFinite(n) && n >= 1 && n <= 9) return n;
   const name = String(value).toUpperCase().trim();
-  const nameMap = { RHC: 1, RHCA: 2, RHCB: 3, CLER: 4 };
+
+  // 3-zone: CLER=4, no RHCBb, CLER variants at 5–8
+  const nameMap3 = {
+    RHC: 1, RHCA: 2, RHCB: 3, CLER: 4, ARGERIE: 4,
+    "CLER(1-14)": 5, "1-14": 5,
+    "CLER(15-28)": 6, "15-28": 6,
+    "CLER(29-50)": 7, "29-50": 7,
+    "CLER(51-72)": 8, "51-72": 8,
+  };
+  // 4-zone: CLER=4, CLER variants at 5–8, RHCBb=9 (key = pcOffset from last table row)
+  const nameMap4 = {
+    RHC: 1, RHCA: 2, RHCB: 3,
+    CLER: 4,
+    "CLER(1-14)": 5, "1-14": 5,
+    "CLER(15-28)": 6, "15-28": 6,
+    "CLER(29-50)": 7, "29-50": 7,
+    "CLER(51-72)": 8, "51-72": 8,
+    RHCBB: 9,
+  };
+
+  const nameMap = zones === 4 ? nameMap4 : nameMap3;
   return nameMap[name] ?? 1;
 }
 
 /**
- * Default zone width multipliers (S5-S8 from spreadsheet "3 ZONAS RADIALES")
- */
-const DEFAULT_ZONE_MULTIPLIERS = {
-  S5: 0.5, // Edge offset - fixed edge clearance
-  S6: 0.46667, // W1 factor - first zone weight
-  S7: 0.33333, // W2 factor - second zone weight
-  S8: 0.2, // W3 factor - third zone weight
-};
-
-/**
- * Power-to-CT offset lookup table
- * Maps sphere power ranges to center thickness offset
- * Formula: C19 = IFS(C2<=threshold, Q2+offset, ...)
+ * Power-to-CT offset lookup table.
+ * Matches Excel IFS formula exactly (including the 0.63→0.65 jump at 17.25).
  */
 function getPowerOffset(power) {
   const thresholds = [
@@ -130,7 +121,7 @@ function getPowerOffset(power) {
     [16.5, 0.61],
     [16.75, 0.62],
     [17, 0.63],
-    [17.25, 0.65],
+    [17.25, 0.65], // Note: Excel skips 0.64 here
     [17.5, 0.66],
     [17.75, 0.67],
     [18, 0.68],
@@ -147,315 +138,410 @@ function getPowerOffset(power) {
   for (const [threshold, offset] of thresholds) {
     if (power <= threshold) return offset;
   }
-  return 0.76; // Max offset for power > 20
+  return 0.76;
 }
 
 /**
- * Calculate sagitta (sag) value
- * Formula: (radius - sqrt(radius^2 - (diameter/2)^2)) / 0.01
+ * Calculate sagitta (sag) value.
+ * Formula: (R - sqrt(R^2 - (D/2)^2)) / 0.01
+ * Result is in microns (mm × 100).
  */
 export function calculateSagitta(radius, diameter) {
   if (radius == null || diameter == null) return null;
   const halfDiam = diameter / 2;
   const radiusSq = radius * radius;
   const halfDiamSq = halfDiam * halfDiam;
-
-  // Check if calculation is valid (radius must be >= halfDiam)
   if (radiusSq < halfDiamSq) return null;
-
-  const sqrtTerm = Math.sqrt(radiusSq - halfDiamSq);
-  return (radius - sqrtTerm) / 0.01;
+  return (radius - Math.sqrt(radiusSq - halfDiamSq)) / 0.01;
 }
 
 /**
- * Calculate toricity-adjusted radius
+ * Apply toric offset to a spherical radius.
+ * - mode 'diop':   337.5 / ((337.5 / R) + offset)  — diopter-based
+ * - mode 'micron': R + offset / 1000                 — micron-based
+ */
+function applyToric(radius, offset, mode) {
+  if (radius == null) return null;
+  if (!offset) return radius;
+  if (mode === "diop") {
+    const denom = 337.5 / radius + offset;
+    if (Math.abs(denom) < 1e-12) return null;
+    return 337.5 / denom;
+  }
+  return radius + offset / 1000;
+}
+
+/**
+ * Legacy diop-mode toric radius (kept for backwards compat with computeScleralLens).
  * Formula: 337.5 / ((337.5 / radius) + toricity)
  */
 export function calculateToricRadius(radius, toricity) {
-  if (radius == null) return null;
-  if (toricity == null || toricity === 0) return radius;
-  const denom = 337.5 / radius + toricity;
-  if (Math.abs(denom) < 1e-12) return null;
-  return 337.5 / denom;
+  return applyToric(radius, toricity, "diop");
 }
 
 /**
- * Compute zone radii from base curve and design type
- * Replicates Excel's C11, C13, C15, C17 calculations
+ * Compute zone radii from the JSON lookup table.
  *
- * @param {number} baseCurve - B.C. value
- * @param {number} designType - 1=RHC, 2=RHCA, 3=RHCB, 4=CLER
- * @returns {Object} { RC1, AC1, AC2, PC1 }
+ * @param {number} bc - base curve in mm
+ * @param {number} designId - 1–8 (3-zone) or 1–9 (4-zone)
+ * @param {3|4} zones - zone count
+ * @returns {{ rc1, ac1, ac2, ac3?, pc1 } | null}
  */
-export function computeZoneRadii(baseCurve, designType) {
-  const d = DESIGN_CONSTANTS[designType];
-  if (!d) {
-    return { RC1: null, AC1: null, AC2: null, PC1: null };
+export function computeZoneRadii(bc, designId, zones = 3) {
+  const tableKey = zones === 4 ? "4zone" : "3zone";
+  const entry = zonesCtTable[tableKey];
+  const d = entry.designs[String(designId)];
+  if (!d) return null;
+
+  const rc1 = bc + d.z1;
+  const ac1 = rc1 + d.z2;
+  const ac2 = ac1 + d.z3;
+  const ac3 = zones === 4 ? ac2 + d.z4 : undefined;
+  const pc1 = entry.pcBase + d.pcOffset;
+
+  return { rc1, ac1, ac2, ...(zones === 4 && { ac3 }), pc1 };
+}
+
+/**
+ * Calculate zone widths from the JSON lookup table.
+ *
+ * 3-zone returns: { w1, w2, w3, totalW }
+ * 4-zone returns: { w1, w2, w3, w4, totalW }
+ *
+ * totalW = outer edge diameter (used for PC1 sagitta).
+ */
+export function calculateZoneWidths(diam, oz, zones = 3) {
+  const tableKey = zones === 4 ? "4zone" : "3zone";
+  const { edgeReserve, ratios } = widthsTable[tableKey];
+
+  const edgeBand = (diam - oz) / 2;
+  const avail = edgeBand - edgeReserve;
+
+  const names = ["w1", "w2", "w3", "w4"];
+  const result = {};
+  let current = oz;
+  for (let i = 0; i < ratios.length; i++) {
+    current = current + 2 * ratios[i] * avail;
+    result[names[i]] = current;
   }
+  result.totalW = current + 2 * edgeReserve;
 
-  const RC1 = baseCurve + d.z1; // C11 - Reverse Curve 1
-  const AC1 = RC1 + d.z2; // C13 - Alignment Curve 1
-  const AC2 = AC1 + d.z3; // C15 - Alignment Curve 2
-  const PC1 = PC_BASE + d.pcOffset; // C17 - Peripheral Curve 1
-
-  return { RC1, AC1, AC2, PC1 };
+  return result;
 }
 
 /**
- * Calculate zone widths (W1-W4) from DIAM and OZ
- *
- * Formulas from Excel:
- * U3 = (DIAM - OZ) / 2
- * U4 = U3 - S5 (where S5 = 0.5 edge offset)
- * V6 = OZ + 2 * (S6 * U4)  -> W1
- * V7 = V6 + 2 * (S7 * U4)  -> W2
- * V8 = V7 + 2 * (S8 * U4)  -> W3
- * V9 = V8 + 2 * S5         -> W4
- */
-export function calculateZoneWidths(diam, oz, multipliers = DEFAULT_ZONE_MULTIPLIERS) {
-  const { S5, S6, S7, S8 } = multipliers;
-
-  const U3 = (diam - oz) / 2;
-  const U4 = U3 - S5;
-
-  const U6 = S6 * U4;
-  const U7 = S7 * U4;
-  const U8 = S8 * U4;
-
-  const W1 = oz + 2 * U6; // V6 = C12
-  const W2 = W1 + 2 * U7; // V7 = C14
-  const W3 = W2 + 2 * U8; // V8 = C16
-  const W4 = W3 + 2 * S5; // V9 = C18
-
-  return { W1, W2, W3, W4, U3, U4 };
-}
-
-/**
- * Calculate center thickness (CT)
- * C19 = IFS(sphere<=threshold, baseCT+offset, ...)
+ * Calculate center thickness.
+ * CT = baseCT + powerOffset(sphere)
  */
 export function calculateCenterThickness(sphere, baseCT) {
-  const offset = getPowerOffset(sphere);
-  return baseCT + offset;
+  return baseCT + getPowerOffset(sphere);
 }
 
 /**
- * Calculate sag difference for final output
- * Formula: ((sagSum1 - sagSum2)) / 100 - 0.07
- * B19 = ((G28-G29))/100-0.07
- * C21 = ((G25-G26))/100-0.07
+ * Calculate sag difference.
+ * Formula: (sumFull - sumShift) / 100 - 0.07
+ * The -0.07 baseline subtraction is mandatory.
  */
-export function calculateSagDifference(sagSum1, sagSum2) {
-  return (sagSum1 - sagSum2) / 100 - 0.07;
+export function calculateSagDifference(sumFull, sumShift) {
+  return (sumFull - sumShift) / 100 - 0.07;
 }
 
+// ---------------------------------------------------------------------------
+// New public API
+// ---------------------------------------------------------------------------
+
 /**
- * Main scleral lens calculation
+ * Calculate scleral lens parameters.
+ *
+ * @param {object} input
+ * @param {number} input.bc       - base curve in mm
+ * @param {number} input.diam     - total diameter in mm
+ * @param {number} input.oz       - optical zone in mm
+ * @param {number} input.design   - design ID (1–8 for 3-zone, 1–9 for 4-zone)
+ * @param {number} input.sphere   - sphere power (for CT)
+ * @param {number} [input.toricity=0]     - toric offset (µm or diop per mode)
+ * @param {3|4}   [input.zones=3]         - zone count
+ * @param {'micron'|'diop'} [input.mode='micron'] - toric unit mode
+ *
+ * @returns {{
+ *   radii: { rc1, ac1, ac2, ac3?, pc1 },
+ *   widths: { w1, w2, w3, w4? },
+ *   sag: {
+ *     principal: { sumFull, sumShift, difference },
+ *     toric:     { sumFull, sumShift, difference }
+ *   },
+ *   centerThickness: number
+ * }}
+ */
+export function calculateScleral({
+  bc,
+  diam,
+  oz,
+  design,
+  sphere,
+  toricity = 0,
+  zones = 3,
+  mode = "micron",
+}) {
+  const designId = resolveDesignType(design, zones);
+  const tableKey = zones === 4 ? "4zone" : "3zone";
+  const tableEntry = zonesCtTable[tableKey];
+  const d = tableEntry.designs[String(designId)];
+  if (!d) {
+    return { _error: `Invalid design ${design} for ${zones}-zone mode` };
+  }
+
+  // 1. Spherical zone radii
+  const rc1 = bc + d.z1;
+  const ac1 = rc1 + d.z2;
+  const ac2 = ac1 + d.z3;
+  const ac3 = zones === 4 ? ac2 + d.z4 : undefined;
+  const pc1 = tableEntry.pcBase + d.pcOffset;
+
+  // 2. Toric zone radii (BC stays spherical)
+  const rc1t = applyToric(rc1, toricity, mode);
+  const ac1t = applyToric(ac1, toricity, mode);
+  const ac2t = applyToric(ac2, toricity, mode);
+  const ac3t = zones === 4 ? applyToric(ac3, toricity, mode) : undefined;
+  const pc1t = applyToric(pc1, toricity, mode);
+
+  // 3. Zone widths
+  const widths = calculateZoneWidths(diam, oz, zones);
+
+  // 4. Build ordered arrays for sag loop
+  const spherRadii = zones === 4 ? [rc1, ac1, ac2, ac3, pc1] : [rc1, ac1, ac2, pc1];
+  const toricRadii = zones === 4 ? [rc1t, ac1t, ac2t, ac3t, pc1t] : [rc1t, ac1t, ac2t, pc1t];
+
+  const outerW = zones === 4
+    ? [widths.w1, widths.w2, widths.w3, widths.w4, widths.totalW]
+    : [widths.w1, widths.w2, widths.w3, widths.totalW];
+  const shiftW = [oz, ...outerW.slice(0, -1)]; // [oz, w1, w2, w3, (w4)]
+
+  // 5. Sag sums — principal (spherical) meridian
+  const principalFull =
+    (calculateSagitta(bc, oz) || 0) +
+    spherRadii.reduce((s, r, i) => s + (calculateSagitta(r, outerW[i]) || 0), 0);
+  const principalShift = spherRadii.reduce(
+    (s, r, i) => s + (calculateSagitta(r, shiftW[i]) || 0),
+    0
+  );
+
+  // 6. Sag sums — toric meridian
+  const toricFull =
+    (calculateSagitta(bc, oz) || 0) +
+    toricRadii.reduce((s, r, i) => s + (calculateSagitta(r, outerW[i]) || 0), 0);
+  const toricShift = toricRadii.reduce(
+    (s, r, i) => s + (calculateSagitta(r, shiftW[i]) || 0),
+    0
+  );
+
+  // 7. Center thickness
+  const centerThickness = calculateCenterThickness(sphere, tableEntry.baseCT);
+
+  return {
+    radii: {
+      rc1,
+      ac1,
+      ac2,
+      ...(zones === 4 && { ac3 }),
+      pc1,
+    },
+    widths: {
+      w1: widths.w1,
+      w2: widths.w2,
+      w3: widths.w3,
+      ...(zones === 4 && { w4: widths.w4 }),
+    },
+    sag: {
+      principal: {
+        sumFull: principalFull,
+        sumShift: principalShift,
+        difference: calculateSagDifference(principalFull, principalShift),
+      },
+      toric: {
+        sumFull: toricFull,
+        sumShift: toricShift,
+        difference: calculateSagDifference(toricFull, toricShift),
+      },
+    },
+    centerThickness,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Legacy API (computeScleralLens) — kept for backwards compatibility
+// ---------------------------------------------------------------------------
+
+/**
+ * Main scleral lens calculation (legacy API, supports 3-zone and 4-zone).
+ * Uses the same JSON-backed formulas as calculateScleral.
  */
 export function computeScleralLens(input) {
   const {
-    eye, // "OD" or "OS"
-    baseCurve, // B.C. (e.g., 7.40) - B2/B3
-    sphere, // Sphere power (e.g., -6.00) - C2/C3
-    cylinder, // Cyl (e.g., 0) - D2/D3
-    axis, // Axis (e.g., 110) - E2/E3
-    diam, // DIAM (e.g., 16.4) - F2/F3
-    oz, // O.Z. (e.g., 9.4) - G2/G3
-    designType, // 1=RHC, 2=RHCA, 3=RHCB, 4=CLER - K2/K3
-    baseCT, // Base center thickness (e.g., 0.36) - Q2/R2
-    // Toricity for toric calculations (A11, A13, A15, A17 or G11, G13, G15, G17)
+    eye,
+    baseCurve,
+    sphere,
+    cylinder,
+    axis,
+    diam,
+    oz,
+    designType,
+    baseCT,
+    zones = 3,
     zone1Toricity = 0,
     zone2Toricity = 0,
     zone3Toricity = 0,
+    zone4Toricity = 0,
     pcToricity = 0,
-    // Zone multipliers (optional override)
-    zoneMultipliers,
+    toricMode = "diop",
   } = input;
 
-  // Validate required inputs
   if (baseCurve == null || diam == null || oz == null || designType == null) {
     return { _error: "Missing required inputs (baseCurve, diam, oz, designType)" };
   }
 
-  // Calculate zone widths (W1-W4)
-  const widths = calculateZoneWidths(diam, oz, zoneMultipliers);
+  const tableKey = zones === 4 ? "4zone" : "3zone";
+  const designId = resolveDesignType(designType, zones);
+  const tableEntry = zonesCtTable[tableKey];
+  const d = tableEntry.designs[String(designId)];
+  if (!d) {
+    return { _error: `Unknown designType: ${designType}` };
+  }
 
-  // Calculate zone radii from design constants (C11, C13, C15, C17)
-  const zoneRadii = computeZoneRadii(baseCurve, designType);
-  const RC1_rad = zoneRadii.RC1;
-  const AC1_rad = zoneRadii.AC1;
-  const AC2_rad = zoneRadii.AC2;
-  const PC1_rad = zoneRadii.PC1;
+  // Zone radii (spherical)
+  const RC1_rad = baseCurve + d.z1;
+  const AC1_rad = RC1_rad + d.z2;
+  const AC2_rad = AC1_rad + d.z3;
+  const AC3_rad = zones === 4 ? AC2_rad + d.z4 : null;
+  const PC1_rad = tableEntry.pcBase + d.pcOffset;
 
-  // Calculate toric versions (B11, B13, B15, B17 for OD; F11, F13, F15, F17 for OS)
-  // Formula: 337.5 / ((337.5 / radius) + toricity)
-  const RC1_toric = calculateToricRadius(RC1_rad, zone1Toricity);
-  const AC1_toric = calculateToricRadius(AC1_rad, zone2Toricity);
-  const AC2_toric = calculateToricRadius(AC2_rad, zone3Toricity);
-  const PC1_toric = calculateToricRadius(PC1_rad, pcToricity);
+  // Zone radii (toric)
+  const RC1_toric = applyToric(RC1_rad, zone1Toricity, toricMode);
+  const AC1_toric = applyToric(AC1_rad, zone2Toricity, toricMode);
+  const AC2_toric = applyToric(AC2_rad, zone3Toricity, toricMode);
+  const AC3_toric = zones === 4 ? applyToric(AC3_rad, zone4Toricity, toricMode) : null;
+  const PC1_toric = applyToric(PC1_rad, pcToricity, toricMode);
 
-  // Calculate sagittas for spherical radii (rows 25-26, 31-32)
-  // Row 25: Using C radii (spherical)
-  const sag_BC_oz = calculateSagitta(baseCurve, oz); // B25: BC with OZ diameter
-  const sag_RC1_W1 = calculateSagitta(RC1_rad, widths.W1); // C25: RC1 with W1
-  const sag_AC1_W2 = calculateSagitta(AC1_rad, widths.W2); // D25: AC1 with W2
-  const sag_AC2_W3 = calculateSagitta(AC2_rad, widths.W3); // E25: AC2 with W3
-  const sag_PC1_W4 = calculateSagitta(PC1_rad, widths.W4); // F25: PC1 with W4
+  // Zone widths
+  const widths = calculateZoneWidths(diam, oz, zones);
+  const { w1: W1, w2: W2, w3: W3, totalW } = widths;
+  const W4 = zones === 4 ? widths.w4 : null;
+  const PC_W = zones === 4 ? totalW : widths.totalW; // PC sag uses totalW in both cases
 
-  // G25 = sum of row 25
-  const sagSum25 =
-    (sag_BC_oz || 0) +
-    (sag_RC1_W1 || 0) +
-    (sag_AC1_W2 || 0) +
-    (sag_AC2_W3 || 0) +
-    (sag_PC1_W4 || 0);
+  // Sagitta sums — spherical
+  const sag_BC_oz  = calculateSagitta(baseCurve, oz);
+  const sag_RC1_W1 = calculateSagitta(RC1_rad, W1);
+  const sag_AC1_W2 = calculateSagitta(AC1_rad, W2);
+  const sag_AC2_W3 = calculateSagitta(AC2_rad, W3);
+  const sag_AC3_W4 = zones === 4 ? calculateSagitta(AC3_rad, W4) : null;
+  const sag_PC1_PCW = calculateSagitta(PC1_rad, PC_W);
+  const sagSum25 = (sag_BC_oz || 0) + (sag_RC1_W1 || 0) + (sag_AC1_W2 || 0) + (sag_AC2_W3 || 0) + (sag_AC3_W4 || 0) + (sag_PC1_PCW || 0);
 
-  // Row 26: Different diameter combinations
-  const sag_RC1_oz = calculateSagitta(RC1_rad, oz); // B26: RC1 with OZ
-  const sag_AC1_W1 = calculateSagitta(AC1_rad, widths.W1); // C26: AC1 with W1
-  const sag_AC2_W2 = calculateSagitta(AC2_rad, widths.W2); // D26: AC2 with W2
-  const sag_PC1_W3 = calculateSagitta(PC1_rad, widths.W3); // E26: PC1 with W3
+  const sag_RC1_oz  = calculateSagitta(RC1_rad, oz);
+  const sag_AC1_W1  = calculateSagitta(AC1_rad, W1);
+  const sag_AC2_W2  = calculateSagitta(AC2_rad, W2);
+  const sag_AC3_W3  = zones === 4 ? calculateSagitta(AC3_rad, W3) : null;
+  const sag_PC1_shift = zones === 4 ? calculateSagitta(PC1_rad, W4) : calculateSagitta(PC1_rad, W3);
+  const sagSum26 = (sag_RC1_oz || 0) + (sag_AC1_W1 || 0) + (sag_AC2_W2 || 0) + (sag_AC3_W3 || 0) + (sag_PC1_shift || 0);
 
-  // G26 = sum of row 26
-  const sagSum26 = (sag_RC1_oz || 0) + (sag_AC1_W1 || 0) + (sag_AC2_W2 || 0) + (sag_PC1_W3 || 0);
+  // Sagitta sums — toric
+  const sagT_BC_oz   = calculateSagitta(baseCurve, oz);
+  const sagT_RC1_W1  = calculateSagitta(RC1_toric, W1);
+  const sagT_AC1_W2  = calculateSagitta(AC1_toric, W2);
+  const sagT_AC2_W3  = calculateSagitta(AC2_toric, W3);
+  const sagT_AC3_W4  = zones === 4 ? calculateSagitta(AC3_toric, W4) : null;
+  const sagT_PC1_PCW = calculateSagitta(PC1_toric, PC_W);
+  const sagSum28 = (sagT_BC_oz || 0) + (sagT_RC1_W1 || 0) + (sagT_AC1_W2 || 0) + (sagT_AC2_W3 || 0) + (sagT_AC3_W4 || 0) + (sagT_PC1_PCW || 0);
 
-  // Calculate sagittas for toric radii (rows 28-29, 34-35)
-  // Row 28: Using B radii (toric) with C diameters
-  const sagT_BC_oz = calculateSagitta(baseCurve, oz); // B28
-  const sagT_RC1_W1 = calculateSagitta(RC1_toric, widths.W1); // C28
-  const sagT_AC1_W2 = calculateSagitta(AC1_toric, widths.W2); // D28
-  const sagT_AC2_W3 = calculateSagitta(AC2_toric, widths.W3); // E28
-  const sagT_PC1_W4 = calculateSagitta(PC1_toric, widths.W4); // F28
+  const sagT_RC1_oz  = calculateSagitta(RC1_toric, oz);
+  const sagT_AC1_W1  = calculateSagitta(AC1_toric, W1);
+  const sagT_AC2_W2  = calculateSagitta(AC2_toric, W2);
+  const sagT_AC3_W3  = zones === 4 ? calculateSagitta(AC3_toric, W3) : null;
+  const sagT_PC1_shift = zones === 4 ? calculateSagitta(PC1_toric, W4) : calculateSagitta(PC1_toric, W3);
+  const sagSum29 = (sagT_RC1_oz || 0) + (sagT_AC1_W1 || 0) + (sagT_AC2_W2 || 0) + (sagT_AC3_W3 || 0) + (sagT_PC1_shift || 0);
 
-  // G28 = sum of row 28
-  const sagSum28 =
-    (sagT_BC_oz || 0) +
-    (sagT_RC1_W1 || 0) +
-    (sagT_AC1_W2 || 0) +
-    (sagT_AC2_W3 || 0) +
-    (sagT_PC1_W4 || 0);
-
-  // Row 29: Toric radii with different diameters
-  const sagT_RC1_oz = calculateSagitta(RC1_toric, oz); // B29
-  const sagT_AC1_W1 = calculateSagitta(AC1_toric, widths.W1); // C29
-  const sagT_AC2_W2 = calculateSagitta(AC2_toric, widths.W2); // D29
-  const sagT_PC1_W3 = calculateSagitta(PC1_toric, widths.W3); // E29
-
-  // G29 = sum of row 29
-  const sagSum29 =
-    (sagT_RC1_oz || 0) + (sagT_AC1_W1 || 0) + (sagT_AC2_W2 || 0) + (sagT_PC1_W3 || 0);
-
-  // Calculate sag differences
-  // C21 = ((G25-G26))/100-0.07 (spherical sag diff)
   const sagDiffSpherical = calculateSagDifference(sagSum25, sagSum26);
+  const sagDiffToric     = calculateSagDifference(sagSum28, sagSum29);
 
-  // B19 = ((G28-G29))/100-0.07 (toric sag diff for OD)
-  const sagDiffToric = calculateSagDifference(sagSum28, sagSum29);
+  const centerThickness = calculateCenterThickness(sphere, baseCT ?? tableEntry.baseCT);
+  console.log('[Scleral CT]', { sphere, baseCT: baseCT ?? tableEntry.baseCT, powerOffset: getPowerOffset(sphere), centerThickness });
 
-  // Calculate center thickness
-  // C19 = IFS(sphere<=..., baseCT+offset)
-  const centerThickness = calculateCenterThickness(sphere, baseCT || 0.36);
+  const designNames = DESIGN_TYPES[zones === 4 ? 4 : 3];
 
   return {
-    _inputs: {
-      eye,
-      baseCurve,
-      sphere,
-      cylinder,
-      axis,
-      diam,
-      oz,
-      designType,
-      designName: DESIGN_TYPES[designType] || "Unknown",
-    },
+    _inputs: { eye, baseCurve, sphere, cylinder, axis, diam, oz, designType, zones, designName: designNames[designId] ?? "Unknown" },
 
-    // Base values (required for work orders)
     BC1_BC2: ok(baseCurve),
     PW1_PW2: ok(sphere),
     OZ1_OZ2: ok(oz),
 
-    // RC1 (Reverse Curve 1)
     RC1_radius: ok(RC1_rad),
     RC1_tor: ok(RC1_toric),
-    RC1_width: ok(widths.W1),
+    RC1_width: ok(W1),
 
-    // AC1 (Alignment Curve 1)
     AC1_radius: ok(AC1_rad),
     AC1_tor: ok(AC1_toric),
-    AC1_width: ok(widths.W2),
+    AC1_width: ok(W2),
 
-    // AC2 (Alignment Curve 2)
     AC2_radius: ok(AC2_rad),
     AC2_tor: ok(AC2_toric),
-    AC2_width: ok(widths.W3),
+    AC2_width: ok(W3),
 
-    // AC3 (not used in scleral - set to null)
-    AC3_radius: ok(null),
-    AC3_tor: ok(null),
-    AC3_width: ok(null),
+    AC3_radius: ok(AC3_rad),
+    AC3_tor: ok(AC3_toric),
+    AC3_width: ok(W4),
 
-    // PC (Peripheral Curve)
-    PC_width: ok(widths.W4),
+    PC_width: ok(PC_W),
     PC1_radius: ok(PC1_rad),
     PC2_radius: ok(PC1_rad),
     PC_radius: PC1_rad,
 
-    // Power (constant for scleral)
     LensPower: 1,
 
-    // Sagitta sums (scleral-specific)
     sagSum_spherical: sagSum25,
     sagSum_spherical2: sagSum26,
     sagSum_toric: sagSum28,
     sagSum_toric2: sagSum29,
 
-    // Sag differences (scleral-specific)
     sagDiff_spherical: sagDiffSpherical,
     sagDiff_toric: sagDiffToric,
 
-    // Center thickness (scleral-specific)
     centerThickness,
 
-    // Output CYL/AXIS (pass through)
     outputCyl: cylinder,
     outputAxis: axis,
   };
 }
 
 /**
- * Calculator factory for scleral lenses
+ * Calculator factory for scleral lenses.
  */
 export function createScleralCalculatorCore({ defaults = {} } = {}) {
-  const defaultBaseCT = defaults.baseCT ?? 0.36;
+  const defaultBaseCT = defaults.baseCT ?? zonesCtTable["3zone"].baseCT;
+  const defaultZones  = defaults.zones  ?? 3;
 
   function computeRow(row) {
+    const zones = row.zones ?? defaultZones;
     return computeScleralLens({
-      // Excel column: Eye
-      eye: row.Eye ?? row.eye ?? "OD",
-      // Excel column: B.C.
+      eye: row["OD/OS"] ?? row.Eye ?? row.eye ?? "OD",
       baseCurve: row["B.C."] ?? row.BC ?? row.baseCurve ?? row.bc,
-      // Excel column: Sphere
       sphere: row.Sphere ?? row.sphere ?? row.SPH ?? row.sph,
-      // Excel column: Cyl
       cylinder: row.Cyl ?? row.cylinder ?? row.CYL ?? row.cyl ?? 0,
-      // Excel column: Axis
       axis: row.Axis ?? row.axis ?? row.AXIS,
-      // Excel column: DIAM
       diam: row.DIAM ?? row.Diam ?? row.diam,
-      // Excel column: OZ
       oz: row.OZ ?? row.oz ?? row["O.Z."],
-      // Excel column: DESIGN (accepts 1-4 or RHC/RHCA/RHCB/CLER)
-      designType: resolveDesignType(row.DESIGN ?? row.design ?? row.designType),
-      baseCT: row.baseCT ?? defaultBaseCT,
-      // Additional scleral fields (pass through)
+      designType: resolveDesignType(row.DESIGN ?? row.design ?? row.designType, zones),
+      baseCT: row["Center Thick"] ?? row.baseCT ?? defaultBaseCT,
+      zones,
       add: row.ADD ?? row.add,
       cnCd: row["CN/CD"] ?? row.cnCd,
       foz: row["F.O.Z."] ?? row.FOZ ?? row.foz,
-      // Toricity values
       zone1Toricity: row.zone1Toricity ?? row.toricity ?? 0,
       zone2Toricity: row.zone2Toricity ?? row.toricity ?? 0,
       zone3Toricity: row.zone3Toricity ?? row.toricity ?? 0,
+      zone4Toricity: row.zone4Toricity ?? row.toricity ?? 0,
       pcToricity: row.pcToricity ?? row.toricity ?? 0,
+      toricMode: String(row["Toric Mode"] ?? row.toricMode ?? row.Toric_Mode ?? "diop").toLowerCase(),
     });
   }
 
