@@ -210,7 +210,9 @@ function validateHeadersFlexible(foundRaw, schema) {
 
   console.log(`[Validation] Schema: ${schema.name} (${schema.id})`);
   console.log(`[Validation] Found ${foundRaw.length} columns in file`);
-  console.log(`[Validation] Expected ${canonRequired.length} required + ${canonOptional.length} optional`);
+  console.log(
+    `[Validation] Expected ${canonRequired.length} required + ${canonOptional.length} optional`,
+  );
 
   // missing = required not present
   for (let i = 0; i < canonRequired.length; i++) {
@@ -230,13 +232,17 @@ function validateHeadersFlexible(foundRaw, schema) {
   if (missing.length) {
     console.log(`[Validation] Missing:`, missing);
     // Always show missing columns as informational message
-    msgs.push(`ℹ️ Missing ${missing.length} column${missing.length !== 1 ? 's' : ''}: ${missing.join(", ")}`);
+    msgs.push(
+      `ℹ️ Missing ${missing.length} column${missing.length !== 1 ? "s" : ""}: ${missing.join(", ")}`,
+    );
   }
 
   if (extra.length) {
     console.log(`[Validation] Unexpected:`, extra);
     // Always show extra columns as informational message
-    msgs.push(`ℹ️ Found ${extra.length} additional column${extra.length !== 1 ? 's' : ''}: ${extra.join(", ")}`);
+    msgs.push(
+      `ℹ️ Found ${extra.length} additional column${extra.length !== 1 ? "s" : ""}: ${extra.join(", ")}`,
+    );
   }
 
   return { missing, extra, msgs, foundCanon };

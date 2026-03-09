@@ -654,7 +654,13 @@
               {#if errors.length > 0}
                 <div class="warning-container">
                   {#each errors as error, i (i)}
-                    <div class={error.startsWith("ℹ️") ? "info-message" : error.startsWith("❌") ? "error-message" : "warning-message"}>
+                    <div
+                      class={error.startsWith("ℹ️")
+                        ? "info-message"
+                        : error.startsWith("❌")
+                          ? "error-message"
+                          : "warning-message"}
+                    >
                       {error}
                     </div>
                   {/each}
@@ -725,7 +731,9 @@
         {#if !rows[0]?.WO_Number}
           <Button
             onclick={handleGenerateWorkOrders}
-            disabled={isSubmitting || state.context?.hasMissingColumns || state.context?.hasMissingEValue}
+            disabled={isSubmitting ||
+              state.context?.hasMissingColumns ||
+              state.context?.hasMissingEValue}
           >
             Generate Work Orders
           </Button>
