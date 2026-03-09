@@ -1,0 +1,4 @@
+{
+  "3zone": { "edgeReserve": 0.5, "ratios": [0.46667, 0.33333, 0.2] },
+  "4zone": { "edgeReserve": 0.5, "ratios": [0.4, 0.3, 0.2, 0.1] }
+}
