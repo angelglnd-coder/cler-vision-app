@@ -15,6 +15,8 @@ import {
 } from "./expo1ac/index.js";
 import {
   scleralCalc,
+  scleralCalc3,
+  scleralCalc4,
   createScleralCalculator,
   CALCULATOR_ID as SCLERAL_ID,
   CALCULATOR_NAME as SCLERAL_NAME,
@@ -38,12 +40,19 @@ const CALCULATOR_REGISTRY = {
     factory: createExpo1acCalculator,
     deviceValues: ["expo1ac"], // Case-insensitive (normalized to lowercase in lookup)
   },
-  [SCLERAL_ID]: {
-    id: SCLERAL_ID,
-    name: SCLERAL_NAME,
-    instance: scleralCalc,
+  "scleral-3": {
+    id: "scleral-3",
+    name: "Scleral 3-zone",
+    instance: scleralCalc3,
     factory: createScleralCalculator,
-    deviceValues: ["scleral", "scl"], // Case-insensitive
+    deviceValues: ["scleral-3", "scleral", "scl"], // "scleral"/"scl" → 3-zone (backward compat)
+  },
+  "scleral-4": {
+    id: "scleral-4",
+    name: "Scleral 4-zone",
+    instance: scleralCalc4,
+    factory: createScleralCalculator,
+    deviceValues: ["scleral-4"],
   },
 };
 
@@ -124,6 +133,8 @@ export {
   orthoKCalc,
   expo1acCalc,
   scleralCalc,
+  scleralCalc3,
+  scleralCalc4,
   createOrthoKCalculator,
   createExpo1acCalculator,
   createScleralCalculator,
