@@ -186,8 +186,8 @@ export const SCHEMA_TYPE3 = {
 
   // Signature columns for deterministic detection
   signatures: {
-    required: ["B.C.", "DIAM", "OZ", "DESIGN"], // Must have ALL these columns
-    preferred: ["Eye", "Sphere", "Device"] // Bonus points if present
+    required: ["BC", "Diam", "OZ", "DESIGN"], // Must have ALL these columns
+    preferred: ["OD/OS", "Sphere", "Device"] // Bonus points if present
   },
 
   // Column definitions
