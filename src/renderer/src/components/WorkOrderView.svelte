@@ -144,7 +144,7 @@
     { desc: "AC 2 Tor", param: pick(row.ac2Tor) },
     { desc: "AC 3 Radius", param: pick(row.ac3Radius) },
     { desc: "AC 3 Tor", param: pick(row.ac3Tor) },
-    { desc: "SAG HEIGH", param: pick("") },
+    { desc: "SAG HEIGH", param: pick(row.sagDiff_spherical ?? row.sagHeight) },
     { desc: "ADD", param: pick("") },
     { desc: "AXIS", param: pick("") },
     { desc: "CD/CN", param: pick("") },

@@ -91,7 +91,7 @@
       transformed.ctDry = toStringOrEmpty(row.ctDry);
       transformed.pw1 = toStringOrEmpty(row.pw1);
       transformed.add = toStringOrEmpty(row.add);
-      transformed.sagHeight = toStringOrEmpty(row.sagHeight);
+      transformed.sagHeight = toStringOrUndefined(row.sagHeight);
       transformed.defocus = toStringOrEmpty(row.defocus);
       transformed.direction = toStringOrEmpty(row.direction);
       transformed.ballast = toStringOrEmpty(row.ballast);
@@ -132,7 +132,7 @@
       transformed.cldfile = toStringOrEmpty(row.cldfile);
       transformed.cylValue = toStringOrEmpty(row.Cyl_v); // Backend expects cylValue
       transformed.edgeThick = toStringOrEmpty(row.Edge_Thick);
-      transformed.centerThick = toStringOrEmpty(row.Center_Thick);
+      transformed.centerThick = toStringOrEmpty(row.centerThick ?? row.Center_Thick ?? null);
       transformed.eValue = toStringOrEmpty(row.eValue);
       transformed.containerCode = toStringOrEmpty(row.Container_Code);
       transformed.blankThickness = toStringOrEmpty(row.Blank_Thick);
@@ -159,6 +159,9 @@
       transformed.pc1Radius = toStringOrEmpty(row.PC1_radius);
       transformed.pc2Radius = toStringOrEmpty(row.PC2_radius);
       transformed.pcwidth = toStringOrEmpty(row.PC_width);
+      transformed.sagHeight = toStringOrUndefined(
+        row.sagDiff_spherical != null ? parseFloat(row.sagDiff_spherical.toFixed(4)) : null,
+      );
     }
 
     // Filter out only undefined values

@@ -86,6 +86,7 @@ export type WorkOrder = {
   pc1Radius?: string;
   pc2Radius?: string;
   pcwidth?: string;
+  sagHeight?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };

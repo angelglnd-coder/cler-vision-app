@@ -52,6 +52,7 @@ const NUMERIC_FIELDS = new Set([
   "pc1Radius",
   "pc2Radius",
   "pcwidth",
+  "sagHeight",
 ]);
 
 /**
