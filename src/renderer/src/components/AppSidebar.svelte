@@ -11,8 +11,13 @@
     Briefcase,
   } from "@lucide/svelte";
   import { p, isActive } from "../router/router";
+  import { authActor } from "../stores/authStore.js";
 
   const appVersion = window.api.app.version;
+
+  function handleLogout() {
+    authActor.send({ type: "LOGOUT" });
+  }
 </script>
 
 <Sidebar.Root collapsible="icon" variant="sidebar">
@@ -86,7 +91,7 @@
   <Sidebar.Footer class="px-2">
     <Sidebar.Menu>
       <Sidebar.MenuItem>
-        <Sidebar.MenuButton tooltipContent="Logout">
+        <Sidebar.MenuButton tooltipContent="Logout" onclick={handleLogout}>
           <LogOut class="size-4 min-h-4 min-w-4 shrink-0" />
           <span>Logout</span>
         </Sidebar.MenuButton>
