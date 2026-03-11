@@ -58,6 +58,7 @@ export const WO_COLUMNS = [
   "pc1Radius",
   "pc2Radius",
   "pcwidth",
+  "sagHeight",
 ];
 
 export const WO_COLUMNS_EXCEL = [
@@ -205,4 +206,5 @@ export const COLUMN_DISPLAY_NAMES = {
   pc1Radius: "PC1 Radius",
   pc2Radius: "PC2 Radius",
   pcwidth: "PC Width",
+  sagHeight: "Sag Height",
 };

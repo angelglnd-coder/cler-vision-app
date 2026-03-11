@@ -86,6 +86,7 @@ export type WorkOrder = {
   pc1Radius?: string;
   pc2Radius?: string;
   pcwidth?: string;
+  sagHeight?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -441,3 +442,20 @@ export type Timestamps = {
 export type Entity = {
   id: number;
 } & Timestamps;
+
+// ============================================================================
+// Auth Domain Types
+// ============================================================================
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  permissions: string[];
+};
+
+export type LoginCredentials = { email: string; password: string };
+export type AuthTokens       = { accessToken: string; refreshToken: string };
+export type LoginResponse    = AuthTokens & { user: AuthUser };
+export type RefreshResponse  = AuthTokens;
