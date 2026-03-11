@@ -61,6 +61,9 @@ const CALC_FIELDS = [
   "PC2_radius",
   "PC_radius",
   "LensPower",
+  "sagDiff_spherical",
+  "sagDiff_toric",
+  "centerThick",
 ];
 
 // pull numeric value from number or {value,_error|_why}
@@ -81,6 +84,8 @@ function flattenCalcRow(r) {
     const err = getErr(r[k]);
     if (err) out[`${k}_err`] = err;
   }
+  // Scleral-computed CT: round and store under DB field name
+  if (r.centerThickness != null) out.centerThick = parseFloat(r.centerThickness.toFixed(4));
   return out;
 }
 // build value columns (right aligned) + error columns (narrow)
@@ -205,7 +210,9 @@ function validateHeadersFlexible(foundRaw, schema) {
 
   console.log(`[Validation] Schema: ${schema.name} (${schema.id})`);
   console.log(`[Validation] Found ${foundRaw.length} columns in file`);
-  console.log(`[Validation] Expected ${canonRequired.length} required + ${canonOptional.length} optional`);
+  console.log(
+    `[Validation] Expected ${canonRequired.length} required + ${canonOptional.length} optional`,
+  );
 
   // missing = required not present
   for (let i = 0; i < canonRequired.length; i++) {
@@ -225,13 +232,17 @@ function validateHeadersFlexible(foundRaw, schema) {
   if (missing.length) {
     console.log(`[Validation] Missing:`, missing);
     // Always show missing columns as informational message
-    msgs.push(`ℹ️ Missing ${missing.length} column${missing.length !== 1 ? 's' : ''}: ${missing.join(", ")}`);
+    msgs.push(
+      `ℹ️ Missing ${missing.length} column${missing.length !== 1 ? "s" : ""}: ${missing.join(", ")}`,
+    );
   }
 
   if (extra.length) {
     console.log(`[Validation] Unexpected:`, extra);
     // Always show extra columns as informational message
-    msgs.push(`ℹ️ Found ${extra.length} additional column${extra.length !== 1 ? 's' : ''}: ${extra.join(", ")}`);
+    msgs.push(
+      `ℹ️ Found ${extra.length} additional column${extra.length !== 1 ? "s" : ""}: ${extra.join(", ")}`,
+    );
   }
 
   return { missing, extra, msgs, foundCanon };
@@ -405,19 +416,23 @@ export const woExcelLoaderMachine = setup({
           return base;
         }
 
-        // Determine which *_err columns are actually needed
+        // Determine which columns actually have data in at least one row
         const neededErr = new Set();
+        const neededVal = new Set();
         for (const r of event.output.rows ?? []) {
           for (const k of Object.keys(r)) {
             if (k.endsWith("_err") && r[k]) neededErr.add(k);
+            else if (r[k] != null) neededVal.add(k);
           }
         }
 
-        // Build calc columns, but include only needed *_err columns
+        // Build calc columns, including only value columns with actual data
+        // and only _err columns that have errors
         const calcAll = makeCalcColumns(); // returns value + *_err columns
         const extra = calcAll.filter((col) => {
           const f = col.field;
-          return !f.endsWith("_err") || neededErr.has(f);
+          if (f.endsWith("_err")) return neededErr.has(f);
+          return neededVal.has(f);
         });
 
         // Avoid duplicates if user recalculates
